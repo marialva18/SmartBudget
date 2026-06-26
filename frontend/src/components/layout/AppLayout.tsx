@@ -10,6 +10,7 @@ import {
   Target,
   Users,
   WalletCards,
+  CalendarDays,
   X,
 } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -38,6 +39,11 @@ const navItems = [
     to: '/app/transactions',
     icon: ReceiptText,
   },
+  {
+  label: es.navigation.calendar,
+  to: '/app/calendar',
+  icon: CalendarDays,
+},
   {
     label: es.navigation.categories,
     to: '/app/categories',

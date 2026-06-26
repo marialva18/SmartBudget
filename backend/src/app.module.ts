@@ -17,6 +17,7 @@ import { GroupsModule } from './modules/groups/groups.module';
 import { HealthModule } from './modules/health/health.module';
 import { ProfileModule } from './modules/profile/profile.module';
 import { TransactionsModule } from './modules/transactions/transactions.module';
+import { CalendarModule } from './modules/calendar/calendar.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { TransactionsModule } from './modules/transactions/transactions.module';
     GoalsModule,
     GroupsModule,
     DashboardModule,
+    CalendarModule,
     ProfileModule,
     TransactionsModule,
   ],

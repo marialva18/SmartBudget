@@ -25,6 +25,7 @@ export const es = {
     dashboard: 'Resumen',
     accounts: 'Cuentas',
     transactions: 'Movimientos',
+    calendar: 'Calendario',
     categories: 'Categorías',
     budgets: 'Presupuestos',
     goals: 'Metas',
@@ -41,6 +42,25 @@ export const es = {
     navigationClose: 'Cerrar navegación',
     logout: 'Cerrar sesión',
   },
+  calendar: {
+  section: 'Calendario',
+  title: 'Calendario financiero',
+  subtitle:
+    'Visualiza tus ingresos y gastos confirmados agrupados por día.',
+  previousMonth: 'Anterior',
+  nextMonth: 'Siguiente',
+  allAccounts: 'Todas las cuentas',
+  selectedDay: 'Día seleccionado',
+  income: 'Ingresos',
+  expense: 'Gastos',
+  net: 'Neto',
+  noActivity: 'Sin movimientos',
+  loadError: 'No pudimos cargar tu calendario financiero.',
+  emptyDayTitle: 'Sin movimientos este día',
+  emptyDayDescription:
+    'Cuando registres ingresos o gastos en esta fecha aparecerán aquí.',
+  unnamedMovement: 'Movimiento sin descripción',
+},
   transactions: {
     section: 'Movimientos',
     title: 'Ingresos y gastos',

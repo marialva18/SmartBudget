@@ -21,6 +21,7 @@ import { SettingsPage } from '../pages/app/SettingsPage'
 import { RouteErrorPage } from '../pages/RouteErrorPage'
 import { GoalsPage as AppGoalsPage } from '../pages/app/GoalsPage'
 import { GroupsPage } from '../pages/app/GroupsPage'
+import { CalendarPage } from '../pages/app/CalendarPage'
 
 export const router = createBrowserRouter([
   {
@@ -109,6 +110,10 @@ export const router = createBrowserRouter([
           {
             path: 'transactions',
             element: <TransactionsPage />,
+          },
+          {
+            path: 'calendar',
+            element: <CalendarPage />,
           },
           {
             path: 'categories',
