@@ -24,4 +24,23 @@ describe('environment configuration', () => {
       }),
     );
   });
+
+  it('rejects unsupported email providers', () => {
+    expect(() =>
+      validateEnvironment({
+        NODE_ENV: 'development',
+        EMAIL_PROVIDER: 'smtp',
+      }),
+    ).toThrow('EMAIL_PROVIDER must be empty or resend.');
+  });
+
+  it('requires email settings when Resend is enabled', () => {
+    expect(() =>
+      validateEnvironment({
+        NODE_ENV: 'development',
+        EMAIL_PROVIDER: 'resend',
+        RESEND_API_KEY: 'secret',
+      }),
+    ).toThrow('EMAIL_FROM must be configured when EMAIL_PROVIDER=resend.');
+  });
 });

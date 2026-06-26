@@ -8,12 +8,45 @@ import {
 import { Prisma } from '@prisma/client';
 import { es } from '../../common/i18n/es';
 import { PrismaService } from '../../database/prisma/prisma.service';
+import { CreateGroupExpenseDto } from './dto/create-group-expense.dto';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { InviteGroupMemberDto } from './dto/invite-group-member.dto';
 
 type Channel = 'WEB' | 'MOBILE';
 
 const groupInclude = {
+  expenses: {
+    where: { deletedAt: null },
+    include: {
+      paidByMember: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              profile: { select: { displayName: true } },
+            },
+          },
+        },
+      },
+      splits: {
+        include: {
+          member: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  email: true,
+                  profile: { select: { displayName: true } },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    orderBy: { occurredAt: 'desc' },
+  },
   members: {
     include: {
       user: {
@@ -31,6 +64,48 @@ const groupInclude = {
 type GroupWithMembers = Prisma.FinancialGroupGetPayload<{
   include: typeof groupInclude;
 }>;
+
+const expenseInclude = {
+  paidByMember: {
+    include: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+          profile: { select: { displayName: true } },
+        },
+      },
+    },
+  },
+  splits: {
+    include: {
+      member: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              profile: { select: { displayName: true } },
+            },
+          },
+        },
+      },
+    },
+  },
+} satisfies Prisma.GroupExpenseInclude;
+
+type GroupExpenseWithDetails = Prisma.GroupExpenseGetPayload<{
+  include: typeof expenseInclude;
+}>;
+
+type MemberSummary = {
+  id: string;
+  userId: string;
+  email: string;
+  displayName: string;
+  role: string;
+  status: string;
+};
 
 @Injectable()
 export class GroupsService {
@@ -263,6 +338,89 @@ export class GroupsService {
     return this.toResponse(group, requester);
   }
 
+  async findExpenses(userId: string, groupId: string) {
+    await this.findActiveMember(userId, groupId);
+    const expenses = await this.prisma.groupExpense.findMany({
+      where: {
+        groupId,
+        deletedAt: null,
+      },
+      include: expenseInclude,
+      orderBy: { occurredAt: 'desc' },
+    });
+
+    return expenses.map((expense) => this.toExpenseResponse(expense));
+  }
+
+  async createExpense(
+    userId: string,
+    channel: Channel,
+    groupId: string,
+    dto: CreateGroupExpenseDto,
+  ) {
+    await this.findActiveMember(userId, groupId);
+    const activeMembers = await this.prisma.groupMember.findMany({
+      where: {
+        groupId,
+        status: 'ACTIVE',
+      },
+      select: { id: true },
+    });
+    const activeMemberIds = new Set(activeMembers.map((member) => member.id));
+    if (!activeMemberIds.has(dto.paidByMemberId)) {
+      throw new BadRequestException(es.groups.invalidPayer);
+    }
+
+    const participantIds = Array.from(new Set(dto.participantMemberIds));
+    if (
+      participantIds.length === 0 ||
+      participantIds.some((memberId) => !activeMemberIds.has(memberId))
+    ) {
+      throw new BadRequestException(es.groups.invalidParticipants);
+    }
+
+    const amount = new Prisma.Decimal(dto.amount);
+    const splits = this.buildEqualSplits(amount, participantIds);
+    const expense = await this.prisma.$transaction(async (transaction) => {
+      const created = await transaction.groupExpense.create({
+        data: {
+          groupId,
+          paidByMemberId: dto.paidByMemberId,
+          createdByUserId: userId,
+          description: dto.description.trim(),
+          amount,
+          currency: dto.currency,
+          occurredAt: dto.occurredAt ? new Date(dto.occurredAt) : new Date(),
+          splits: {
+            createMany: {
+              data: splits,
+            },
+          },
+        },
+        include: expenseInclude,
+      });
+      await transaction.auditLog.create({
+        data: {
+          userId,
+          action: 'GROUP_EXPENSE_CREATED',
+          entity: 'GROUP_EXPENSE',
+          entityId: created.id,
+          channel,
+          newValuesJson: JSON.stringify({
+            groupId,
+            paidByMemberId: dto.paidByMemberId,
+            amount: amount.toFixed(4),
+            currency: dto.currency,
+            participants: participantIds,
+          }),
+        },
+      });
+      return created;
+    });
+
+    return this.toExpenseResponse(expense);
+  }
+
   private async findActiveMember(userId: string, groupId: string) {
     const member = await this.prisma.groupMember.findFirst({
       where: {
@@ -320,6 +478,10 @@ export class GroupsService {
         currentMembership?.role === 'OWNER' ||
         currentMembership?.role === 'ADMIN',
       canArchive: currentMembership?.role === 'OWNER',
+      balances: this.toBalanceSummaries(group),
+      recentExpenses: group.expenses
+        .slice(0, 5)
+        .map((expense) => this.toExpenseResponse(expense)),
       members: group.members.map((member) => ({
         id: member.id,
         userId: member.userId,
@@ -331,6 +493,108 @@ export class GroupsService {
         leftAt: member.leftAt,
       })),
     };
+  }
+
+  private toExpenseResponse(expense: GroupExpenseWithDetails) {
+    return {
+      id: expense.id,
+      groupId: expense.groupId,
+      description: expense.description,
+      amount: expense.amount.toFixed(4),
+      currency: expense.currency,
+      occurredAt: expense.occurredAt,
+      createdAt: expense.createdAt,
+      paidByMember: this.toMemberSummary(expense.paidByMember),
+      splits: expense.splits.map((split) => ({
+        id: split.id,
+        amount: split.amount.toFixed(4),
+        member: this.toMemberSummary(split.member),
+      })),
+    };
+  }
+
+  private toBalanceSummaries(group: GroupWithMembers) {
+    const balances = new Map<
+      string,
+      {
+        member: MemberSummary;
+        currency: string;
+        paid: Prisma.Decimal;
+        owed: Prisma.Decimal;
+      }
+    >();
+
+    const getBalance = (
+      member: (typeof group.members)[number],
+      currency: string,
+    ) => {
+      const key = `${member.id}:${currency}`;
+      let balance = balances.get(key);
+      if (!balance) {
+        balance = {
+          member: this.toMemberSummary(member),
+          currency,
+          paid: new Prisma.Decimal(0),
+          owed: new Prisma.Decimal(0),
+        };
+        balances.set(key, balance);
+      }
+      return balance;
+    };
+
+    for (const expense of group.expenses) {
+      const payerBalance = getBalance(expense.paidByMember, expense.currency);
+      payerBalance.paid = payerBalance.paid.plus(expense.amount);
+      for (const split of expense.splits) {
+        const balance = getBalance(split.member, expense.currency);
+        balance.owed = balance.owed.plus(split.amount);
+      }
+    }
+
+    return Array.from(balances.values()).map((balance) => ({
+      member: balance.member,
+      currency: balance.currency,
+      paidAmount: balance.paid.toFixed(4),
+      owedAmount: balance.owed.toFixed(4),
+      netAmount: balance.paid.minus(balance.owed).toFixed(4),
+    }));
+  }
+
+  private toMemberSummary(member: {
+    id: string;
+    userId: string;
+    role: string;
+    status: string;
+    user: {
+      email: string;
+      profile: { displayName: string } | null;
+    };
+  }): MemberSummary {
+    return {
+      id: member.id,
+      userId: member.userId,
+      email: member.user.email,
+      displayName: member.user.profile?.displayName ?? member.user.email,
+      role: member.role,
+      status: member.status,
+    };
+  }
+
+  private buildEqualSplits(amount: Prisma.Decimal, participantIds: string[]) {
+    const baseAmount = amount
+      .dividedBy(participantIds.length)
+      .toDecimalPlaces(4);
+    let assignedAmount = new Prisma.Decimal(0);
+
+    return participantIds.map((memberId, index) => {
+      const isLast = index === participantIds.length - 1;
+      const splitAmount = isLast ? amount.minus(assignedAmount) : baseAmount;
+      assignedAmount = assignedAmount.plus(splitAmount);
+      return {
+        memberId,
+        amount: splitAmount,
+      };
+    });
   }
 
   private auditValues(group: GroupWithMembers) {

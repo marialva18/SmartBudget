@@ -26,6 +26,24 @@ export function validateEnvironment(config: Environment): Environment {
     }
   }
 
+  const emailProvider = readString(config.EMAIL_PROVIDER);
+  if (emailProvider && emailProvider !== 'resend') {
+    throw new Error('EMAIL_PROVIDER must be empty or resend.');
+  }
+  if (emailProvider === 'resend') {
+    for (const key of [
+      'RESEND_API_KEY',
+      'EMAIL_FROM',
+      'PASSWORD_RESET_APP_URL',
+    ]) {
+      if (!readString(config[key])) {
+        throw new Error(
+          `${key} must be configured when EMAIL_PROVIDER=resend.`,
+        );
+      }
+    }
+  }
+
   return {
     ...config,
     NODE_ENV: nodeEnv,

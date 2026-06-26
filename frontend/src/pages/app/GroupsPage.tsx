@@ -1,12 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Archive, Check, MailPlus, Plus, Users, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Archive, Check, MailPlus, Plus, ReceiptText, Users, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import {
   acceptGroupInvitation,
   archiveGroup,
+  createGroupExpense,
   createGroup,
   declineGroupInvitation,
   getGroups,
@@ -14,8 +15,10 @@ import {
   type FinancialGroup,
 } from '../../features/groups/groupsApi';
 import {
+  groupExpenseSchema,
   groupInvitationSchema,
   groupSchema,
+  type GroupExpenseFormValues,
   type GroupFormValues,
   type GroupInvitationFormValues,
 } from '../../features/groups/groupSchema';
@@ -26,6 +29,7 @@ export function GroupsPage() {
   const queryClient = useQueryClient();
   const [groupPanelOpen, setGroupPanelOpen] = useState(false);
   const [inviteGroup, setInviteGroup] = useState<FinancialGroup | null>(null);
+  const [expenseGroup, setExpenseGroup] = useState<FinancialGroup | null>(null);
   const [archiveCandidate, setArchiveCandidate] =
     useState<FinancialGroup | null>(null);
   const [error, setError] = useState('');
@@ -64,6 +68,24 @@ export function GroupsPage() {
     onError: (reason) =>
       setError(
         reason instanceof ApiError ? reason.message : es.groups.inviteError,
+      ),
+  });
+  const expenseMutation = useMutation({
+    mutationFn: ({
+      groupId,
+      values,
+    }: {
+      groupId: string;
+      values: GroupExpenseFormValues;
+    }) => createGroupExpense(groupId, values),
+    onSuccess: async () => {
+      setExpenseGroup(null);
+      setError('');
+      await refreshGroups();
+    },
+    onError: (reason) =>
+      setError(
+        reason instanceof ApiError ? reason.message : es.groups.saveError,
       ),
   });
   const acceptMutation = useMutation({
@@ -150,6 +172,7 @@ export function GroupsPage() {
             onAccept={() => acceptMutation.mutate(group.id)}
             onArchive={() => setArchiveCandidate(group)}
             onDecline={() => declineMutation.mutate(group.id)}
+            onExpense={() => setExpenseGroup(group)}
             onInvite={() => setInviteGroup(group)}
           />
         ))}
@@ -183,6 +206,17 @@ export function GroupsPage() {
         />
       ) : null}
 
+      {expenseGroup ? (
+        <ExpensePanel
+          group={expenseGroup}
+          isSaving={expenseMutation.isPending}
+          onClose={() => setExpenseGroup(null)}
+          onSubmit={(values) =>
+            expenseMutation.mutate({ groupId: expenseGroup.id, values })
+          }
+        />
+      ) : null}
+
       {archiveCandidate ? (
         <ConfirmDialog
           actionLabel={es.groups.confirmArchiveAction}
@@ -204,12 +238,14 @@ function GroupCard({
   onAccept,
   onArchive,
   onDecline,
+  onExpense,
   onInvite,
 }: {
   group: FinancialGroup;
   onAccept: () => void;
   onArchive: () => void;
   onDecline: () => void;
+  onExpense: () => void;
   onInvite: () => void;
 }) {
   const isInvitation = group.currentMemberStatus === 'INVITED';
@@ -253,9 +289,17 @@ function GroupCard({
         </div>
       ) : (
         <div className="mt-5 flex flex-wrap gap-2">
+          <button
+            className="inline-flex items-center gap-2 rounded-full bg-emerald-800 px-4 py-2 text-sm font-semibold text-white"
+            onClick={onExpense}
+            type="button"
+          >
+            <ReceiptText size={16} />
+            {es.groups.newExpense}
+          </button>
           {group.canInvite ? (
             <button
-              className="inline-flex items-center gap-2 rounded-full bg-emerald-800 px-4 py-2 text-sm font-semibold text-white"
+              className="inline-flex items-center gap-2 rounded-full border border-emerald-800 px-4 py-2 text-sm font-semibold text-emerald-900"
               onClick={onInvite}
               type="button"
             >
@@ -275,6 +319,67 @@ function GroupCard({
           ) : null}
         </div>
       )}
+
+      <div className="mt-5 border-t border-slate-100 pt-4">
+        <h3 className="font-bold">{es.groups.balances}</h3>
+        <div className="mt-3 grid gap-2">
+          {group.balances.map((balance) => {
+            const netAmount = Number(balance.netAmount);
+            return (
+              <div
+                className="flex items-center justify-between gap-3 rounded-md bg-slate-50 px-3 py-2 text-sm"
+               key={`${balance.member.id}-${balance.currency}`}
+              >
+                <span className="truncate font-semibold">
+                  {balance.member.displayName}
+                </span>
+                <span
+                  className={`shrink-0 font-bold ${
+                    netAmount > 0
+                      ? 'text-emerald-800'
+                      : netAmount < 0
+                        ? 'text-red-700'
+                        : 'text-slate-500'
+                  }`}
+                >
+                  {netAmount > 0
+                    ? es.groups.netPositive
+                    : netAmount < 0
+                      ? es.groups.netNegative
+                      : es.groups.netZero}
+                  : {formatMoney(Math.abs(netAmount), balance.currency)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="mt-5 border-t border-slate-100 pt-4">
+        <h3 className="font-bold">{es.groups.recentExpenses}</h3>
+        {group.recentExpenses.length > 0 ? (
+          <div className="mt-3 space-y-2">
+            {group.recentExpenses.map((expense) => (
+              <div
+                className="rounded-md bg-slate-50 px-3 py-2 text-sm"
+                key={expense.id}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-semibold">{expense.description}</span>
+                  <span className="font-bold">
+                    {formatMoney(Number(expense.amount), expense.currency)}
+                  </span>
+                </div>
+                <p className="mt-1 text-slate-500">
+                  {es.groups.paidBy}: {expense.paidByMember.displayName}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-3 text-sm text-slate-500">{es.groups.noExpenses}</p>
+        )}
+      </div>
 
       <div className="mt-5 border-t border-slate-100 pt-4">
         <h3 className="font-bold">{es.groups.members}</h3>
@@ -389,6 +494,101 @@ function InvitePanel({
   );
 }
 
+function ExpensePanel({
+  group,
+  isSaving,
+  onClose,
+  onSubmit,
+}: {
+  group: FinancialGroup;
+  isSaving: boolean;
+  onClose: () => void;
+  onSubmit: (values: GroupExpenseFormValues) => void;
+}) {
+  const activeMembers = useMemo(
+    () => group.members.filter((member) => member.status === 'ACTIVE'),
+    [group.members],
+  );
+  const defaultValues = useMemo(
+    () => getExpenseDefaults(activeMembers),
+    [activeMembers],
+  );
+  const {
+    formState: { errors },
+    handleSubmit,
+    register,
+    reset,
+  } = useForm<GroupExpenseFormValues>({
+    resolver: zodResolver(groupExpenseSchema),
+    defaultValues,
+  });
+
+  useEffect(() => {
+    reset(defaultValues);
+  }, [defaultValues, group.id, reset]);
+
+  return (
+    <Panel title={es.groups.form.expenseTitle(group.name)} onClose={onClose}>
+      <form className="flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit(onSubmit)}>
+        <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
+          <Field
+            label={es.groups.form.expenseDescription}
+            error={errors.description?.message}
+          >
+            <input className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700" {...register('description')} />
+          </Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label={es.groups.form.amount} error={errors.amount?.message}>
+              <input className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700" min="0.01" step="0.01" type="number" {...register('amount', { valueAsNumber: true })} />
+            </Field>
+            <Field label={es.groups.form.currency}>
+              <select className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700" {...register('currency')}>
+                <option value="PEN">PEN</option>
+                <option value="USD">USD</option>
+              </select>
+            </Field>
+          </div>
+          <Field label={es.groups.form.paidBy} error={errors.paidByMemberId?.message}>
+            <select className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700" {...register('paidByMemberId')}>
+              {activeMembers.map((member) => (
+                <option key={member.id} value={member.id}>
+                  {member.displayName}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label={es.groups.form.participants} error={errors.participantMemberIds?.message}>
+            <div className="space-y-2">
+              {activeMembers.map((member) => (
+                <label
+                  className="flex items-center gap-3 rounded-md bg-slate-100 px-4 py-3"
+                  key={member.id}
+                >
+                  <input
+                    className="size-4 accent-emerald-800"
+                    type="checkbox"
+                    value={member.id}
+                    {...register('participantMemberIds')}
+                  />
+                  <span className="font-semibold">{member.displayName}</span>
+                </label>
+              ))}
+            </div>
+          </Field>
+          <Field label={es.groups.form.occurredAt} error={errors.occurredAt?.message}>
+            <input className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700" type="datetime-local" {...register('occurredAt')} />
+          </Field>
+        </div>
+        <PanelFooter
+          isSaving={isSaving}
+          onClose={onClose}
+          submitLabel={es.groups.form.submitExpense}
+        />
+      </form>
+    </Panel>
+  );
+}
+
 function Panel({
   children,
   onClose,
@@ -415,6 +615,36 @@ function Panel({
       </aside>
     </div>
   );
+}
+
+function getExpenseDefaults(
+  members: Array<{ id: string }>,
+): GroupExpenseFormValues {
+  return {
+    description: '',
+    amount: 0,
+    currency: 'PEN',
+    paidByMemberId: members[0]?.id ?? '',
+    participantMemberIds: members.map((member) => member.id),
+    occurredAt: getCurrentDateTimeInputValue(),
+  };
+}
+
+function getCurrentDateTimeInputValue() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+    2,
+    '0',
+  )}-${String(now.getDate()).padStart(2, '0')}T${String(
+    now.getHours(),
+  ).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+}
+
+function formatMoney(value: number, currency: 'PEN' | 'USD') {
+  return new Intl.NumberFormat('es-PE', {
+    style: 'currency',
+    currency,
+  }).format(value);
 }
 
 function PanelFooter({

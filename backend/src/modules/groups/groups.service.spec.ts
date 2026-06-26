@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { ForbiddenException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { GroupsService } from './groups.service';
 import { PrismaService } from '../../database/prisma/prisma.service';
 
@@ -11,6 +12,9 @@ describe('GroupsService', () => {
     },
     user: {
       findFirst: jest.fn(),
+    },
+    groupExpense: {
+      findMany: jest.fn(),
     },
     $transaction: jest.fn(),
   };
@@ -24,6 +28,9 @@ describe('GroupsService', () => {
       findUnique: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+    },
+    groupExpense: {
+      create: jest.fn(),
     },
     auditLog: {
       create: jest.fn(),
@@ -79,6 +86,45 @@ describe('GroupsService', () => {
       }),
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
+
+  it('creates a group expense with equal splits', async () => {
+    prisma.groupMember.findFirst.mockResolvedValue(memberRecord());
+    prisma.groupMember.findMany.mockResolvedValue([
+      { id: 'member-id' },
+      { id: 'member-2' },
+    ]);
+    transactionClient.groupExpense.create.mockResolvedValue(expenseRecord());
+    transactionClient.auditLog.create.mockResolvedValue({});
+
+    const result = await service.createExpense('user-id', 'WEB', 'group-id', {
+      description: 'Cena',
+      amount: 100,
+      currency: 'PEN',
+      paidByMemberId: 'member-id',
+      participantMemberIds: ['member-id', 'member-2'],
+      occurredAt: '2026-06-26T20:00:00.000Z',
+    });
+
+    expect(transactionClient.groupExpense.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        groupId: 'group-id',
+        paidByMemberId: 'member-id',
+        amount: new Prisma.Decimal(100),
+        currency: 'PEN',
+        splits: {
+          createMany: {
+            data: [
+              { memberId: 'member-id', amount: new Prisma.Decimal(50) },
+              { memberId: 'member-2', amount: new Prisma.Decimal(50) },
+            ],
+          },
+        },
+      }),
+      include: expect.any(Object),
+    });
+    expect(result.amount).toBe('100.0000');
+    expect(result.splits).toHaveLength(2);
+  });
 });
 
 function groupRecord() {
@@ -91,7 +137,52 @@ function groupRecord() {
     createdAt: new Date('2026-06-26T12:00:00.000Z'),
     updatedAt: new Date('2026-06-26T12:00:00.000Z'),
     archivedAt: null as Date | null,
+    expenses: [],
     members: [memberRecord()],
+  };
+}
+
+function expenseRecord() {
+  return {
+    id: 'expense-id',
+    groupId: 'group-id',
+    paidByMemberId: 'member-id',
+    createdByUserId: 'user-id',
+    personalTransactionId: null as string | null,
+    description: 'Cena',
+    amount: new Prisma.Decimal(100),
+    currency: 'PEN',
+    occurredAt: new Date('2026-06-26T20:00:00.000Z'),
+    createdAt: new Date('2026-06-26T20:00:00.000Z'),
+    updatedAt: new Date('2026-06-26T20:00:00.000Z'),
+    deletedAt: null as Date | null,
+    paidByMember: memberRecord(),
+    splits: [
+      splitRecord('split-1', 'member-id', new Prisma.Decimal(50)),
+      splitRecord('split-2', 'member-2', new Prisma.Decimal(50)),
+    ],
+  };
+}
+
+function splitRecord(id: string, memberId: string, amount: Prisma.Decimal) {
+  return {
+    id,
+    groupExpenseId: 'expense-id',
+    memberId,
+    amount,
+    createdAt: new Date('2026-06-26T20:00:00.000Z'),
+    member: memberRecord({
+      id: memberId,
+      userId: memberId === 'member-id' ? 'user-id' : 'user-2',
+      user:
+        memberId === 'member-id'
+          ? memberBase().user
+          : {
+              id: 'user-2',
+              email: 'friend@example.com',
+              profile: { displayName: 'Friend' },
+            },
+    }),
   };
 }
 

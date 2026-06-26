@@ -14,6 +14,8 @@ export const es = {
     passwordUpdated: 'Contraseña actualizada correctamente.',
     recoveryRequested:
       'Si el correo está registrado, enviaremos instrucciones para recuperar la contraseña.',
+    recoveryUnavailable:
+      'La recuperación de contraseña aún no está configurada. Inténtalo más tarde.',
   },
   accounts: {
     missing: 'La cuenta no existe.',
@@ -59,6 +61,9 @@ export const es = {
     ownerRequired: 'Solo el propietario del grupo puede archivar el grupo.',
     invitationMissing: 'La invitación no existe o ya fue respondida.',
     invitationDeclined: 'Invitación rechazada correctamente.',
+    invalidPayer: 'La persona que pagó debe ser miembro activo del grupo.',
+    invalidParticipants:
+      'Todos los participantes deben ser miembros activos del grupo.',
   },
   profile: {
     incompleteOnboarding:
@@ -96,6 +101,11 @@ export const es = {
     goalReservationAmountMaximum: 'La reserva es demasiado alta.',
     groupName:
       'El nombre del grupo solo puede contener letras, números, espacios, apóstrofos o guiones.',
+    groupExpenseDescription:
+      'La descripción del gasto solo puede contener letras, números y puntuación básica.',
+    groupExpenseAmountNumber: 'El gasto debe ser un número válido.',
+    groupExpenseAmountMinimum: 'El gasto debe ser mayor que cero.',
+    groupExpenseAmountMaximum: 'El gasto es demasiado alto.',
     monthStart: 'El mes debe enviarse como YYYY-MM-01.',
     password:
       'La contraseña debe incluir una mayúscula, un número y un carácter especial.',

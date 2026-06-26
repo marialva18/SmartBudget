@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/auth/authenticated-user';
+import { CreateGroupExpenseDto } from './dto/create-group-expense.dto';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { InviteGroupMemberDto } from './dto/invite-group-member.dto';
 import { GroupsService } from './groups.service';
@@ -34,6 +35,28 @@ export class GroupsController {
     @Body() dto: InviteGroupMemberDto,
   ) {
     return this.groupsService.invite(user.userId, user.platform, groupId, dto);
+  }
+
+  @Get(':groupId/expenses')
+  findExpenses(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('groupId', ParseUUIDPipe) groupId: string,
+  ) {
+    return this.groupsService.findExpenses(user.userId, groupId);
+  }
+
+  @Post(':groupId/expenses')
+  createExpense(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('groupId', ParseUUIDPipe) groupId: string,
+    @Body() dto: CreateGroupExpenseDto,
+  ) {
+    return this.groupsService.createExpense(
+      user.userId,
+      user.platform,
+      groupId,
+      dto,
+    );
   }
 
   @Patch(':groupId/accept')

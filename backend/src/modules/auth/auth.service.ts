@@ -2,6 +2,7 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -36,6 +37,12 @@ type SessionResult = {
     user: AuthUser;
     accessToken: string;
   };
+};
+
+type PasswordRecoveryEmailConfig = {
+  apiKey: string;
+  from: string;
+  resetAppUrl: string;
 };
 
 @Injectable()
@@ -295,6 +302,7 @@ export class AuthService {
   }
 
   async forgotPassword(dto: ForgotPasswordDto) {
+    const emailConfig = this.getPasswordRecoveryEmailConfig();
     const email = dto.email.trim().toLowerCase();
     const user = await this.prisma.user.findUnique({
       where: { email },
@@ -303,13 +311,26 @@ export class AuthService {
 
     if (user) {
       const resetTokenSecret = randomBytes(32).toString('base64url');
-      await this.prisma.passwordResetToken.create({
+      const resetToken = await this.prisma.passwordResetToken.create({
         data: {
           userId: user.id,
           tokenHash: await argon2.hash(resetTokenSecret),
           expiresAt: this.addDays(1),
         },
       });
+      try {
+        await this.sendPasswordRecoveryEmail(
+          email,
+          `${resetToken.id}.${resetTokenSecret}`,
+          emailConfig,
+        );
+      } catch (error) {
+        await this.prisma.passwordResetToken.update({
+          where: { id: resetToken.id },
+          data: { usedAt: new Date() },
+        });
+        throw error;
+      }
     }
 
     return {
@@ -444,6 +465,52 @@ export class AuthService {
       604_800_000,
     );
     return new Date(Date.now() + maxAge);
+  }
+
+  private getPasswordRecoveryEmailConfig(): PasswordRecoveryEmailConfig {
+    const provider = this.configService
+      .get<string>('EMAIL_PROVIDER', '')
+      .trim();
+    const apiKey = this.configService.get<string>('RESEND_API_KEY', '').trim();
+    const from = this.configService.get<string>('EMAIL_FROM', '').trim();
+    const resetAppUrl = this.configService
+      .get<string>('PASSWORD_RESET_APP_URL', '')
+      .trim();
+
+    if (provider !== 'resend' || !apiKey || !from || !resetAppUrl) {
+      throw new ServiceUnavailableException(es.auth.recoveryUnavailable);
+    }
+
+    return { apiKey, from, resetAppUrl };
+  }
+
+  private async sendPasswordRecoveryEmail(
+    email: string,
+    token: string,
+    config: PasswordRecoveryEmailConfig,
+  ) {
+    const resetUrl = `${config.resetAppUrl.replace(/\/+$/g, '')}/reset-password?token=${encodeURIComponent(token)}`;
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${config.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: config.from,
+        to: email,
+        subject: 'Recupera tu contrasena de Smart Budget',
+        html: [
+          '<p>Recibimos una solicitud para restablecer tu contrasena.</p>',
+          `<p><a href="${resetUrl}">Restablecer contrasena</a></p>`,
+          '<p>Si no solicitaste este cambio, puedes ignorar este correo.</p>',
+        ].join(''),
+      }),
+    });
+
+    if (!response.ok) {
+      throw new ServiceUnavailableException(es.auth.recoveryUnavailable);
+    }
   }
 
   private addDays(days: number): Date {
