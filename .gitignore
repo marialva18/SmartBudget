@@ -30,3 +30,4 @@ Thumbs.db
 .vscode/
 README.md
 database/scripts/
+backend/.env.example
