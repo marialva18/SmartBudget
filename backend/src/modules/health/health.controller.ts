@@ -1,0 +1,15 @@
+import { Controller, Get } from '@nestjs/common';
+import { Public } from '../../common/auth/public.decorator';
+
+@Public()
+@Controller('health')
+export class HealthController {
+  @Get()
+  check() {
+    return {
+      status: 'ok',
+      service: 'smart-budget-api',
+      timestamp: new Date().toISOString(),
+    };
+  }
+}
