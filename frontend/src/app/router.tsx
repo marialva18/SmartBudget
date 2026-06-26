@@ -20,6 +20,7 @@ import { RequireAuth } from '../features/auth/components/RequireAuth'
 import { SettingsPage } from '../pages/app/SettingsPage'
 import { RouteErrorPage } from '../pages/RouteErrorPage'
 import { GoalsPage as AppGoalsPage } from '../pages/app/GoalsPage'
+import { GroupsPage } from '../pages/app/GroupsPage'
 
 export const router = createBrowserRouter([
   {
@@ -120,6 +121,10 @@ export const router = createBrowserRouter([
           {
             path: 'goals',
             element: <AppGoalsPage />,
+          },
+          {
+            path: 'groups',
+            element: <GroupsPage />,
           },
           {
             path: 'settings',

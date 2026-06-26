@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { getAccounts } from '../../features/accounts/services/accountsApi';
 import { useFinanceScope } from '../../features/finance-scope/financeScope';
 import {
@@ -37,6 +38,7 @@ export function GoalsPage() {
   const { scope } = useFinanceScope();
   const [selected, setSelected] = useState<Goal | null>(null);
   const [reservationGoal, setReservationGoal] = useState<Goal | null>(null);
+  const [deleteCandidate, setDeleteCandidate] = useState<Goal | null>(null);
   const [goalPanelOpen, setGoalPanelOpen] = useState(false);
   const [error, setError] = useState('');
   const goalsQuery = useQuery({
@@ -101,7 +103,10 @@ export function GoalsPage() {
   });
   const deleteMutation = useMutation({
     mutationFn: deleteGoal,
-    onSuccess: refreshData,
+    onSuccess: async () => {
+      setDeleteCandidate(null);
+      await refreshData();
+    },
     onError: (reason) =>
       setError(
         reason instanceof ApiError ? reason.message : es.goals.deleteError,
@@ -173,11 +178,7 @@ export function GoalsPage() {
             key={goal.id}
             onCancel={() => cancelMutation.mutate(goal.id)}
             onComplete={() => completeMutation.mutate(goal.id)}
-            onDelete={() => {
-              if (window.confirm(es.goals.deleteConfirmation(goal.name))) {
-                deleteMutation.mutate(goal.id);
-              }
-            }}
+            onDelete={() => setDeleteCandidate(goal)}
             onEdit={() => {
               setSelected(goal);
               setGoalPanelOpen(true);
@@ -222,6 +223,17 @@ export function GoalsPage() {
           onSubmit={(values) =>
             reserveMutation.mutate({ goalId: reservationGoal.id, values })
           }
+        />
+      ) : null}
+
+      {deleteCandidate ? (
+        <ConfirmDialog
+          actionLabel={es.goals.deleteConfirmationAction}
+          description={es.goals.deleteConfirmation(deleteCandidate.name)}
+          isSaving={deleteMutation.isPending}
+          onCancel={() => setDeleteCandidate(null)}
+          onConfirm={() => deleteMutation.mutate(deleteCandidate.id)}
+          title={es.goals.deleteConfirmationTitle}
         />
       ) : null}
     </section>

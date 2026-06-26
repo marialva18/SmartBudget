@@ -27,4 +27,5 @@ dist-ssr
 .env.example
 scripts
 README.md
+backend/.env.example
 database/scripts/

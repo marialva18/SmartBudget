@@ -1,4 +1,5 @@
 import {
+  Bell,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -7,15 +8,17 @@ import {
   Settings,
   Tags,
   Target,
+  Users,
   WalletCards,
   X,
 } from 'lucide-react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { logout } from '../../features/auth/services/authApi';
 import { FinanceScopeProvider } from '../../features/finance-scope/FinanceScopeContext';
 import { useFinanceScope } from '../../features/finance-scope/financeScope';
+import { getGroups } from '../../features/groups/groupsApi';
 import { es } from '../../i18n/es';
 import { clearAuthSession } from '../../lib/auth-session';
 
@@ -51,6 +54,11 @@ const navItems = [
     icon: Target,
   },
   {
+    label: es.navigation.groups,
+    to: '/app/groups',
+    icon: Users,
+  },
+  {
     label: es.navigation.settings,
     to: '/app/settings',
     icon: Settings,
@@ -71,6 +79,14 @@ function AppShell() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { availableScopes, canChooseScope, scope, setScope } =
     useFinanceScope();
+  const groupsQuery = useQuery({
+    queryKey: ['groups'],
+    queryFn: getGroups,
+  });
+  const pendingInvitations =
+    groupsQuery.data?.filter(
+      (group) => group.currentMemberStatus === 'INVITED',
+    ).length ?? 0;
   const logoutMutation = useMutation({
     mutationFn: logout,
     onSettled: () => {
@@ -86,16 +102,19 @@ function AppShell() {
         <span className="text-lg font-extrabold text-emerald-800">
           {es.brand}
         </span>
-        <button
-          aria-label={
-            isMenuOpen ? es.navigation.menuClose : es.navigation.menuOpen
-          }
-          className="grid size-10 place-items-center rounded-md hover:bg-slate-100"
-          onClick={() => setIsMenuOpen((current) => !current)}
-          type="button"
-        >
-          {isMenuOpen ? <X size={21} /> : <Menu size={21} />}
-        </button>
+        <div className="flex items-center gap-2">
+          <NotificationBell pendingInvitations={pendingInvitations} />
+          <button
+            aria-label={
+              isMenuOpen ? es.navigation.menuClose : es.navigation.menuOpen
+            }
+            className="grid size-10 place-items-center rounded-md hover:bg-slate-100"
+            onClick={() => setIsMenuOpen((current) => !current)}
+            type="button"
+          >
+            {isMenuOpen ? <X size={21} /> : <Menu size={21} />}
+          </button>
+        </div>
       </header>
 
       <aside
@@ -147,7 +166,8 @@ function AppShell() {
       ) : null}
 
       <main className="min-h-screen md:pl-64">
-        <div className="sticky top-0 z-20 hidden h-16 items-center justify-end border-b border-slate-200 bg-white px-6 md:flex lg:px-10">
+        <div className="sticky top-0 z-20 hidden h-16 items-center justify-end gap-4 border-b border-slate-200 bg-white px-6 md:flex lg:px-10">
+          <NotificationBell pendingInvitations={pendingInvitations} />
           {canChooseScope ? (
             <FinanceScopeSelector
               availableScopes={availableScopes}
@@ -168,6 +188,49 @@ function AppShell() {
           <Outlet />
         </div>
       </main>
+    </div>
+  );
+}
+
+function NotificationBell({
+  pendingInvitations,
+}: {
+  pendingInvitations: number;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div className="relative">
+      <button
+        aria-label={es.navigation.notifications}
+        className="relative grid size-10 place-items-center rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+        onClick={() => setIsOpen((current) => !current)}
+        type="button"
+      >
+        <Bell size={19} />
+        {pendingInvitations > 0 ? (
+          <span className="absolute -right-1 -top-1 grid min-w-5 place-items-center rounded-full bg-red-700 px-1 text-xs font-bold text-white">
+            {pendingInvitations}
+          </span>
+        ) : null}
+      </button>
+      {isOpen ? (
+        <div className="absolute right-0 top-12 z-50 w-72 rounded-lg border border-slate-200 bg-white p-4 shadow-xl">
+          <p className="font-bold">{es.navigation.notifications}</p>
+          {pendingInvitations > 0 ? (
+            <NavLink
+              className="mt-3 block rounded-md bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-900"
+              onClick={() => setIsOpen(false)}
+              to="/app/groups"
+            >
+              {es.navigation.pendingInvitations(pendingInvitations)}
+            </NavLink>
+          ) : (
+            <p className="mt-3 text-sm text-slate-500">
+              {es.navigation.noNotifications}
+            </p>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

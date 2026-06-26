@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { AccountFormPanel } from '../../features/accounts/components/AccountFormPanel';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import type { AccountFormValues } from '../../features/accounts/schemas/accountSchemas';
 import {
   archiveAccount,
@@ -36,6 +37,9 @@ export function AccountsPage() {
   const { scope } = useFinanceScope();
   const queryClient = useQueryClient();
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [archiveCandidate, setArchiveCandidate] = useState<Account | null>(
+    null,
+  );
   const [formError, setFormError] = useState('');
   const accountsQuery = useQuery({
     queryKey: ['accounts'],
@@ -59,6 +63,7 @@ export function AccountsPage() {
   const archiveMutation = useMutation({
     mutationFn: archiveAccount,
     onSuccess: async () => {
+      setArchiveCandidate(null);
       await queryClient.invalidateQueries({ queryKey: ['accounts'] });
     },
   });
@@ -76,15 +81,6 @@ export function AccountsPage() {
         ) ?? [],
     };
   }, [accountsQuery.data]);
-
-  const handleArchive = (account: Account) => {
-    const confirmed = window.confirm(
-      es.accounts.archiveConfirmation(account.name),
-    );
-    if (confirmed) {
-      archiveMutation.mutate(account.id);
-    }
-  };
 
   const handleCreate = (values: AccountFormValues) => {
     setFormError('');
@@ -151,7 +147,7 @@ export function AccountsPage() {
             currency={currency}
             isArchiving={archiveMutation.isPending}
             key={currency}
-            onArchive={handleArchive}
+            onArchive={setArchiveCandidate}
           />
         ) : null,
       )}
@@ -194,6 +190,17 @@ export function AccountsPage() {
             setIsPanelOpen(false);
           }}
           onSubmit={handleCreate}
+        />
+      ) : null}
+
+      {archiveCandidate ? (
+        <ConfirmDialog
+          actionLabel={es.accounts.archiveAction}
+          description={es.accounts.archiveConfirmation(archiveCandidate.name)}
+          isSaving={archiveMutation.isPending}
+          onCancel={() => setArchiveCandidate(null)}
+          onConfirm={() => archiveMutation.mutate(archiveCandidate.id)}
+          title={es.accounts.archiveTitle}
         />
       ) : null}
     </section>

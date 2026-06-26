@@ -13,6 +13,7 @@ import { BudgetsModule } from './modules/budgets/budgets.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { GoalsModule } from './modules/goals/goals.module';
+import { GroupsModule } from './modules/groups/groups.module';
 import { HealthModule } from './modules/health/health.module';
 import { ProfileModule } from './modules/profile/profile.module';
 import { TransactionsModule } from './modules/transactions/transactions.module';
@@ -36,6 +37,7 @@ import { TransactionsModule } from './modules/transactions/transactions.module';
     CategoriesModule,
     BudgetsModule,
     GoalsModule,
+    GroupsModule,
     DashboardModule,
     ProfileModule,
     TransactionsModule,

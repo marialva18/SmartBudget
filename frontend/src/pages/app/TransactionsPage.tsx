@@ -8,6 +8,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useState } from 'react';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { getAccounts } from '../../features/accounts/services/accountsApi';
 import { useFinanceScope } from '../../features/finance-scope/financeScope';
 import { TransactionFormPanel } from '../../features/transactions/components/TransactionFormPanel';
@@ -29,6 +30,8 @@ export function TransactionsPage() {
   const [search, setSearch] = useState('');
   const [accountId, setAccountId] = useState('');
   const [selected, setSelected] = useState<Transaction | null>(null);
+  const [deleteCandidate, setDeleteCandidate] =
+    useState<Transaction | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
   const [error, setError] = useState('');
   const { scope } = useFinanceScope();
@@ -74,7 +77,10 @@ export function TransactionsPage() {
   });
   const deleteMutation = useMutation({
     mutationFn: deleteTransaction,
-    onSuccess: refreshData,
+    onSuccess: async () => {
+      setDeleteCandidate(null);
+      await refreshData();
+    },
     onError: () => setError(es.transactions.deleteError),
   });
 
@@ -212,11 +218,7 @@ export function TransactionsPage() {
                 {query.data.items.map((transaction) => (
                   <TransactionRow
                     key={transaction.id}
-                    onDelete={() => {
-                      if (window.confirm(es.transactions.deleteConfirmation)) {
-                        deleteMutation.mutate(transaction.id);
-                      }
-                    }}
+                    onDelete={() => setDeleteCandidate(transaction)}
                     onEdit={() => {
                       setSelected(transaction);
                       setPanelOpen(true);
@@ -269,6 +271,17 @@ export function TransactionsPage() {
           }}
           onSubmit={(values) => saveMutation.mutate(values)}
           transaction={selected}
+        />
+      ) : null}
+
+      {deleteCandidate ? (
+        <ConfirmDialog
+          actionLabel={es.transactions.deleteConfirmationAction}
+          description={es.transactions.deleteConfirmation}
+          isSaving={deleteMutation.isPending}
+          onCancel={() => setDeleteCandidate(null)}
+          onConfirm={() => deleteMutation.mutate(deleteCandidate.id)}
+          title={es.transactions.deleteConfirmationTitle}
         />
       ) : null}
     </section>

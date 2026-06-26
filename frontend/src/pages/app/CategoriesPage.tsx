@@ -15,6 +15,7 @@ import {
   Utensils,
 } from 'lucide-react';
 import { useState } from 'react';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { CategoryFormPanel } from '../../features/categories/CategoryFormPanel';
 import {
   archiveCategory,
@@ -43,6 +44,9 @@ export function CategoriesPage() {
   const queryClient = useQueryClient();
   const [type, setType] = useState<'EXPENSE' | 'INCOME'>('EXPENSE');
   const [selected, setSelected] = useState<Category | null>(null);
+  const [archiveCandidate, setArchiveCandidate] = useState<Category | null>(
+    null,
+  );
   const [panelOpen, setPanelOpen] = useState(false);
   const [error, setError] = useState('');
   const query = useQuery({
@@ -70,6 +74,7 @@ export function CategoriesPage() {
   const archiveMutation = useMutation({
     mutationFn: archiveCategory,
     onSuccess: async () => {
+      setArchiveCandidate(null);
       setError('');
       await queryClient.invalidateQueries({ queryKey: ['categories'] });
     },
@@ -167,15 +172,7 @@ export function CategoriesPage() {
           <CategorySection
             categories={personalCategories}
             emptyMessage={es.categories.emptyPersonal}
-            onArchive={(category) => {
-              if (
-                window.confirm(
-                  es.categories.archiveConfirmation(category.name),
-                )
-              ) {
-                archiveMutation.mutate(category.id);
-              }
-            }}
+            onArchive={setArchiveCandidate}
             onEdit={(category) => {
               setSelected(category);
               setPanelOpen(true);
@@ -217,6 +214,19 @@ export function CategoriesPage() {
             setError('');
           }}
           onSubmit={(values) => saveMutation.mutate(values)}
+        />
+      ) : null}
+
+      {archiveCandidate ? (
+        <ConfirmDialog
+          actionLabel={es.categories.archiveAction}
+          description={es.categories.archiveConfirmation(
+            archiveCandidate.name,
+          )}
+          isSaving={archiveMutation.isPending}
+          onCancel={() => setArchiveCandidate(null)}
+          onConfirm={() => archiveMutation.mutate(archiveCandidate.id)}
+          title={es.categories.archiveTitle}
         />
       ) : null}
     </section>

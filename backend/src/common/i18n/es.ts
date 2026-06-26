@@ -49,6 +49,17 @@ export const es = {
     deleteOnlyCancelled: 'Solo puedes borrar metas canceladas.',
     deleted: 'Meta eliminada correctamente.',
   },
+  groups: {
+    missing: 'El grupo no existe o no tienes acceso.',
+    userMissing: 'El usuario invitado debe estar registrado y activo.',
+    selfInvitation: 'No puedes invitarte a tu propio grupo.',
+    memberDuplicate:
+      'Ese usuario ya pertenece al grupo o tiene una invitación pendiente.',
+    adminRequired: 'Solo un administrador del grupo puede invitar miembros.',
+    ownerRequired: 'Solo el propietario del grupo puede archivar el grupo.',
+    invitationMissing: 'La invitación no existe o ya fue respondida.',
+    invitationDeclined: 'Invitación rechazada correctamente.',
+  },
   profile: {
     incompleteOnboarding:
       'Completa tus objetivos y crea una cuenta antes de finalizar.',
@@ -83,6 +94,8 @@ export const es = {
     goalReservationAmountNumber: 'La reserva debe ser un número válido.',
     goalReservationAmountMinimum: 'La reserva debe ser mayor que cero.',
     goalReservationAmountMaximum: 'La reserva es demasiado alta.',
+    groupName:
+      'El nombre del grupo solo puede contener letras, números, espacios, apóstrofos o guiones.',
     monthStart: 'El mes debe enviarse como YYYY-MM-01.',
     password:
       'La contraseña debe incluir una mayúscula, un número y un carácter especial.',
