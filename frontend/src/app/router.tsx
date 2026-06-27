@@ -24,10 +24,11 @@ import { GroupsPage } from '../pages/app/GroupsPage'
 import { CalendarPage } from '../pages/app/CalendarPage'
 import { RecurringPage } from '../pages/app/RecurringPage'
 import { CoachPage } from '../pages/app/CoachPage'
+import { HomePage } from '../pages/public/HomePage'
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <Navigate to="/login" replace />,
+     element: <HomePage />,
     errorElement: <RouteErrorPage />,
   },
   {
