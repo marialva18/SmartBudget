@@ -9,7 +9,10 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
-import { getAccounts } from '../../features/accounts/services/accountsApi';
+import {
+  getAccounts,
+  type Account,
+} from '../../features/accounts/services/accountsApi';
 import { useFinanceScope } from '../../features/finance-scope/financeScope';
 import { TransactionFormPanel } from '../../features/transactions/components/TransactionFormPanel';
 import type { TransactionFormValues } from '../../features/transactions/schemas/transactionSchemas';
@@ -34,6 +37,8 @@ export function TransactionsPage() {
     useState<Transaction | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
   const [error, setError] = useState('');
+  const [highExpenseWarning, setHighExpenseWarning] =
+  useState<HighExpenseWarning | null>(null);
   const { scope } = useFinanceScope();
   const accountsQuery = useQuery({
     queryKey: ['accounts'],
@@ -85,6 +90,21 @@ export function TransactionsPage() {
   });
 
   const summary = getSummary(query.data?.summary ?? []);
+
+  const handleSubmitTransaction = (values: TransactionFormValues) => {
+  const warning = getHighExpenseWarning({
+    accounts: accountsQuery.data ?? [],
+    selected,
+    values,
+  });
+
+  if (warning) {
+    setHighExpenseWarning(warning);
+    return;
+  }
+
+  saveMutation.mutate(values);
+};
 
   return (
     <section className="space-y-7">
@@ -269,7 +289,7 @@ export function TransactionsPage() {
             setSelected(null);
             setError('');
           }}
-          onSubmit={(values) => saveMutation.mutate(values)}
+          onSubmit={handleSubmitTransaction}
           transaction={selected}
         />
       ) : null}
@@ -284,9 +304,35 @@ export function TransactionsPage() {
           title={es.transactions.deleteConfirmationTitle}
         />
       ) : null}
+
+      {highExpenseWarning ? (
+  <ConfirmDialog
+    actionLabel={es.transactions.highExpenseWarning.action}
+    description={buildHighExpenseWarningDescription(highExpenseWarning)}
+    isSaving={saveMutation.isPending}
+    onCancel={() => setHighExpenseWarning(null)}
+    onConfirm={() => {
+      const values = highExpenseWarning.values;
+      setHighExpenseWarning(null);
+      saveMutation.mutate(values);
+    }}
+    title={es.transactions.highExpenseWarning.title}
+  />
+) : null}
     </section>
   );
 }
+
+const HIGH_EXPENSE_WARNING_PERCENT = 0.5;
+
+type HighExpenseWarning = {
+  values: TransactionFormValues;
+  account: Account;
+  availableBalance: number;
+  comparisonBalance: number;
+  threshold: number;
+  percent: number;
+};
 
 function TransactionRow({
   onDelete,
@@ -431,7 +477,84 @@ function getSummary(
   }
   return result;
 }
+function getHighExpenseWarning({
+  accounts,
+  selected,
+  values,
+}: {
+  accounts: Account[];
+  selected: Transaction | null;
+  values: TransactionFormValues;
+}) {
+  if (values.type !== 'EXPENSE') {
+    return null;
+  }
 
+  const account = accounts.find(
+    (currentAccount) => currentAccount.id === values.accountId,
+  );
+
+  if (!account) {
+    return null;
+  }
+
+  const amount = Number(values.amount);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return null;
+  }
+
+  const availableBalance = Number(account.availableBalance);
+
+  const previousExpenseAmount =
+    selected?.type === 'EXPENSE' &&
+    selected.account.id === values.accountId
+      ? Number(selected.amount)
+      : 0;
+
+  const comparisonBalance = availableBalance + previousExpenseAmount;
+  const threshold = comparisonBalance * HIGH_EXPENSE_WARNING_PERCENT;
+
+  if (comparisonBalance <= 0 || amount > threshold) {
+    return {
+      values,
+      account,
+      availableBalance,
+      comparisonBalance,
+      threshold,
+      percent: HIGH_EXPENSE_WARNING_PERCENT * 100,
+    };
+  }
+
+  return null;
+}
+
+function buildHighExpenseWarningDescription(warning: HighExpenseWarning) {
+  const currency = warning.account.currency;
+  const amount = Number(warning.values.amount);
+
+  if (warning.comparisonBalance <= 0) {
+    return `${es.transactions.highExpenseWarning.noAvailableBalance}
+
+Cuenta: ${warning.account.name}
+Saldo disponible: ${formatMoney(warning.availableBalance, currency)}
+Gasto ingresado: ${formatMoney(amount, currency)}
+
+¿Deseas registrarlo de todas formas?`;
+  }
+
+  return `${es.transactions.highExpenseWarning.description}
+
+Cuenta: ${warning.account.name}
+Saldo disponible: ${formatMoney(warning.comparisonBalance, currency)}
+Umbral de alerta (${warning.percent}%): ${formatMoney(
+    warning.threshold,
+    currency,
+  )}
+Gasto ingresado: ${formatMoney(amount, currency)}
+
+¿Deseas registrarlo de todas formas?`;
+}
 function formatMoney(value: number, currency: 'PEN' | 'USD') {
   return new Intl.NumberFormat('es-PE', {
     style: 'currency',

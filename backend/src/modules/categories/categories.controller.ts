@@ -3,7 +3,6 @@ import {
   Controller,
   Get,
   Param,
-  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -14,7 +13,7 @@ import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { ListCategoriesDto } from './dto/list-categories.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-
+import { ParseSqlServerGuidPipe } from '../../common/validation/sql-server-guid';
 @Controller('categories')
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
@@ -38,7 +37,7 @@ export class CategoriesController {
   @Patch(':categoryId')
   update(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('categoryId', ParseUUIDPipe) categoryId: string,
+    @Param('categoryId', ParseSqlServerGuidPipe) categoryId: string,
     @Body() dto: UpdateCategoryDto,
   ) {
     return this.categoriesService.update(
@@ -52,7 +51,7 @@ export class CategoriesController {
   @Patch(':categoryId/archive')
   archive(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('categoryId', ParseUUIDPipe) categoryId: string,
+    @Param('categoryId', ParseSqlServerGuidPipe) categoryId: string,
   ) {
     return this.categoriesService.archive(
       user.userId,

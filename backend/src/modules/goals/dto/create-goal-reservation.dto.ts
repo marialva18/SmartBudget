@@ -4,15 +4,15 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  IsUUID,
   Max,
   MaxLength,
   Min,
 } from 'class-validator';
 import { es } from '../../../common/i18n/es';
+import { IsSqlServerGuid } from '../../../common/validation/sql-server-guid';
 
 export class CreateGoalReservationDto {
-  @IsUUID()
+  @IsSqlServerGuid({ message: 'Selecciona una cuenta válida.' })
   accountId!: string;
 
   @Type(() => Number)

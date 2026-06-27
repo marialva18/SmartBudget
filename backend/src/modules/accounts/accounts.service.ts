@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -7,7 +8,7 @@ import { Prisma } from '@prisma/client';
 import { es } from '../../common/i18n/es';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { CreateAccountDto } from './dto/create-account.dto';
-
+import { UpdateOpeningBalanceDto } from './dto/update-opening-balance.dto';
 type AccountRecord = {
   id: string;
   name: string;
@@ -120,6 +121,103 @@ export class AccountsService {
 
     const balances = await this.getBalanceMap(userId, accountId);
     return this.toResponse(account, balances.get(account.id));
+  }
+
+    async updateOpeningBalance(
+    userId: string,
+    accountId: string,
+    channel: 'WEB' | 'MOBILE',
+    dto: UpdateOpeningBalanceDto,
+  ) {
+    const account = await this.prisma.account.findFirst({
+      where: { id: accountId, userId },
+    });
+
+    if (!account) {
+      throw new NotFoundException(es.accounts.missing);
+    }
+
+    if (account.status === 'ARCHIVED') {
+      throw new BadRequestException('No puedes editar una cuenta archivada.');
+    }
+
+    const newOpeningBalance = new Prisma.Decimal(dto.openingBalance);
+
+    await this.prisma.$transaction(async (transaction) => {
+      const existingOpening = await transaction.transaction.findFirst({
+        where: {
+          userId,
+          accountId: account.id,
+          type: 'OPENING_BALANCE',
+          source: 'SYSTEM_OPENING',
+          deletedAt: null,
+        },
+        orderBy: { createdAt: 'asc' },
+      });
+
+      if (existingOpening) {
+        await transaction.transaction.update({
+          where: { id: existingOpening.id },
+          data: {
+            amount: newOpeningBalance,
+            currency: account.currency,
+            description: es.accounts.openingBalanceDescription,
+          },
+        });
+
+        await transaction.auditLog.create({
+          data: {
+            userId,
+            action: 'ACCOUNT_OPENING_BALANCE_UPDATED',
+            entity: 'ACCOUNT',
+            entityId: account.id,
+            channel,
+            oldValuesJson: JSON.stringify({
+              openingBalance: existingOpening.amount.toFixed(4),
+            }),
+            newValuesJson: JSON.stringify({
+              openingBalance: newOpeningBalance.toFixed(4),
+            }),
+          },
+        });
+
+        return;
+      }
+
+      if (newOpeningBalance.greaterThan(0)) {
+        await transaction.transaction.create({
+          data: {
+            userId,
+            accountId: account.id,
+            type: 'OPENING_BALANCE',
+            amount: newOpeningBalance,
+            currency: account.currency,
+            description: es.accounts.openingBalanceDescription,
+            occurredAt: account.createdAt,
+            source: 'SYSTEM_OPENING',
+            idempotencyKey: `account-opening:${account.id}`,
+          },
+        });
+      }
+
+      await transaction.auditLog.create({
+        data: {
+          userId,
+          action: 'ACCOUNT_OPENING_BALANCE_UPDATED',
+          entity: 'ACCOUNT',
+          entityId: account.id,
+          channel,
+          oldValuesJson: JSON.stringify({
+            openingBalance: '0.0000',
+          }),
+          newValuesJson: JSON.stringify({
+            openingBalance: newOpeningBalance.toFixed(4),
+          }),
+        },
+      });
+    });
+
+    return this.findOne(userId, accountId);
   }
 
   async archive(userId: string, accountId: string, channel: 'WEB' | 'MOBILE') {

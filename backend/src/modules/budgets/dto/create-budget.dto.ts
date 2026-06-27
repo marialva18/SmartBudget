@@ -4,19 +4,19 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  IsUUID,
   Matches,
   Max,
   Min,
 } from 'class-validator';
 import { es } from '../../../common/i18n/es';
+import { IsSqlServerGuid } from '../../../common/validation/sql-server-guid';
 
 export const BUDGET_CURRENCIES = ['PEN', 'USD'] as const;
 
 export class CreateBudgetDto {
   @IsOptional()
-  @IsUUID()
-  categoryId?: string;
+ @IsSqlServerGuid({ message: 'Selecciona una categoría válida.' })
+categoryId!: string;
 
   @Type(() => Number)
   @IsNumber(

@@ -5,7 +5,6 @@ import {
   Get,
   Headers,
   Param,
-  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -17,6 +16,7 @@ import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { ListTransactionsDto } from './dto/list-transactions.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { TransactionsService } from './transactions.service';
+import { ParseSqlServerGuidPipe } from '../../common/validation/sql-server-guid';
 
 @Controller('transactions')
 export class TransactionsController {
@@ -33,7 +33,7 @@ export class TransactionsController {
   @Get(':transactionId')
   findOne(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('transactionId', ParseUUIDPipe) transactionId: string,
+    @Param('transactionId', ParseSqlServerGuidPipe) transactionId: string,
   ) {
     return this.transactionsService.findOne(user.userId, transactionId);
   }
@@ -55,7 +55,7 @@ export class TransactionsController {
   @Patch(':transactionId')
   update(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('transactionId', ParseUUIDPipe) transactionId: string,
+    @Param('transactionId', ParseSqlServerGuidPipe) transactionId: string,
     @Body() dto: UpdateTransactionDto,
   ) {
     return this.transactionsService.update(
@@ -69,7 +69,7 @@ export class TransactionsController {
   @Delete(':transactionId')
   remove(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('transactionId', ParseUUIDPipe) transactionId: string,
+    @Param('transactionId', ParseSqlServerGuidPipe) transactionId: string,
   ) {
     return this.transactionsService.remove(
       user.userId,

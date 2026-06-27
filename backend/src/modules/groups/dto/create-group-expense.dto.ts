@@ -7,13 +7,13 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  IsUUID,
   Matches,
   Max,
   MaxLength,
   Min,
 } from 'class-validator';
 import { es } from '../../../common/i18n/es';
+import { IsSqlServerGuid } from '../../../common/validation/sql-server-guid';
 
 export const GROUP_EXPENSE_CURRENCIES = ['PEN', 'USD'] as const;
 
@@ -39,12 +39,15 @@ export class CreateGroupExpenseDto {
   @IsIn(GROUP_EXPENSE_CURRENCIES)
   currency!: (typeof GROUP_EXPENSE_CURRENCIES)[number];
 
-  @IsUUID()
+  @IsSqlServerGuid({ message: 'Selecciona un miembro válido.' })
   paidByMemberId!: string;
 
   @IsArray()
   @ArrayMinSize(1)
-  @IsUUID('all', { each: true })
+  @IsSqlServerGuid({
+  each: true,
+  message: 'Selecciona participantes válidos.',
+})
 participantMemberIds!: string[];
 
   @IsOptional()

@@ -3,7 +3,6 @@ import {
   Controller,
   Get,
   Param,
-  ParseUUIDPipe,
   Patch,
   Post,
 } from '@nestjs/common';
@@ -13,6 +12,7 @@ import { CreateGroupExpenseDto } from './dto/create-group-expense.dto';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { InviteGroupMemberDto } from './dto/invite-group-member.dto';
 import { GroupsService } from './groups.service';
+import { ParseSqlServerGuidPipe } from '../../common/validation/sql-server-guid';
 
 @Controller('groups')
 export class GroupsController {
@@ -31,7 +31,7 @@ export class GroupsController {
   @Post(':groupId/invitations')
   invite(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('groupId', ParseUUIDPipe) groupId: string,
+    @Param('groupId', ParseSqlServerGuidPipe) groupId: string,
     @Body() dto: InviteGroupMemberDto,
   ) {
     return this.groupsService.invite(user.userId, user.platform, groupId, dto);
@@ -40,7 +40,7 @@ export class GroupsController {
   @Get(':groupId/expenses')
   findExpenses(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('groupId', ParseUUIDPipe) groupId: string,
+    @Param('groupId', ParseSqlServerGuidPipe) groupId: string,
   ) {
     return this.groupsService.findExpenses(user.userId, groupId);
   }
@@ -48,7 +48,7 @@ export class GroupsController {
   @Post(':groupId/expenses')
   createExpense(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('groupId', ParseUUIDPipe) groupId: string,
+    @Param('groupId', ParseSqlServerGuidPipe) groupId: string,
     @Body() dto: CreateGroupExpenseDto,
   ) {
     return this.groupsService.createExpense(
@@ -62,7 +62,7 @@ export class GroupsController {
   @Patch(':groupId/accept')
   accept(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('groupId', ParseUUIDPipe) groupId: string,
+    @Param('groupId', ParseSqlServerGuidPipe) groupId: string,
   ) {
     return this.groupsService.accept(user.userId, user.platform, groupId);
   }
@@ -70,7 +70,7 @@ export class GroupsController {
   @Patch(':groupId/decline')
   decline(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('groupId', ParseUUIDPipe) groupId: string,
+    @Param('groupId', ParseSqlServerGuidPipe) groupId: string,
   ) {
     return this.groupsService.decline(user.userId, user.platform, groupId);
   }
@@ -78,7 +78,7 @@ export class GroupsController {
   @Patch(':groupId/archive')
   archive(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('groupId', ParseUUIDPipe) groupId: string,
+    @Param('groupId', ParseSqlServerGuidPipe) groupId: string,
   ) {
     return this.groupsService.archive(user.userId, user.platform, groupId);
   }

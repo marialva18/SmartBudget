@@ -1,5 +1,8 @@
 import { apiRequest } from '../../../lib/api';
-import type { AccountFormValues } from '../schemas/accountSchemas';
+import type {
+  AccountFormValues,
+  OpeningBalanceFormValues,
+} from '../schemas/accountSchemas';
 
 export type Account = {
   id: string;
@@ -29,6 +32,16 @@ export function createAccount(values: AccountFormValues) {
 export function archiveAccount(accountId: string) {
   return apiRequest<Account>(`/accounts/${accountId}/archive`, {
     method: 'PATCH',
+  });
+}
+
+export function updateOpeningBalance(
+  accountId: string,
+  values: OpeningBalanceFormValues,
+) {
+  return apiRequest<Account>(`/accounts/${accountId}/opening-balance`, {
+    method: 'PATCH',
+    body: values,
   });
 }
 

@@ -22,7 +22,7 @@ import { RouteErrorPage } from '../pages/RouteErrorPage'
 import { GoalsPage as AppGoalsPage } from '../pages/app/GoalsPage'
 import { GroupsPage } from '../pages/app/GroupsPage'
 import { CalendarPage } from '../pages/app/CalendarPage'
-
+import { RecurringPage } from '../pages/app/RecurringPage'
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -114,6 +114,10 @@ export const router = createBrowserRouter([
           {
             path: 'calendar',
             element: <CalendarPage />,
+          },
+          {
+            path: 'recurring',
+            element: <RecurringPage />,
           },
           {
             path: 'categories',

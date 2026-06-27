@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -16,6 +15,7 @@ import { CreateGoalReservationDto } from './dto/create-goal-reservation.dto';
 import { ListGoalsDto } from './dto/list-goals.dto';
 import { UpdateGoalDto } from './dto/update-goal.dto';
 import { GoalsService } from './goals.service';
+import { ParseSqlServerGuidPipe } from '../../common/validation/sql-server-guid';
 
 @Controller('goals')
 export class GoalsController {
@@ -37,7 +37,7 @@ export class GoalsController {
   @Patch(':goalId')
   update(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('goalId', ParseUUIDPipe) goalId: string,
+    @Param('goalId', ParseSqlServerGuidPipe) goalId: string,
     @Body() dto: UpdateGoalDto,
   ) {
     return this.goalsService.update(user.userId, user.platform, goalId, dto);
@@ -46,7 +46,7 @@ export class GoalsController {
   @Patch(':goalId/complete')
   complete(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('goalId', ParseUUIDPipe) goalId: string,
+    @Param('goalId', ParseSqlServerGuidPipe) goalId: string,
   ) {
     return this.goalsService.complete(user.userId, user.platform, goalId);
   }
@@ -54,7 +54,7 @@ export class GoalsController {
   @Patch(':goalId/cancel')
   cancel(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('goalId', ParseUUIDPipe) goalId: string,
+    @Param('goalId', ParseSqlServerGuidPipe) goalId: string,
   ) {
     return this.goalsService.cancel(user.userId, user.platform, goalId);
   }
@@ -62,7 +62,7 @@ export class GoalsController {
   @Delete(':goalId')
   remove(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('goalId', ParseUUIDPipe) goalId: string,
+    @Param('goalId', ParseSqlServerGuidPipe) goalId: string,
   ) {
     return this.goalsService.remove(user.userId, user.platform, goalId);
   }
@@ -70,7 +70,7 @@ export class GoalsController {
   @Post(':goalId/reservations')
   reserve(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('goalId', ParseUUIDPipe) goalId: string,
+    @Param('goalId', ParseSqlServerGuidPipe) goalId: string,
     @Body() dto: CreateGoalReservationDto,
   ) {
     return this.goalsService.reserve(user.userId, user.platform, goalId, dto);
@@ -79,8 +79,8 @@ export class GoalsController {
   @Patch(':goalId/reservations/:reservationId/reverse')
   reverseReservation(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('goalId', ParseUUIDPipe) goalId: string,
-    @Param('reservationId', ParseUUIDPipe) reservationId: string,
+    @Param('goalId', ParseSqlServerGuidPipe) goalId: string,
+    @Param('reservationId', ParseSqlServerGuidPipe) reservationId: string,
   ) {
     return this.goalsService.reverseReservation(
       user.userId,

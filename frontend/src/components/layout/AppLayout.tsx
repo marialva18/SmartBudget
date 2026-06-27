@@ -1,5 +1,7 @@
 import {
   Bell,
+  CalendarClock,
+  CalendarDays,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -10,7 +12,6 @@ import {
   Target,
   Users,
   WalletCards,
-  CalendarDays,
   X,
 } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -22,6 +23,7 @@ import { useFinanceScope } from '../../features/finance-scope/financeScope';
 import { getGroups } from '../../features/groups/groupsApi';
 import { es } from '../../i18n/es';
 import { clearAuthSession } from '../../lib/auth-session';
+import { getRecurringDueOccurrences } from '../../features/recurring/services/recurringApi';
 
 const navItems = [
   {
@@ -43,7 +45,13 @@ const navItems = [
   label: es.navigation.calendar,
   to: '/app/calendar',
   icon: CalendarDays,
-},
+  },
+    {
+    label: es.navigation.recurring,
+    to: '/app/recurring',
+    icon: CalendarClock,
+  },
+
   {
     label: es.navigation.categories,
     to: '/app/categories',
@@ -89,10 +97,15 @@ function AppShell() {
     queryKey: ['groups'],
     queryFn: getGroups,
   });
+  const recurringDueQuery = useQuery({
+    queryKey: ['recurring-due'],
+    queryFn: getRecurringDueOccurrences,
+  });
   const pendingInvitations =
     groupsQuery.data?.filter(
       (group) => group.currentMemberStatus === 'INVITED',
     ).length ?? 0;
+  const pendingRecurringDue = recurringDueQuery.data?.length ?? 0;
   const logoutMutation = useMutation({
     mutationFn: logout,
     onSettled: () => {
@@ -109,7 +122,10 @@ function AppShell() {
           {es.brand}
         </span>
         <div className="flex items-center gap-2">
-          <NotificationBell pendingInvitations={pendingInvitations} />
+          <NotificationBell
+            pendingInvitations={pendingInvitations}
+            pendingRecurringDue={pendingRecurringDue}
+          />
           <button
             aria-label={
               isMenuOpen ? es.navigation.menuClose : es.navigation.menuOpen
@@ -173,7 +189,10 @@ function AppShell() {
 
       <main className="min-h-screen md:pl-64">
         <div className="sticky top-0 z-20 hidden h-16 items-center justify-end gap-4 border-b border-slate-200 bg-white px-6 md:flex lg:px-10">
-          <NotificationBell pendingInvitations={pendingInvitations} />
+          <NotificationBell
+            pendingInvitations={pendingInvitations}
+            pendingRecurringDue={pendingRecurringDue}
+          />
           {canChooseScope ? (
             <FinanceScopeSelector
               availableScopes={availableScopes}
@@ -200,10 +219,13 @@ function AppShell() {
 
 function NotificationBell({
   pendingInvitations,
+  pendingRecurringDue,
 }: {
   pendingInvitations: number;
+  pendingRecurringDue: number;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const totalNotifications = pendingInvitations + pendingRecurringDue;
   return (
     <div className="relative">
       <button
@@ -213,23 +235,39 @@ function NotificationBell({
         type="button"
       >
         <Bell size={19} />
-        {pendingInvitations > 0 ? (
+        {totalNotifications > 0 ? (
           <span className="absolute -right-1 -top-1 grid min-w-5 place-items-center rounded-full bg-red-700 px-1 text-xs font-bold text-white">
-            {pendingInvitations}
+            {totalNotifications}
           </span>
         ) : null}
       </button>
       {isOpen ? (
         <div className="absolute right-0 top-12 z-50 w-72 rounded-lg border border-slate-200 bg-white p-4 shadow-xl">
           <p className="font-bold">{es.navigation.notifications}</p>
-          {pendingInvitations > 0 ? (
-            <NavLink
-              className="mt-3 block rounded-md bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-900"
-              onClick={() => setIsOpen(false)}
-              to="/app/groups"
-            >
-              {es.navigation.pendingInvitations(pendingInvitations)}
-            </NavLink>
+                    {totalNotifications > 0 ? (
+            <div className="mt-3 space-y-2">
+              {pendingRecurringDue > 0 ? (
+                <NavLink
+                  className="block rounded-md bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900"
+                  onClick={() => setIsOpen(false)}
+                  to="/app/recurring"
+                >
+                  {pendingRecurringDue === 1
+                    ? 'Tienes 1 recurrencia pendiente por confirmar'
+                    : `Tienes ${pendingRecurringDue} recurrencias pendientes por confirmar`}
+                </NavLink>
+              ) : null}
+
+              {pendingInvitations > 0 ? (
+                <NavLink
+                  className="block rounded-md bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-900"
+                  onClick={() => setIsOpen(false)}
+                  to="/app/groups"
+                >
+                  {es.navigation.pendingInvitations(pendingInvitations)}
+                </NavLink>
+              ) : null}
+            </div>
           ) : (
             <p className="mt-3 text-sm text-slate-500">
               {es.navigation.noNotifications}

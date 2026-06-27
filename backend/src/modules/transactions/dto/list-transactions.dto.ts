@@ -5,11 +5,11 @@ import {
   IsInt,
   IsOptional,
   IsString,
-  IsUUID,
   Max,
   MaxLength,
   Min,
 } from 'class-validator';
+import { IsSqlServerGuid } from '../../../common/validation/sql-server-guid';
 
 export class ListTransactionsDto {
   @IsOptional()
@@ -34,11 +34,11 @@ export class ListTransactionsDto {
   currency?: 'PEN' | 'USD';
 
   @IsOptional()
-  @IsUUID()
-  accountId?: string;
+ @IsSqlServerGuid({ message: 'Selecciona una cuenta válida.' })
+accountId?: string;
 
   @IsOptional()
-  @IsUUID()
+  @IsSqlServerGuid({ message: 'Selecciona una categoría válida.' })
   categoryId?: string;
 
   @IsOptional()

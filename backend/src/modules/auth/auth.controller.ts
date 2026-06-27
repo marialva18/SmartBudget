@@ -6,7 +6,6 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  ParseUUIDPipe,
   Post,
   Req,
   Res,
@@ -22,6 +21,7 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ParseSqlServerGuidPipe } from '../../common/validation/sql-server-guid';
 
 @Controller('auth')
 export class AuthController {
@@ -122,7 +122,7 @@ export class AuthController {
   @Delete('sessions/:sessionId')
   async revokeSession(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('sessionId', ParseUUIDPipe)
+    @Param('sessionId', ParseSqlServerGuidPipe)
     sessionId: string,
   ): Promise<void> {
     await this.authService.revokeSession(user.userId, sessionId);

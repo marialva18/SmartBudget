@@ -1,11 +1,12 @@
 export const es = {
   brand: 'Smart Budget',
   common: {
-    cancel: 'Cancelar',
-    retry: 'Reintentar',
-    saving: 'Guardando...',
-    archive: 'Archivar',
-  },
+  cancel: 'Cancelar',
+  retry: 'Reintentar',
+  saving: 'Guardando...',
+  archive: 'Archivar',
+  loading: 'Cargando...',
+},
   auth: {
     verifyingSession: 'Validando tu sesión...',
   },
@@ -27,6 +28,7 @@ export const es = {
     transactions: 'Movimientos',
     calendar: 'Calendario',
     categories: 'Categorías',
+    recurring: 'Recurrencias',
     budgets: 'Presupuestos',
     goals: 'Metas',
     groups: 'Grupos',
@@ -115,7 +117,71 @@ export const es = {
       category: 'Selecciona una categoría.',
       date: 'Selecciona una fecha válida.',
     },
+    highExpenseWarning: {
+  title: 'Gasto alto detectado',
+  description:
+    'Este gasto supera el 50% del saldo disponible de la cuenta seleccionada. SmartBudget recomienda revisarlo antes de registrarlo.',
+  noAvailableBalance:
+    'La cuenta seleccionada no tiene saldo disponible positivo. Registrar este gasto puede dejarla en negativo.',
+  account: 'Cuenta',
+  availableBalance: 'Saldo disponible',
+  threshold: 'Umbral de alerta',
+  expenseAmount: 'Gasto ingresado',
+  action: 'Registrar de todas formas',
+},
+  },recurring: {
+  section: 'Automatización financiera',
+  title: 'Recurrencias',
+  subtitle:
+    'Programa ingresos o gastos frecuentes. SmartBudget los dejará como pendientes para confirmar antes de afectar tu saldo.',
+  newSchedule: 'Nueva recurrencia',
+  totalRules: 'Reglas visibles',
+  activeRules: 'Activas',
+  pausedRules: 'Pausadas',
+  pendingNote:
+    'Las recurrencias todavía no modifican tu saldo. Primero aparecerán como pendientes por confirmar.',
+  emptyTitle: 'Aún no tienes recurrencias',
+  emptyDescription:
+    'Crea reglas para gastos o ingresos repetidos como sueldo, Netflix, pasajes o ahorros frecuentes.',
+  loadError: 'No pudimos cargar tus recurrencias.',
+  saveError: 'No pudimos guardar la recurrencia.',
+  statusError: 'No pudimos actualizar el estado de la recurrencia.',
+  unnamed: 'Recurrencia sin descripción',
+  nextDue: 'próxima fecha',
+  endsOn: 'termina',
+  pause: 'Pausar',
+  resume: 'Reactivar',
+  cancel: 'Cancelar',
+  cancelAction: 'Cancelar recurrencia',
+  cancelConfirmationTitle: 'Cancelar recurrencia',
+  cancelConfirmation:
+    'Esta recurrencia dejará de generar pendientes futuras. No se eliminarán movimientos ya confirmados.',
+  status: {
+    all: 'Todos los estados',
+    active: 'Activas',
+    paused: 'Pausadas',
+    cancelled: 'Canceladas',
   },
+  statusLabel: {
+    ACTIVE: 'Activa',
+    PAUSED: 'Pausada',
+    CANCELLED: 'Cancelada',
+  },
+  frequency: {
+    DAILY: {
+      single: 'Diaria',
+      plural: 'días',
+    },
+    WEEKLY: {
+      single: 'Semanal',
+      plural: 'semanas',
+    },
+    MONTHLY: {
+      single: 'Mensual',
+      plural: 'meses',
+    },
+  },
+},
   categories: {
     section: 'Categorías',
     title: 'Organiza tus ingresos y gastos',
@@ -488,5 +554,17 @@ export const es = {
       negativeOpeningBalance: 'El saldo inicial no puede ser negativo.',
       highOpeningBalance: 'El saldo inicial es demasiado alto.',
     },
+    openingBalanceEdit: {
+  eyebrow: 'Ajuste de cuenta',
+  title: 'Editar saldo inicial',
+  newOpeningBalance: 'Nuevo saldo inicial',
+  submit: 'Actualizar saldo inicial',
+  warningTitle: 'Este cambio no modificará tus movimientos',
+  warningDescription:
+    'Solo se ajustará el saldo base de la cuenta. Tus ingresos, gastos y reservas registrados se mantendrán igual.',
+  action: 'Editar saldo inicial',
+  success: 'Saldo inicial actualizado correctamente.',
+  error: 'No pudimos actualizar el saldo inicial.',
+},
   },
 } as const;

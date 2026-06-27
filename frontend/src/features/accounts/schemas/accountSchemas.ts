@@ -16,4 +16,13 @@ export const accountSchema = z.object({
     .max(999_999_999_999, es.accounts.validation.highOpeningBalance),
 });
 
+export const openingBalanceSchema = z.object({
+  openingBalance: z
+    .number({ error: 'Ingresa un saldo inicial válido.' })
+    .min(0, es.accounts.validation.negativeOpeningBalance)
+    .max(999_999_999_999, es.accounts.validation.highOpeningBalance),
+});
+
+export type OpeningBalanceFormValues = z.infer<typeof openingBalanceSchema>;
+
 export type AccountFormValues = z.infer<typeof accountSchema>;

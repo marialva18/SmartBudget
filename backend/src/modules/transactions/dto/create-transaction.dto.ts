@@ -5,11 +5,11 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  IsUUID,
   Max,
   MaxLength,
   Min,
 } from 'class-validator';
+import { IsSqlServerGuid } from '../../../common/validation/sql-server-guid';
 
 export class CreateTransactionDto {
   @IsIn(['INCOME', 'EXPENSE'])
@@ -21,10 +21,10 @@ export class CreateTransactionDto {
   @Max(999_999_999_999)
   amount!: number;
 
-  @IsUUID()
+  @IsSqlServerGuid({ message: 'Selecciona una cuenta válida.' })
   accountId!: string;
 
-  @IsUUID()
+  @IsSqlServerGuid({ message: 'Selecciona una categoría válida.' })
   categoryId!: string;
 
   @Type(() => Date)

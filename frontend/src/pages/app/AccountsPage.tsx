@@ -5,16 +5,21 @@ import {
   Landmark,
   Plus,
   RefreshCw,
+  Pencil,
   WalletCards,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { AccountFormPanel } from '../../features/accounts/components/AccountFormPanel';
+import { OpeningBalancePanel } from '../../features/accounts/components/OpeningBalancePanel';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import type { AccountFormValues } from '../../features/accounts/schemas/accountSchemas';
+import type { OpeningBalanceFormValues } from '../../features/accounts/schemas/accountSchemas';
+
 import {
   archiveAccount,
   createAccount,
   getAccounts,
+  updateOpeningBalance,
   type Account,
 } from '../../features/accounts/services/accountsApi';
 import { ApiError } from '../../lib/api';
@@ -41,6 +46,8 @@ export function AccountsPage() {
     null,
   );
   const [formError, setFormError] = useState('');
+  const [openingBalanceCandidate, setOpeningBalanceCandidate] =
+  useState<Account | null>(null);
   const accountsQuery = useQuery({
     queryKey: ['accounts'],
     queryFn: getAccounts,
@@ -68,6 +75,32 @@ export function AccountsPage() {
     },
   });
 
+  const openingBalanceMutation = useMutation({
+  mutationFn: ({
+    accountId,
+    values,
+  }: {
+    accountId: string;
+    values: OpeningBalanceFormValues;
+  }) => updateOpeningBalance(accountId, values),
+  onSuccess: async () => {
+    setFormError('');
+    setOpeningBalanceCandidate(null);
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['accounts'] }),
+      queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] }),
+      queryClient.invalidateQueries({ queryKey: ['calendar-month'] }),
+    ]);
+  },
+  onError: (error) => {
+    setFormError(
+      error instanceof ApiError
+        ? error.message
+        : es.accounts.openingBalanceEdit.error,
+    );
+  },
+});
+
   const groupedAccounts = useMemo(() => {
     const active = accountsQuery.data?.filter(
       (account) => account.status === 'ACTIVE',
@@ -86,6 +119,18 @@ export function AccountsPage() {
     setFormError('');
     createMutation.mutate(values);
   };
+
+  const handleUpdateOpeningBalance = (values: OpeningBalanceFormValues) => {
+  if (!openingBalanceCandidate) {
+    return;
+  }
+
+  setFormError('');
+  openingBalanceMutation.mutate({
+    accountId: openingBalanceCandidate.id,
+    values,
+  });
+};
 
   return (
     <section className="space-y-8">
@@ -142,13 +187,14 @@ export function AccountsPage() {
       {(['PEN', 'USD'] as const).map((currency) =>
         groupedAccounts[currency].length > 0 &&
         (scope === 'ALL' || scope === currency) ? (
-          <CurrencySection
-            accounts={groupedAccounts[currency]}
-            currency={currency}
-            isArchiving={archiveMutation.isPending}
-            key={currency}
-            onArchive={setArchiveCandidate}
-          />
+        <CurrencySection
+          accounts={groupedAccounts[currency]}
+          currency={currency}
+          isArchiving={archiveMutation.isPending}
+          key={currency}
+          onArchive={setArchiveCandidate}
+          onEditOpeningBalance={setOpeningBalanceCandidate}
+        />
         ) : null,
       )}
 
@@ -193,6 +239,18 @@ export function AccountsPage() {
         />
       ) : null}
 
+      {openingBalanceCandidate ? (
+  <OpeningBalancePanel
+    account={openingBalanceCandidate}
+    isSaving={openingBalanceMutation.isPending}
+    onClose={() => {
+      setFormError('');
+      setOpeningBalanceCandidate(null);
+    }}
+    onSubmit={handleUpdateOpeningBalance}
+  />
+) : null}
+
       {archiveCandidate ? (
         <ConfirmDialog
           actionLabel={es.accounts.archiveAction}
@@ -206,12 +264,12 @@ export function AccountsPage() {
     </section>
   );
 }
-
 type CurrencySectionProps = {
   accounts: Account[];
   currency: 'PEN' | 'USD';
   isArchiving: boolean;
   onArchive: (account: Account) => void;
+  onEditOpeningBalance: (account: Account) => void;
 };
 
 function CurrencySection({
@@ -219,6 +277,7 @@ function CurrencySection({
   currency,
   isArchiving,
   onArchive,
+  onEditOpeningBalance,
 }: CurrencySectionProps) {
   const totals = accounts.reduce(
     (current, account) => ({
@@ -267,6 +326,17 @@ function CurrencySection({
                     </p>
                   </div>
                 </div>
+                <div className="flex gap-1">
+                <button
+                  aria-label={`Editar saldo inicial de ${account.name}`}
+                  className="grid size-9 place-items-center rounded-md text-slate-500 hover:bg-emerald-50 hover:text-emerald-800"
+                  onClick={() => onEditOpeningBalance(account)}
+                  title={es.accounts.openingBalanceEdit.action}
+                  type="button"
+                >
+                  <Pencil size={18} />
+                </button>
+
                 <button
                   aria-label={`Archivar ${account.name}`}
                   className="grid size-9 place-items-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50"
@@ -277,6 +347,7 @@ function CurrencySection({
                 >
                   <Archive size={18} />
                 </button>
+</div>
               </div>
 
               <div className="mt-6 grid grid-cols-3 gap-3 border-t border-slate-100 pt-5">

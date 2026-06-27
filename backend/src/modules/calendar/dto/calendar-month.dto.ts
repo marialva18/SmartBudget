@@ -1,4 +1,5 @@
-import { IsIn, IsOptional, IsString, IsUUID, Matches } from 'class-validator';
+import { IsIn, IsOptional, IsString, Matches } from 'class-validator';
+import { IsSqlServerGuid } from '../../../common/validation/sql-server-guid';
 import { es } from '../../../common/i18n/es';
 
 export class CalendarMonthDto {
@@ -14,6 +15,6 @@ export class CalendarMonthDto {
   currency?: 'PEN' | 'USD';
 
   @IsOptional()
-  @IsUUID()
-  accountId?: string;
+  @IsSqlServerGuid({ message: 'Selecciona una cuenta válida.' })
+accountId?: string;
 }

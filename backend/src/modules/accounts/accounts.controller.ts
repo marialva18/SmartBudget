@@ -3,7 +3,6 @@ import {
   Controller,
   Get,
   Param,
-  ParseUUIDPipe,
   Patch,
   Post,
 } from '@nestjs/common';
@@ -11,7 +10,8 @@ import { CurrentUser } from '../../common/auth/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/auth/authenticated-user';
 import { AccountsService } from './accounts.service';
 import { CreateAccountDto } from './dto/create-account.dto';
-
+import { ParseSqlServerGuidPipe } from '../../common/validation/sql-server-guid';
+import { UpdateOpeningBalanceDto } from './dto/update-opening-balance.dto';
 @Controller('accounts')
 export class AccountsController {
   constructor(private readonly accountsService: AccountsService) {}
@@ -32,15 +32,29 @@ export class AccountsController {
   @Get(':accountId')
   findOne(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('accountId', ParseUUIDPipe) accountId: string,
+    @Param('accountId', ParseSqlServerGuidPipe) accountId: string,
   ) {
     return this.accountsService.findOne(user.userId, accountId);
+  }
+
+    @Patch(':accountId/opening-balance')
+  updateOpeningBalance(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('accountId', ParseSqlServerGuidPipe) accountId: string,
+    @Body() dto: UpdateOpeningBalanceDto,
+  ) {
+    return this.accountsService.updateOpeningBalance(
+      user.userId,
+      accountId,
+      user.platform,
+      dto,
+    );
   }
 
   @Patch(':accountId/archive')
   archive(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('accountId', ParseUUIDPipe) accountId: string,
+    @Param('accountId', ParseSqlServerGuidPipe) accountId: string,
   ) {
     return this.accountsService.archive(user.userId, accountId, user.platform);
   }

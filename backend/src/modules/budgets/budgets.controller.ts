@@ -3,7 +3,6 @@ import {
   Controller,
   Get,
   Param,
-  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -14,6 +13,7 @@ import { BudgetsService } from './budgets.service';
 import { CreateBudgetDto } from './dto/create-budget.dto';
 import { ListBudgetsDto } from './dto/list-budgets.dto';
 import { UpdateBudgetDto } from './dto/update-budget.dto';
+import { ParseSqlServerGuidPipe } from '../../common/validation/sql-server-guid';
 
 @Controller('budgets')
 export class BudgetsController {
@@ -35,7 +35,7 @@ export class BudgetsController {
   @Patch(':budgetId')
   update(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('budgetId', ParseUUIDPipe) budgetId: string,
+    @Param('budgetId', ParseSqlServerGuidPipe) budgetId: string,
     @Body() dto: UpdateBudgetDto,
   ) {
     return this.budgetsService.update(

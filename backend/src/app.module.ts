@@ -18,7 +18,7 @@ import { HealthModule } from './modules/health/health.module';
 import { ProfileModule } from './modules/profile/profile.module';
 import { TransactionsModule } from './modules/transactions/transactions.module';
 import { CalendarModule } from './modules/calendar/calendar.module';
-
+import { RecurringModule } from './modules/recurring/recurring.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -42,6 +42,7 @@ import { CalendarModule } from './modules/calendar/calendar.module';
     DashboardModule,
     CalendarModule,
     ProfileModule,
+    RecurringModule,
     TransactionsModule,
   ],
   controllers: [AppController],
