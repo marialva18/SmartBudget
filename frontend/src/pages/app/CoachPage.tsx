@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+﻿import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Bot,
   Loader2,
@@ -40,7 +40,7 @@ export function CoachPage() {
       id: 'welcome',
       role: 'COACH',
       content:
-        'Hola, soy tu coach financiero de SmartBudget. Puedo ayudarte a entender tus gastos, revisar tu mes y darte ideas simples para ordenar mejor tu dinero.',
+        'Hola, soy tu coach financiero de Qori. Puedo ayudarte a entender tus gastos, revisar tu mes y darte ideas simples para ordenar mejor tu dinero.',
       provider: 'LOCAL',
     },
   ]);
@@ -159,7 +159,7 @@ export function CoachPage() {
             </h1>
 
             <p className="mt-3 max-w-2xl text-sm leading-6 text-emerald-50/90">
-              Pregunta sobre tus gastos, metas o hábitos del mes. SmartBudget
+              Pregunta sobre tus gastos, metas o hábitos del mes. Qori
               revisa un resumen de tus datos y te responde con recomendaciones
               claras, cercanas y accionables.
             </p>
@@ -184,7 +184,7 @@ export function CoachPage() {
               </span>
 
               <div>
-                <h2 className="font-bold">Chat con SmartBudget</h2>
+                <h2 className="font-bold">Chat con Qori</h2>
                 <p className="text-sm text-slate-500">
                   Orientación educativa, no asesoría financiera profesional.
                 </p>
@@ -302,7 +302,7 @@ export function CoachPage() {
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
             <h2 className="font-bold">Importante</h2>
             <p className="mt-2 leading-6">
-              El coach usa un resumen financiero de SmartBudget para orientarte,
+              El coach usa un resumen financiero de Qori para orientarte,
               pero no reemplaza asesoría financiera profesional. Sus respuestas
               son educativas y deben ayudarte a tomar mejores decisiones.
             </p>

@@ -1,12 +1,12 @@
-export const es = {
-  brand: 'Smart Budget',
+﻿export const es = {
+  brand: 'Qori',
   common: {
-  cancel: 'Cancelar',
-  retry: 'Reintentar',
-  saving: 'Guardando...',
-  archive: 'Archivar',
-  loading: 'Cargando...',
-},
+    cancel: 'Cancelar',
+    retry: 'Reintentar',
+    saving: 'Guardando...',
+    archive: 'Archivar',
+    loading: 'Cargando...',
+  },
   auth: {
     verifyingSession: 'Validando tu sesión...',
   },
@@ -35,7 +35,9 @@ export const es = {
     settings: 'Configuración',
     notifications: 'Notificaciones',
     pendingInvitations: (count: number) =>
-      count === 1 ? '1 invitación pendiente' : `${count} invitaciones pendientes`,
+      count === 1
+        ? '1 invitación pendiente'
+        : `${count} invitaciones pendientes`,
     noNotifications: 'No tienes avisos pendientes.',
     financeView: 'Vista financiera',
     allCurrencies: 'Vista general',
@@ -45,24 +47,24 @@ export const es = {
     logout: 'Cerrar sesión',
   },
   calendar: {
-  section: 'Calendario',
-  title: 'Calendario financiero',
-  subtitle:
-    'Visualiza tus ingresos y gastos confirmados agrupados por día.',
-  previousMonth: 'Anterior',
-  nextMonth: 'Siguiente',
-  allAccounts: 'Todas las cuentas',
-  selectedDay: 'Día seleccionado',
-  income: 'Ingresos',
-  expense: 'Gastos',
-  net: 'Neto',
-  noActivity: 'Sin movimientos',
-  loadError: 'No pudimos cargar tu calendario financiero.',
-  emptyDayTitle: 'Sin movimientos este día',
-  emptyDayDescription:
-    'Cuando registres ingresos o gastos en esta fecha aparecerán aquí.',
-  unnamedMovement: 'Movimiento sin descripción',
-},
+    section: 'Calendario',
+    title: 'Calendario financiero',
+    subtitle:
+      'Visualiza tus ingresos y gastos confirmados agrupados por día.',
+    previousMonth: 'Anterior',
+    nextMonth: 'Siguiente',
+    allAccounts: 'Todas las cuentas',
+    selectedDay: 'Día seleccionado',
+    income: 'Ingresos',
+    expense: 'Gastos',
+    net: 'Neto',
+    noActivity: 'Sin movimientos',
+    loadError: 'No pudimos cargar tu calendario financiero.',
+    emptyDayTitle: 'Sin movimientos este día',
+    emptyDayDescription:
+      'Cuando registres ingresos o gastos en esta fecha aparecerán aquí.',
+    unnamedMovement: 'Movimiento sin descripción',
+  },
   transactions: {
     section: 'Movimientos',
     title: 'Ingresos y gastos',
@@ -118,70 +120,71 @@ export const es = {
       date: 'Selecciona una fecha válida.',
     },
     highExpenseWarning: {
-  title: 'Gasto alto detectado',
-  description:
-    'Este gasto supera el 50% del saldo disponible de la cuenta seleccionada. SmartBudget recomienda revisarlo antes de registrarlo.',
-  noAvailableBalance:
-    'La cuenta seleccionada no tiene saldo disponible positivo. Registrar este gasto puede dejarla en negativo.',
-  account: 'Cuenta',
-  availableBalance: 'Saldo disponible',
-  threshold: 'Umbral de alerta',
-  expenseAmount: 'Gasto ingresado',
-  action: 'Registrar de todas formas',
-},
-  },recurring: {
-  section: 'Automatización financiera',
-  title: 'Recurrencias',
-  subtitle:
-    'Programa ingresos o gastos frecuentes. SmartBudget los dejará como pendientes para confirmar antes de afectar tu saldo.',
-  newSchedule: 'Nueva recurrencia',
-  totalRules: 'Reglas visibles',
-  activeRules: 'Activas',
-  pausedRules: 'Pausadas',
-  pendingNote:
-    'Las recurrencias todavía no modifican tu saldo. Primero aparecerán como pendientes por confirmar.',
-  emptyTitle: 'Aún no tienes recurrencias',
-  emptyDescription:
-    'Crea reglas para gastos o ingresos repetidos como sueldo, Netflix, pasajes o ahorros frecuentes.',
-  loadError: 'No pudimos cargar tus recurrencias.',
-  saveError: 'No pudimos guardar la recurrencia.',
-  statusError: 'No pudimos actualizar el estado de la recurrencia.',
-  unnamed: 'Recurrencia sin descripción',
-  nextDue: 'próxima fecha',
-  endsOn: 'termina',
-  pause: 'Pausar',
-  resume: 'Reactivar',
-  cancel: 'Cancelar',
-  cancelAction: 'Cancelar recurrencia',
-  cancelConfirmationTitle: 'Cancelar recurrencia',
-  cancelConfirmation:
-    'Esta recurrencia dejará de generar pendientes futuras. No se eliminarán movimientos ya confirmados.',
-  status: {
-    all: 'Todos los estados',
-    active: 'Activas',
-    paused: 'Pausadas',
-    cancelled: 'Canceladas',
-  },
-  statusLabel: {
-    ACTIVE: 'Activa',
-    PAUSED: 'Pausada',
-    CANCELLED: 'Cancelada',
-  },
-  frequency: {
-    DAILY: {
-      single: 'Diaria',
-      plural: 'días',
-    },
-    WEEKLY: {
-      single: 'Semanal',
-      plural: 'semanas',
-    },
-    MONTHLY: {
-      single: 'Mensual',
-      plural: 'meses',
+      title: 'Gasto alto detectado',
+      description:
+        'Este gasto supera el porcentaje de alerta configurado para tu saldo disponible. Qori recomienda revisarlo antes de registrarlo.',
+      noAvailableBalance:
+        'La cuenta seleccionada no tiene saldo disponible positivo. Registrar este gasto puede dejarla en negativo.',
+      account: 'Cuenta',
+      availableBalance: 'Saldo disponible',
+      threshold: 'Umbral de alerta',
+      expenseAmount: 'Gasto ingresado',
+      action: 'Registrar de todas formas',
     },
   },
-},
+  recurring: {
+    section: 'Automatización financiera',
+    title: 'Recurrencias',
+    subtitle:
+      'Programa ingresos o gastos frecuentes. Qori los dejará como pendientes para confirmar antes de afectar tu saldo.',
+    newSchedule: 'Nueva recurrencia',
+    totalRules: 'Reglas visibles',
+    activeRules: 'Activas',
+    pausedRules: 'Pausadas',
+    pendingNote:
+      'Las recurrencias todavía no modifican tu saldo. Primero aparecerán como pendientes por confirmar.',
+    emptyTitle: 'Aún no tienes recurrencias',
+    emptyDescription:
+      'Crea reglas para gastos o ingresos repetidos como sueldo, Netflix, pasajes o ahorros frecuentes.',
+    loadError: 'No pudimos cargar tus recurrencias.',
+    saveError: 'No pudimos guardar la recurrencia.',
+    statusError: 'No pudimos actualizar el estado de la recurrencia.',
+    unnamed: 'Recurrencia sin descripción',
+    nextDue: 'próxima fecha',
+    endsOn: 'termina',
+    pause: 'Pausar',
+    resume: 'Reactivar',
+    cancel: 'Cancelar',
+    cancelAction: 'Cancelar recurrencia',
+    cancelConfirmationTitle: 'Cancelar recurrencia',
+    cancelConfirmation:
+      'Esta recurrencia dejará de generar pendientes futuras. No se eliminarán movimientos ya confirmados.',
+    status: {
+      all: 'Todos los estados',
+      active: 'Activas',
+      paused: 'Pausadas',
+      cancelled: 'Canceladas',
+    },
+    statusLabel: {
+      ACTIVE: 'Activa',
+      PAUSED: 'Pausada',
+      CANCELLED: 'Cancelada',
+    },
+    frequency: {
+      DAILY: {
+        single: 'Diaria',
+        plural: 'días',
+      },
+      WEEKLY: {
+        single: 'Semanal',
+        plural: 'semanas',
+      },
+      MONTHLY: {
+        single: 'Mensual',
+        plural: 'meses',
+      },
+    },
+  },
   categories: {
     section: 'Categorías',
     title: 'Organiza tus ingresos y gastos',
@@ -299,13 +302,18 @@ export const es = {
     disabled: 'Desactivado',
     noObjectives: 'Sin objetivos registrados',
     highExpenseWarningPercent: 'Alerta de gasto alto',
-highExpenseWarningDescription:
-  'Define cuándo SmartBudget debe pedirte confirmación antes de registrar un gasto grande.',
-highExpenseWarningOptions: {
-  30: '30% del saldo disponible — más sensible',
-  50: '50% del saldo disponible — equilibrado',
-  70: '70% del saldo disponible — menos frecuente',
-},
+    highExpenseWarningDescription:
+      'Define cuándo Qori debe pedirte confirmación antes de registrar un gasto grande.',
+    highExpenseWarningOptions: {
+      30: '30% del saldo disponible — más sensible',
+      50: '50% del saldo disponible — equilibrado',
+      70: '70% del saldo disponible — menos frecuente',
+    },
+    maxExpenseAmountTitle: 'Límite máximo por gasto',
+    maxExpenseAmountDescription:
+      'Define un tope personal para evitar registrar gastos demasiado altos. Déjalo vacío si no quieres aplicar límite.',
+    maxExpenseAmountPen: 'Máximo por gasto en PEN',
+    maxExpenseAmountUsd: 'Máximo por gasto en USD',
     themes: {
       LIGHT: 'Claro',
       DARK: 'Oscuro',
@@ -324,6 +332,8 @@ highExpenseWarningOptions: {
         'El nombre solo puede contener letras, espacios, apóstrofos o guiones.',
       timezone: 'Selecciona una zona horaria válida.',
       highExpenseWarningPercent: 'Selecciona un porcentaje de alerta válido.',
+      maxExpenseAmount:
+        'Ingresa un monto mayor que cero o deja el campo vacío.',
     },
   },
   goals: {
@@ -468,7 +478,8 @@ highExpenseWarningOptions: {
         'El nombre solo puede contener letras, números, espacios, apóstrofos o guiones.',
       longDescription: 'La descripción es demasiado larga.',
       email: 'Ingresa un correo válido.',
-      shortExpenseDescription: 'Ingresa una descripción de al menos 2 caracteres.',
+      shortExpenseDescription:
+        'Ingresa una descripción de al menos 2 caracteres.',
       longExpenseDescription: 'La descripción del gasto es demasiado larga.',
       invalidExpenseDescription:
         'La descripción solo puede contener letras, números y puntuación básica.',
@@ -495,7 +506,8 @@ highExpenseWarningOptions: {
     monthlyExpense: 'Gastos',
     monthlyBalance: 'Balance mensual',
     budgetProgress: 'Presupuesto mensual',
-    budgetUsed: (used: string, planned: string) => `${used} usados de ${planned}`,
+    budgetUsed: (used: string, planned: string) =>
+      `${used} usados de ${planned}`,
     noBudget: 'Aún no definiste un presupuesto para este mes.',
     manageBudgets: 'Administrar presupuestos',
     activeGoals: 'Metas activas',
@@ -551,8 +563,7 @@ highExpenseWarningOptions: {
       namePlaceholder: 'Ej. Cuenta sueldo',
       currency: 'Moneda',
       openingBalance: 'Saldo inicial',
-      openingBalanceHelp:
-        'Se registrará como un movimiento de apertura.',
+      openingBalanceHelp: 'Se registrará como un movimiento de apertura.',
       submit: 'Guardar cuenta',
     },
     validation: {
@@ -564,16 +575,16 @@ highExpenseWarningOptions: {
       highOpeningBalance: 'El saldo inicial es demasiado alto.',
     },
     openingBalanceEdit: {
-  eyebrow: 'Ajuste de cuenta',
-  title: 'Editar saldo inicial',
-  newOpeningBalance: 'Nuevo saldo inicial',
-  submit: 'Actualizar saldo inicial',
-  warningTitle: 'Este cambio no modificará tus movimientos',
-  warningDescription:
-    'Solo se ajustará el saldo base de la cuenta. Tus ingresos, gastos y reservas registrados se mantendrán igual.',
-  action: 'Editar saldo inicial',
-  success: 'Saldo inicial actualizado correctamente.',
-  error: 'No pudimos actualizar el saldo inicial.',
-},
+      eyebrow: 'Ajuste de cuenta',
+      title: 'Editar saldo inicial',
+      newOpeningBalance: 'Nuevo saldo inicial',
+      submit: 'Actualizar saldo inicial',
+      warningTitle: 'Este cambio no modificará tus movimientos',
+      warningDescription:
+        'Solo se ajustará el saldo base de la cuenta. Tus ingresos, gastos y reservas registrados se mantendrán igual.',
+      action: 'Editar saldo inicial',
+      success: 'Saldo inicial actualizado correctamente.',
+      error: 'No pudimos actualizar el saldo inicial.',
+    },
   },
 } as const;

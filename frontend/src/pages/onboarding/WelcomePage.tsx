@@ -1,4 +1,4 @@
-import { ArrowRight, BarChart3, PiggyBank, WalletCards } from 'lucide-react';
+﻿import { ArrowRight, BarChart3, PiggyBank, WalletCards } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { OnboardingStep } from '../../features/onboarding/components/OnboardingStep';
 
@@ -8,7 +8,7 @@ export function WelcomePage() {
     <OnboardingStep
       current={1}
       description="Configuraremos tus preferencias y tu primera cuenta sin mezclar monedas."
-      title="Bienvenida a Smart Budget"
+      title="Bienvenida a Qori"
     >
       <div className="grid gap-3 sm:grid-cols-3">
         {[
@@ -36,3 +36,4 @@ export function WelcomePage() {
     </OnboardingStep>
   );
 }
+

@@ -29,9 +29,9 @@ describe('environment configuration', () => {
     expect(() =>
       validateEnvironment({
         NODE_ENV: 'development',
-        EMAIL_PROVIDER: 'smtp',
+        EMAIL_PROVIDER: 'mailgun',
       }),
-    ).toThrow('EMAIL_PROVIDER must be empty or resend.');
+    ).toThrow('EMAIL_PROVIDER must be empty, resend or smtp.');
   });
 
   it('requires email settings when Resend is enabled', () => {

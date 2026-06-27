@@ -1,37 +1,75 @@
-import { MailCheck } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { AuthCard } from '../../features/auth/components/AuthCard';
 
 export function EmailSentPage() {
   const [searchParams] = useSearchParams();
-  const email = searchParams.get('email') ?? 'tu correo';
+
+  const email = searchParams.get('email');
+  const mode = searchParams.get('mode') ?? 'reset';
+  const message = searchParams.get('message');
+
+  const isVerification = mode === 'verify';
+  const protectedEmail = email ? maskEmail(email) : null;
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-5 py-10">
-      <AuthCard className="w-full max-w-[560px] text-center">
-        <div className="mx-auto mb-8 flex h-40 w-40 items-center justify-center rounded-full bg-[#f2f4f6] text-[#006b5f]">
-          <MailCheck size={72} strokeWidth={1.5} />
+    <main className="grid min-h-screen place-items-center bg-[#f4f8f7] px-4 py-10">
+      <section className="w-full max-w-md rounded-3xl bg-white p-8 text-center shadow-xl shadow-emerald-900/10">
+        <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-100 text-emerald-800">
+          <Mail size={28} />
         </div>
-        <h1 className="text-3xl font-bold">Revisa tu correo</h1>
-        <p className="mx-auto mt-3 max-w-[420px] text-lg text-[#3c4a46]">
-          Si existe una cuenta asociada a <strong>{email}</strong>, enviaremos
-          un enlace para restablecer tu contraseña.
+
+        <h1 className="mt-6 text-3xl font-black text-slate-950">
+          {isVerification ? 'Verifica tu correo' : 'Revisa tu correo'}
+        </h1>
+
+        <p className="mt-3 leading-7 text-slate-600">
+          {message ??
+            (isVerification
+              ? 'Si el registro fue válido, enviaremos un enlace para activar la cuenta.'
+              : 'Si el correo está registrado y habilitado, enviaremos las instrucciones correspondientes.')}
         </p>
+
+        {protectedEmail ? (
+          <p className="mt-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
+            {protectedEmail}
+          </p>
+        ) : null}
+
+        <p className="mt-5 text-sm leading-6 text-slate-500">
+          {isVerification
+            ? 'Por seguridad, revisa tu bandeja de entrada y abre el enlace recibido para activar la cuenta.'
+            : 'Por seguridad, no confirmamos si el correo existe o si está habilitado.'}
+        </p>
+
         <div className="mt-8 grid gap-3">
           <Link
-            className="rounded-lg bg-[#006b5f] px-5 py-3 font-semibold text-white"
+            className="rounded-full bg-emerald-800 px-5 py-3 font-bold text-white transition hover:bg-emerald-900"
             to="/login"
           >
-            Volver al inicio de sesión
+            Ir a iniciar sesión
           </Link>
+
           <Link
-            className="rounded-lg border border-[#006b5f] px-5 py-3 font-semibold text-[#006b5f]"
-            to="/forgot-password"
+            className="rounded-full border border-emerald-200 px-5 py-3 font-bold text-emerald-800 transition hover:bg-emerald-50"
+            to="/"
           >
-            Enviar a otro correo
+            Volver al inicio
           </Link>
         </div>
-      </AuthCard>
-    </div>
+      </section>
+    </main>
   );
+}
+
+function maskEmail(email: string) {
+  const [localPart, domain] = email.split('@');
+
+  if (!localPart || !domain) {
+    return 'Correo protegido';
+  }
+
+  const visibleStart = localPart.slice(0, 2);
+  const visibleEnd = localPart.length > 4 ? localPart.slice(-1) : '';
+
+  return `${visibleStart}***${visibleEnd}@${domain}`;
 }

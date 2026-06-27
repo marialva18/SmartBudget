@@ -1,4 +1,4 @@
-import { ValidationPipe } from '@nestjs/common';
+﻿import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
@@ -52,8 +52,9 @@ async function bootstrap() {
 }
 bootstrap().catch((error) => {
   console.error(
-    'Failed to start SmartBudget API',
+    'Failed to start Qori API',
     error instanceof Error ? error.message : 'Unknown startup error',
   );
   process.exit(1);
 });
+

@@ -1,4 +1,4 @@
-import {
+﻿import {
   ConflictException,
   Injectable,
   NotFoundException,
@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { randomBytes } from 'node:crypto';
+import * as nodemailer from 'nodemailer';
 import type { AuthenticatedUser } from '../../common/auth/authenticated-user';
 import { es } from '../../common/i18n/es';
 import { PrismaService } from '../../database/prisma/prisma.service';
@@ -16,6 +17,7 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { VerifyEmailDto } from './dto/verify-email.dto';
 
 type AuthUser = {
   id: string;
@@ -39,10 +41,23 @@ type SessionResult = {
   };
 };
 
-type PasswordRecoveryEmailConfig = {
-  apiKey: string;
+type MessageResponse = {
+  message: string;
+};
+
+type EmailConfig = {
+  provider: 'resend' | 'smtp';
   from: string;
   resetAppUrl: string;
+  verificationAppUrl: string;
+  passwordResetExpiresInMinutes: number;
+  emailVerificationExpiresInMinutes: number;
+  resendApiKey?: string;
+  smtpHost?: string;
+  smtpPort?: number;
+  smtpSecure?: boolean;
+  smtpUser?: string;
+  smtpPass?: string;
 };
 
 @Injectable()
@@ -53,18 +68,34 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
-  async register(
-    dto: RegisterDto,
-    context: SessionContext,
-  ): Promise<SessionResult> {
+  async register(dto: RegisterDto): Promise<MessageResponse> {
+    const emailConfig = this.getEmailConfig(es.auth.emailUnavailable);
     const email = dto.email.trim().toLowerCase();
+
     const existingUser = await this.prisma.user.findUnique({
       where: { email },
-      select: { id: true },
+      select: {
+        id: true,
+        email: true,
+        status: true,
+        emailVerifiedAt: true,
+      },
     });
 
     if (existingUser) {
-      throw new ConflictException(es.auth.registeredEmail);
+      if (existingUser.status !== 'ACTIVE' || existingUser.emailVerifiedAt) {
+        throw new ConflictException(es.auth.registeredEmail);
+      }
+
+      await this.issueEmailVerification(
+        existingUser.id,
+        existingUser.email,
+        emailConfig,
+      );
+
+      return {
+        message: es.auth.emailVerificationSent,
+      };
     }
 
     const passwordHash = await argon2.hash(dto.password);
@@ -79,18 +110,64 @@ export class AuthService {
           },
         },
       },
-      include: { profile: true },
+      select: {
+        id: true,
+        email: true,
+      },
     });
 
-    return this.createSession(
-      {
-        id: user.id,
-        email: user.email,
-        displayName: user.profile?.displayName ?? dto.displayName.trim(),
-        onboardingCompleted: user.profile?.onboardingCompleted ?? false,
-      },
-      context,
+    await this.issueEmailVerification(user.id, user.email, emailConfig);
+
+    return {
+      message: es.auth.emailVerificationSent,
+    };
+  }
+
+  async verifyEmail(dto: VerifyEmailDto): Promise<MessageResponse> {
+    const [tokenId, tokenSecret] = dto.token.split('.');
+
+    if (!tokenId || !tokenSecret) {
+      throw new UnauthorizedException(es.auth.invalidVerificationLink);
+    }
+
+    const verificationToken =
+      await this.prisma.emailVerificationToken.findUnique({
+        where: { id: tokenId },
+      });
+
+    if (
+      !verificationToken ||
+      verificationToken.usedAt ||
+      verificationToken.expiresAt <= new Date()
+    ) {
+      throw new UnauthorizedException(es.auth.invalidVerificationLink);
+    }
+
+    const matches = await argon2.verify(
+      verificationToken.tokenHash,
+      tokenSecret,
     );
+
+    if (!matches) {
+      throw new UnauthorizedException(es.auth.invalidVerificationLink);
+    }
+
+    const now = new Date();
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: verificationToken.userId },
+        data: { emailVerifiedAt: now },
+      }),
+      this.prisma.emailVerificationToken.update({
+        where: { id: verificationToken.id },
+        data: { usedAt: now },
+      }),
+    ]);
+
+    return {
+      message: es.auth.emailVerified,
+    };
   }
 
   async login(dto: LoginDto, context: SessionContext): Promise<SessionResult> {
@@ -111,6 +188,10 @@ export class AuthService {
 
     if (!passwordMatches) {
       throw new UnauthorizedException(es.auth.invalidCredentials);
+    }
+
+    if (!user.emailVerifiedAt) {
+      throw new UnauthorizedException(es.auth.emailNotVerified);
     }
 
     await this.prisma.user.update({
@@ -150,12 +231,14 @@ export class AuthService {
       currentToken.revokedAt ||
       currentToken.session.revokedAt ||
       currentToken.expiresAt <= new Date() ||
-      currentToken.user.status !== 'ACTIVE'
+      currentToken.user.status !== 'ACTIVE' ||
+      !currentToken.user.emailVerifiedAt
     ) {
       throw new UnauthorizedException(es.auth.invalidSession);
     }
 
     const matches = await argon2.verify(currentToken.tokenHash, tokenSecret);
+
     if (!matches) {
       throw new UnauthorizedException(es.auth.invalidSession);
     }
@@ -289,6 +372,7 @@ export class AuthService {
     }
 
     const now = new Date();
+
     await this.prisma.$transaction([
       this.prisma.userSession.update({
         where: { id: session.id },
@@ -301,23 +385,29 @@ export class AuthService {
     ]);
   }
 
-  async forgotPassword(dto: ForgotPasswordDto) {
-    const emailConfig = this.getPasswordRecoveryEmailConfig();
+  async forgotPassword(dto: ForgotPasswordDto): Promise<MessageResponse> {
+    const emailConfig = this.getEmailConfig(es.auth.recoveryUnavailable);
     const email = dto.email.trim().toLowerCase();
     const user = await this.prisma.user.findUnique({
       where: { email },
-      select: { id: true },
+      select: {
+        id: true,
+        emailVerifiedAt: true,
+      },
     });
 
-    if (user) {
+    if (user?.emailVerifiedAt) {
       const resetTokenSecret = randomBytes(32).toString('base64url');
       const resetToken = await this.prisma.passwordResetToken.create({
         data: {
           userId: user.id,
           tokenHash: await argon2.hash(resetTokenSecret),
-          expiresAt: this.addDays(1),
+          expiresAt: this.addMinutes(
+            emailConfig.passwordResetExpiresInMinutes,
+          ),
         },
       });
+
       try {
         await this.sendPasswordRecoveryEmail(
           email,
@@ -329,6 +419,7 @@ export class AuthService {
           where: { id: resetToken.id },
           data: { usedAt: new Date() },
         });
+
         throw error;
       }
     }
@@ -338,7 +429,7 @@ export class AuthService {
     };
   }
 
-  async resetPassword(dto: ResetPasswordDto) {
+  async resetPassword(dto: ResetPasswordDto): Promise<MessageResponse> {
     const [tokenId, tokenSecret] = dto.token.split('.');
 
     if (!tokenId || !tokenSecret) {
@@ -358,6 +449,7 @@ export class AuthService {
     }
 
     const matches = await argon2.verify(resetToken.tokenHash, tokenSecret);
+
     if (!matches) {
       throw new UnauthorizedException(es.auth.invalidResetLink);
     }
@@ -453,9 +545,11 @@ export class AuthService {
     serializedToken: string | undefined,
   ): [string, string] {
     const [tokenId, tokenSecret] = serializedToken?.split('.') ?? [];
+
     if (!tokenId || !tokenSecret) {
       throw new UnauthorizedException(es.auth.invalidSession);
     }
+
     return [tokenId, tokenSecret];
   }
 
@@ -464,58 +558,221 @@ export class AuthService {
       'REFRESH_COOKIE_MAX_AGE_MS',
       604_800_000,
     );
+
     return new Date(Date.now() + maxAge);
   }
 
-  private getPasswordRecoveryEmailConfig(): PasswordRecoveryEmailConfig {
+  private async issueEmailVerification(
+    userId: string,
+    email: string,
+    config: EmailConfig,
+  ) {
+    const verificationSecret = randomBytes(32).toString('base64url');
+    const verificationToken =
+      await this.prisma.emailVerificationToken.create({
+        data: {
+          userId,
+          tokenHash: await argon2.hash(verificationSecret),
+          expiresAt: this.addMinutes(
+            config.emailVerificationExpiresInMinutes,
+          ),
+        },
+      });
+
+    try {
+      await this.sendEmailVerificationEmail(
+        email,
+        `${verificationToken.id}.${verificationSecret}`,
+        config,
+      );
+    } catch (error) {
+      await this.prisma.emailVerificationToken.update({
+        where: { id: verificationToken.id },
+        data: { usedAt: new Date() },
+      });
+
+      throw error;
+    }
+  }
+
+  private getEmailConfig(errorMessage: string): EmailConfig {
     const provider = this.configService
       .get<string>('EMAIL_PROVIDER', '')
       .trim();
-    const apiKey = this.configService.get<string>('RESEND_API_KEY', '').trim();
+
     const from = this.configService.get<string>('EMAIL_FROM', '').trim();
     const resetAppUrl = this.configService
       .get<string>('PASSWORD_RESET_APP_URL', '')
       .trim();
+    const verificationAppUrl = this.configService
+      .get<string>('EMAIL_VERIFICATION_APP_URL', '')
+      .trim();
 
-    if (provider !== 'resend' || !apiKey || !from || !resetAppUrl) {
-      throw new ServiceUnavailableException(es.auth.recoveryUnavailable);
+    const passwordResetExpiresInMinutes = this.configService.get<number>(
+      'PASSWORD_RESET_EXPIRES_IN_MINUTES',
+      30,
+    );
+    const emailVerificationExpiresInMinutes = this.configService.get<number>(
+      'EMAIL_VERIFICATION_EXPIRES_IN_MINUTES',
+      1440,
+    );
+
+    if (!from || !resetAppUrl || !verificationAppUrl) {
+      throw new ServiceUnavailableException(errorMessage);
     }
 
-    return { apiKey, from, resetAppUrl };
+    if (provider === 'resend') {
+      const resendApiKey = this.configService
+        .get<string>('RESEND_API_KEY', '')
+        .trim();
+
+      if (!resendApiKey) {
+        throw new ServiceUnavailableException(errorMessage);
+      }
+
+      return {
+        provider,
+        from,
+        resetAppUrl,
+        verificationAppUrl,
+        passwordResetExpiresInMinutes,
+        emailVerificationExpiresInMinutes,
+        resendApiKey,
+      };
+    }
+
+    if (provider === 'smtp') {
+      const smtpHost = this.configService.get<string>('SMTP_HOST', '').trim();
+      const smtpPort = this.configService.get<number>('SMTP_PORT', 587);
+      const smtpSecure = this.configService.get<boolean>(
+        'SMTP_SECURE',
+        false,
+      );
+      const smtpUser = this.configService.get<string>('SMTP_USER', '').trim();
+      const smtpPass = this.configService.get<string>('SMTP_PASS', '').trim();
+
+      if (!smtpHost || !smtpUser || !smtpPass) {
+        throw new ServiceUnavailableException(errorMessage);
+      }
+
+      return {
+        provider,
+        from,
+        resetAppUrl,
+        verificationAppUrl,
+        passwordResetExpiresInMinutes,
+        emailVerificationExpiresInMinutes,
+        smtpHost,
+        smtpPort,
+        smtpSecure,
+        smtpUser,
+        smtpPass,
+      };
+    }
+
+    throw new ServiceUnavailableException(errorMessage);
   }
 
   private async sendPasswordRecoveryEmail(
     email: string,
     token: string,
-    config: PasswordRecoveryEmailConfig,
+    config: EmailConfig,
   ) {
-    const resetUrl = `${config.resetAppUrl.replace(/\/+$/g, '')}/reset-password?token=${encodeURIComponent(token)}`;
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${config.apiKey}`,
-        'Content-Type': 'application/json',
+    const resetUrl = `${config.resetAppUrl.replace(
+  /\/+$/g,
+  '',
+)}?token=${encodeURIComponent(token)}`;
+    await this.sendEmail({
+      config,
+      to: email,
+      subject: 'Recupera tu contraseña de Qori',
+      html: [
+        '<p>Recibimos una solicitud para restablecer tu contraseña.</p>',
+        `<p><a href="${resetUrl}">Restablecer contraseña</a></p>`,
+        '<p>Si no solicitaste este cambio, puedes ignorar este correo.</p>',
+      ].join(''),
+    });
+  }
+
+  private async sendEmailVerificationEmail(
+    email: string,
+    token: string,
+    config: EmailConfig,
+  ) {
+    const verificationUrl = `${config.verificationAppUrl.replace(
+      /\/+$/g,
+      '',
+    )}?token=${encodeURIComponent(token)}`;
+
+    await this.sendEmail({
+      config,
+      to: email,
+      subject: 'Verifica tu cuenta de Qori',
+      html: [
+        '<p>Gracias por crear tu cuenta en Qori.</p>',
+        '<p>Para activar tu cuenta, confirma tu correo usando este enlace:</p>',
+        `<p><a href="${verificationUrl}">Verificar mi correo</a></p>`,
+        '<p>Si no creaste esta cuenta, puedes ignorar este correo.</p>',
+      ].join(''),
+    });
+  }
+
+  private async sendEmail({
+    config,
+    to,
+    subject,
+    html,
+  }: {
+    config: EmailConfig;
+    to: string;
+    subject: string;
+    html: string;
+  }) {
+    if (config.provider === 'resend') {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${config.resendApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: config.from,
+          to,
+          subject,
+          html,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new ServiceUnavailableException(es.auth.emailUnavailable);
+      }
+
+      return;
+    }
+
+    const transporter = nodemailer.createTransport({
+      host: config.smtpHost,
+      port: config.smtpPort,
+      secure: config.smtpSecure,
+      auth: {
+        user: config.smtpUser,
+        pass: config.smtpPass,
       },
-      body: JSON.stringify({
-        from: config.from,
-        to: email,
-        subject: 'Recupera tu contrasena de Smart Budget',
-        html: [
-          '<p>Recibimos una solicitud para restablecer tu contrasena.</p>',
-          `<p><a href="${resetUrl}">Restablecer contrasena</a></p>`,
-          '<p>Si no solicitaste este cambio, puedes ignorar este correo.</p>',
-        ].join(''),
-      }),
     });
 
-    if (!response.ok) {
-      throw new ServiceUnavailableException(es.auth.recoveryUnavailable);
+    try {
+      await transporter.sendMail({
+        from: config.from,
+        to,
+        subject,
+        html,
+      });
+    } catch {
+      throw new ServiceUnavailableException(es.auth.emailUnavailable);
     }
   }
 
-  private addDays(days: number): Date {
-    const date = new Date();
-    date.setDate(date.getDate() + days);
-    return date;
+  private addMinutes(minutes: number): Date {
+    return new Date(Date.now() + minutes * 60_000);
   }
 }

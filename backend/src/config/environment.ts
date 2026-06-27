@@ -5,6 +5,8 @@ const REQUIRED_PRODUCTION_VALUES = [
   'JWT_ACCESS_SECRET',
 ] as const;
 
+const EMAIL_PROVIDERS = ['resend', 'smtp'] as const;
+
 export function validateEnvironment(config: Environment): Environment {
   const nodeEnv = readString(config.NODE_ENV, 'development');
 
@@ -15,20 +17,28 @@ export function validateEnvironment(config: Environment): Environment {
   if (nodeEnv === 'production') {
     for (const key of REQUIRED_PRODUCTION_VALUES) {
       const value = readString(config[key]);
+
       if (!value || value.includes('replace_') || value.includes('change_me')) {
         throw new Error(`${key} must be configured for production.`);
       }
     }
 
     const accessSecret = readString(config.JWT_ACCESS_SECRET);
+
     if (accessSecret.length < 32) {
       throw new Error('JWT_ACCESS_SECRET must contain at least 32 characters.');
     }
   }
 
   const emailProvider = readString(config.EMAIL_PROVIDER);
-  if (emailProvider && emailProvider !== 'resend') {
-    throw new Error('EMAIL_PROVIDER must be empty or resend.');
+
+  if (
+    emailProvider &&
+    !EMAIL_PROVIDERS.includes(
+      emailProvider as (typeof EMAIL_PROVIDERS)[number],
+    )
+  ) {
+    throw new Error('EMAIL_PROVIDER must be empty, resend or smtp.');
   }
 
   if (emailProvider === 'resend') {
@@ -36,11 +46,28 @@ export function validateEnvironment(config: Environment): Environment {
       'RESEND_API_KEY',
       'EMAIL_FROM',
       'PASSWORD_RESET_APP_URL',
+      'EMAIL_VERIFICATION_APP_URL',
     ]) {
       if (!readString(config[key])) {
         throw new Error(
           `${key} must be configured when EMAIL_PROVIDER=resend.`,
         );
+      }
+    }
+  }
+
+  if (emailProvider === 'smtp') {
+    for (const key of [
+      'EMAIL_FROM',
+      'SMTP_HOST',
+      'SMTP_PORT',
+      'SMTP_USER',
+      'SMTP_PASS',
+      'PASSWORD_RESET_APP_URL',
+      'EMAIL_VERIFICATION_APP_URL',
+    ]) {
+      if (!readString(config[key])) {
+        throw new Error(`${key} must be configured when EMAIL_PROVIDER=smtp.`);
       }
     }
   }
@@ -57,7 +84,9 @@ export function validateEnvironment(config: Environment): Environment {
   );
 
   if (aiCoachEnabled && !geminiApiKey) {
-    throw new Error('GEMINI_API_KEY must be configured when AI_COACH_ENABLED=true.');
+    throw new Error(
+      'GEMINI_API_KEY must be configured when AI_COACH_ENABLED=true.',
+    );
   }
 
   if (aiCoachDailyLimit < 1 || aiCoachDailyLimit > 100) {
@@ -77,6 +106,30 @@ export function validateEnvironment(config: Environment): Environment {
     REFRESH_COOKIE_MAX_AGE_MS: Number(
       config.REFRESH_COOKIE_MAX_AGE_MS ?? 604_800_000,
     ),
+
+    EMAIL_PROVIDER: emailProvider,
+    EMAIL_FROM: readString(config.EMAIL_FROM),
+
+    RESEND_API_KEY: readString(config.RESEND_API_KEY),
+
+    SMTP_HOST: readString(config.SMTP_HOST),
+    SMTP_PORT: Number(config.SMTP_PORT ?? 587),
+    SMTP_SECURE: readBoolean(config.SMTP_SECURE, false),
+    SMTP_USER: readString(config.SMTP_USER),
+    SMTP_PASS: readString(config.SMTP_PASS),
+
+    PASSWORD_RESET_APP_URL: readString(config.PASSWORD_RESET_APP_URL),
+    PASSWORD_RESET_EXPIRES_IN_MINUTES: readPositiveInteger(
+      config.PASSWORD_RESET_EXPIRES_IN_MINUTES,
+      30,
+    ),
+
+    EMAIL_VERIFICATION_APP_URL: readString(config.EMAIL_VERIFICATION_APP_URL),
+    EMAIL_VERIFICATION_EXPIRES_IN_MINUTES: readPositiveInteger(
+      config.EMAIL_VERIFICATION_EXPIRES_IN_MINUTES,
+      1440,
+    ),
+
     AI_COACH_ENABLED: aiCoachEnabled,
     GEMINI_API_KEY: geminiApiKey,
     GEMINI_MODEL: geminiModel,

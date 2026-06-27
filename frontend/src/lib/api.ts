@@ -105,6 +105,7 @@ function shouldAttemptRefresh(path: string) {
     '/auth/refresh',
     '/auth/forgot-password',
     '/auth/reset-password',
+    '/auth/verify-email',
   ].includes(path);
 }
 

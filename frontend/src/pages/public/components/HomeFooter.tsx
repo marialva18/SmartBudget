@@ -1,11 +1,11 @@
-import { Mail } from 'lucide-react';
+﻿import { Mail } from 'lucide-react';
 
 const currentYear = new Date().getFullYear();
 
 const contactEmail = 'malva0418@gmail.com';
-const contactSubject = 'Consulta sobre SmartBudget';
+const contactSubject = 'Consulta sobre Qori';
 const contactBody =
-  'Hola, quiero conocer más sobre SmartBudget.';
+  'Hola, quiero conocer más sobre Qori.';
 
 const contactHref = `mailto:${contactEmail}?subject=${encodeURIComponent(
   contactSubject,
@@ -21,7 +21,7 @@ export function HomeFooter() {
           </p>
 
           <h2 className="mt-2 max-w-2xl text-3xl font-black text-slate-950">
-            ¿Quieres saber más sobre SmartBudget?
+            ¿Quieres saber más sobre Qori?
           </h2>
 
           <p className="mt-3 max-w-xl leading-7 text-slate-600">
@@ -42,7 +42,7 @@ export function HomeFooter() {
             <span>
               Contactar
               <span className="block text-slate-500">
-                Enviar una consulta sobre SmartBudget
+                Enviar una consulta sobre Qori
               </span>
             </span>
           </a>
@@ -52,15 +52,16 @@ export function HomeFooter() {
       <div className="border-t border-emerald-100">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-6 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="font-black text-slate-800">SmartBudget</p>
+            <p className="font-black text-slate-800">Qori</p>
             <p className="mt-1 text-xs text-slate-400">
               Desarrollado por María Alva.
             </p>
           </div>
 
-          <p>© {currentYear} SmartBudget. Todos los derechos reservados.</p>
+          <p>© {currentYear} Qori. Todos los derechos reservados.</p>
         </div>
       </div>
     </footer>
   );
 }
+

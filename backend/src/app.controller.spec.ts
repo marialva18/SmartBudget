@@ -1,4 +1,4 @@
-import { Test, TestingModule } from '@nestjs/testing';
+﻿import { Test, TestingModule } from '@nestjs/testing';
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -16,8 +16,9 @@ describe('AppController', () => {
   });
 
   describe('root', () => {
-    it('should return "SmartBudget API is running"', () => {
-      expect(appController.getHello()).toBe('SmartBudget API is running');
+    it('should return "Qori API is running"', () => {
+      expect(appController.getHello()).toBe('Qori API is running');
     });
   });
 });
+

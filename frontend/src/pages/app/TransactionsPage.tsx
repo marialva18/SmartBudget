@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+﻿import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ChevronLeft,
   ChevronRight,
@@ -387,7 +387,7 @@ function TransactionRow({
           transaction.type === 'EXPENSE' ? 'text-red-700' : 'text-emerald-700'
         }`}
       >
-        {transaction.type === 'EXPENSE' ? '− ' : '+ '}
+        {transaction.type === 'EXPENSE' ? 'âˆ’ ' : '+ '}
         {formatMoney(Number(transaction.amount), transaction.currency)}
       </td>
       <td className="px-4 py-4">
@@ -551,7 +551,7 @@ function buildHighExpenseWarningDescription(warning: HighExpenseWarning) {
   const amount = Number(warning.values.amount);
 
   if (warning.comparisonBalance <= 0) {
-    return `Este gasto supera el ${warning.percent}% del saldo disponible de la cuenta seleccionada. SmartBudget recomienda revisarlo antes de registrarlo.
+    return `Este gasto supera el ${warning.percent}% del saldo disponible de la cuenta seleccionada. Qori recomienda revisarlo antes de registrarlo.
 
 Cuenta: ${warning.account.name}
 Saldo disponible: ${formatMoney(warning.availableBalance, currency)}
@@ -578,3 +578,4 @@ function formatMoney(value: number, currency: 'PEN' | 'USD') {
     currency,
   }).format(value);
 }
+

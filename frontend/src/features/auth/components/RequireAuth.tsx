@@ -5,6 +5,7 @@ import {
   clearAuthSession,
   getAuthSession,
   setAuthSession,
+  wasLoggedOut,
 } from '../../../lib/auth-session';
 import { getCurrentUser, refreshSession } from '../services/authApi';
 
@@ -58,6 +59,10 @@ async function resolveCurrentUser() {
     const currentSession = getAuthSession();
 
     if (!currentSession?.accessToken) {
+      if (wasLoggedOut()) {
+        throw new Error('User logged out intentionally.');
+      }
+
       const refreshedSession = await refreshSession();
       setAuthSession(refreshedSession);
     }

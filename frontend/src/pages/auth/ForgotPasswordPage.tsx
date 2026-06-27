@@ -27,7 +27,7 @@ export function ForgotPasswordPage() {
     setServerError(null);
     try {
       await forgotPassword(values);
-      navigate(`/email-sent?email=${encodeURIComponent(values.email)}`);
+      navigate('/email-sent?mode=reset');
     } catch (error) {
       setServerError(
         error instanceof Error

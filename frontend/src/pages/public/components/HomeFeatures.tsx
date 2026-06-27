@@ -1,4 +1,4 @@
-import { Bot, CalendarDays, PiggyBank, WalletCards } from 'lucide-react';
+﻿import { Bot, CalendarDays, PiggyBank, WalletCards } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 type Feature = {
@@ -47,7 +47,7 @@ export function HomeFeatures() {
         </h2>
 
         <p className="mt-3 text-slate-600">
-          SmartBudget combina organización, alertas y recomendaciones
+          Qori combina organización, alertas y recomendaciones
           inteligentes para ayudarte a pasar de solo registrar gastos a entender
           realmente tu dinero.
         </p>

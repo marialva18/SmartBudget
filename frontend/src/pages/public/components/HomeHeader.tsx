@@ -1,4 +1,4 @@
-import { PiggyBank } from 'lucide-react';
+﻿import { PiggyBank } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export function HomeHeader() {
@@ -11,7 +11,7 @@ export function HomeHeader() {
           </span>
 
           <div>
-            <p className="text-lg font-black leading-none">SmartBudget</p>
+            <p className="text-lg font-black leading-none">Qori</p>
             <p className="text-xs font-semibold text-emerald-700">
               Finanzas claras, sin estrés
             </p>

@@ -23,7 +23,7 @@ import { FinanceScopeProvider } from '../../features/finance-scope/FinanceScopeC
 import { useFinanceScope } from '../../features/finance-scope/financeScope';
 import { getGroups } from '../../features/groups/groupsApi';
 import { es } from '../../i18n/es';
-import { clearAuthSession } from '../../lib/auth-session';
+import { markLoggedOut } from '../../lib/auth-session';
 import { getRecurringDueOccurrences } from '../../features/recurring/services/recurringApi';
 
 const navItems = [
@@ -123,9 +123,9 @@ const logoutMutation = useMutation({
     return logout();
   },
   onSettled: () => {
-    clearAuthSession();
+    markLoggedOut();
     queryClient.clear();
-    navigate('/login', { replace: true });
+    navigate('/', { replace: true });
   },
 });
 

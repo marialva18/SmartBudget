@@ -34,13 +34,19 @@ export function login(values: LoginFormValues) {
 }
 
 export function register(values: RegisterFormValues) {
-  const { confirmPassword, acceptedTerms, ...payload } = values;
-  void confirmPassword;
-  void acceptedTerms;
-
-  return apiRequest<AuthResponse>('/auth/register', {
+  return apiRequest<MessageResponse>('/auth/register', {
     method: 'POST',
-    body: payload,
+    body: {
+      displayName: values.displayName,
+      email: values.email,
+      password: values.password,
+    },
+  });
+}
+export function verifyEmail(token: string) {
+  return apiRequest<MessageResponse>('/auth/verify-email', {
+    method: 'POST',
+    body: { token },
   });
 }
 

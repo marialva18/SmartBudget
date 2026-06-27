@@ -25,6 +25,7 @@ import { CalendarPage } from '../pages/app/CalendarPage'
 import { RecurringPage } from '../pages/app/RecurringPage'
 import { CoachPage } from '../pages/app/CoachPage'
 import { HomePage } from '../pages/public/HomePage'
+import { VerifyEmailPage } from '../pages/auth/VerifyEmailPage'
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -82,10 +83,17 @@ export const router = createBrowserRouter([
       {
         path: '/email-sent',
         element: <EmailSentPage />,
+        errorElement: <RouteErrorPage />,
+      },
+      {
+        path: '/verify-email',
+        element: <VerifyEmailPage />,
+        errorElement: <RouteErrorPage />,
       },
       {
         path: '/reset-password',
         element: <ResetPasswordPage />,
+        errorElement: <RouteErrorPage />,
       },
     ],
   },

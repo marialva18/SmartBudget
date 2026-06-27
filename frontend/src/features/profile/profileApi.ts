@@ -11,6 +11,8 @@ export type Profile = {
   theme: 'LIGHT' | 'DARK' | 'SYSTEM';
   aiEnabled: boolean;
   highExpenseWarningPercent: HighExpenseWarningPercent;
+  maxExpenseAmountPen: number | null;
+  maxExpenseAmountUsd: number | null;
   onboardingCompleted: boolean;
   objectives: OnboardingObjective[];
 };

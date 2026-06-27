@@ -1,4 +1,4 @@
-import { ArrowRight, Bot, CheckCircle2, Sparkles } from 'lucide-react';
+﻿import { ArrowRight, Bot, CheckCircle2, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const benefits = [
@@ -26,7 +26,7 @@ export function HomeHero() {
           </h1>
 
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
-            SmartBudget reúne tus cuentas, gastos, metas y pagos frecuentes en
+            Qori reúne tus cuentas, gastos, metas y pagos frecuentes en
             una sola app. Entiende mejor tu dinero, recibe alertas útiles y toma
             decisiones con más confianza, sin estrés ni hojas de cálculo
             complicadas.
@@ -99,7 +99,7 @@ export function HomeHero() {
               </span>
 
               <div>
-                <p className="font-black">Coach SmartBudget</p>
+                <p className="font-black">Coach Qori</p>
                 <p className="text-sm text-slate-500">
                   Orientación inteligente
                 </p>

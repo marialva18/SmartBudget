@@ -1,4 +1,4 @@
-import { zodResolver } from '@hookform/resolvers/zod';
+﻿import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowRight, CheckCircle, Eye, EyeOff } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
@@ -10,7 +10,7 @@ import {
   type RegisterFormValues,
 } from '../../features/auth/schemas/authSchemas';
 import { register as registerUser } from '../../features/auth/services/authApi';
-import { setAuthSession } from '../../lib/auth-session';
+
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -45,9 +45,11 @@ export function RegisterPage() {
   async function onSubmit(values: RegisterFormValues) {
     setServerError(null);
     try {
-      const session = await registerUser(values);
-      setAuthSession(session);
-      navigate('/onboarding/welcome');
+      const result = await registerUser(values);
+
+navigate(
+        `/email-sent?mode=verify&message=${encodeURIComponent(result.message)}`,
+      );
     } catch (error) {
       setServerError(
         error instanceof Error ? error.message : 'No se pudo crear la cuenta.',
@@ -61,7 +63,7 @@ export function RegisterPage() {
         <aside className="hidden bg-gradient-to-br from-[#6dfe9c] to-[#2dd4bf] p-10 text-white md:flex md:flex-col md:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide">
-              Smart Budget
+              Qori
             </p>
             <h1 className="mt-6 text-5xl font-extrabold leading-tight">
               Domina tu futuro financiero.
@@ -206,3 +208,5 @@ function sanitizeNameInput(event: React.FormEvent<HTMLInputElement>) {
     '',
   );
 }
+
+

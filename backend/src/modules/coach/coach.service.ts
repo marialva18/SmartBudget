@@ -1,4 +1,4 @@
-import {
+﻿import {
   BadRequestException,
   Injectable,
   Logger,
@@ -328,7 +328,7 @@ export class CoachService {
 
   private buildPrompt(message: string, summary: FinancialSummary) {
     return `
-Eres el coach financiero de SmartBudget, una app de finanzas personales para personas que quieren entender mejor su dinero sin sentirse juzgadas.
+Eres el coach financiero de Qori, una app de finanzas personales para personas que quieren entender mejor su dinero sin sentirse juzgadas.
 
 Personalidad:
 - Habla en español latino, con tono cercano, tranquilo y amable.

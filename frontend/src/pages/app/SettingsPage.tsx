@@ -4,6 +4,7 @@ import { LogOut, RefreshCw, Save } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
+import { getAccounts } from '../../features/accounts/services/accountsApi';
 import {
   getProfile,
   updateProfile,
@@ -15,7 +16,7 @@ import {
 } from '../../features/profile/profileSchema';
 import { logout } from '../../features/auth/services/authApi';
 import { es } from '../../i18n/es';
-import { clearAuthSession } from '../../lib/auth-session';
+import { markLoggedOut } from '../../lib/auth-session';
 import { ApiError } from '../../lib/api';
 
 const timezoneOptions = [
@@ -35,6 +36,16 @@ export function SettingsPage() {
     queryKey: ['profile'],
     queryFn: getProfile,
   });
+  const accountsQuery = useQuery({
+  queryKey: ['accounts'],
+  queryFn: getAccounts,
+});
+const activeAccounts = accountsQuery.data?.filter(
+  (account) => account.status === 'ACTIVE',
+) ?? [];
+
+const hasPenAccount = activeAccounts.some((account) => account.currency === 'PEN');
+const hasUsdAccount = activeAccounts.some((account) => account.currency === 'USD');
   const {
     formState: { errors, isDirty },
     handleSubmit,
@@ -76,11 +87,11 @@ export function SettingsPage() {
     return logout();
   },
   onSettled: () => {
-    clearAuthSession();
+    markLoggedOut();
     queryClient.clear();
-    navigate('/login', { replace: true });
+    navigate('/', { replace: true });
   },
-});
+  });
 
   return (
     <section className="space-y-7">
@@ -128,7 +139,13 @@ export function SettingsPage() {
         <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
           <form
             className="space-y-6 rounded-lg bg-white p-5 shadow-[0_10px_30px_rgba(13,148,136,0.08)]"
-            onSubmit={handleSubmit((values) => saveMutation.mutate(values))}
+            onSubmit={handleSubmit((values) =>
+  saveMutation.mutate({
+    ...values,
+    maxExpenseAmountPen: hasPenAccount ? values.maxExpenseAmountPen : null,
+    maxExpenseAmountUsd: hasUsdAccount ? values.maxExpenseAmountUsd : null,
+  }),
+)}
           >
             <div>
               <h2 className="text-xl font-bold">
@@ -242,6 +259,73 @@ export function SettingsPage() {
                 </span>
               ) : null}
             </label>
+            <label className="block rounded-lg border border-slate-200 p-4">
+  <span className="mb-2 block text-xs font-semibold uppercase text-slate-600">
+    {es.settings.maxExpenseAmountTitle}
+  </span>
+
+  <p className="mb-4 text-sm text-slate-500">
+    {es.settings.maxExpenseAmountDescription}
+  </p>
+
+  {hasPenAccount || hasUsdAccount ? (
+    <div className="grid gap-4 sm:grid-cols-2">
+      {hasPenAccount ? (
+        <label className="block">
+          <span className="mb-2 block text-xs font-semibold uppercase text-slate-500">
+            {es.settings.maxExpenseAmountPen}
+          </span>
+
+          <input
+            className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700"
+            min={1}
+            placeholder="Ej. 50"
+            step="0.01"
+            type="number"
+            {...register('maxExpenseAmountPen', {
+              setValueAs: (value) => (value === '' ? null : Number(value)),
+            })}
+          />
+
+          {errors.maxExpenseAmountPen ? (
+            <span className="mt-1 block text-sm text-red-700">
+              {errors.maxExpenseAmountPen.message}
+            </span>
+          ) : null}
+        </label>
+      ) : null}
+
+      {hasUsdAccount ? (
+        <label className="block">
+          <span className="mb-2 block text-xs font-semibold uppercase text-slate-500">
+            {es.settings.maxExpenseAmountUsd}
+          </span>
+
+          <input
+            className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700"
+            min={1}
+            placeholder="Ej. 20"
+            step="0.01"
+            type="number"
+            {...register('maxExpenseAmountUsd', {
+              setValueAs: (value) => (value === '' ? null : Number(value)),
+            })}
+          />
+
+          {errors.maxExpenseAmountUsd ? (
+            <span className="mt-1 block text-sm text-red-700">
+              {errors.maxExpenseAmountUsd.message}
+            </span>
+          ) : null}
+        </label>
+      ) : null}
+    </div>
+  ) : (
+    <p className="rounded-md bg-slate-100 px-4 py-3 text-sm text-slate-600">
+      Crea una cuenta activa para configurar límites máximos por gasto.
+    </p>
+  )}
+</label>
 
             {message ? (
               <p className="rounded-md bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
@@ -314,6 +398,8 @@ function getDefaults(profile?: Partial<Profile>): ProfileFormValues {
     theme: profile?.theme ?? 'SYSTEM',
     aiEnabled: profile?.aiEnabled ?? true,
     highExpenseWarningPercent: profile?.highExpenseWarningPercent ?? 50,
+    maxExpenseAmountPen: profile?.maxExpenseAmountPen ?? null,
+    maxExpenseAmountUsd: profile?.maxExpenseAmountUsd ?? null,
   };
 }
 
