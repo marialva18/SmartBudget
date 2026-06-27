@@ -298,6 +298,14 @@ export const es = {
     enabled: 'Activo',
     disabled: 'Desactivado',
     noObjectives: 'Sin objetivos registrados',
+    highExpenseWarningPercent: 'Alerta de gasto alto',
+highExpenseWarningDescription:
+  'Define cuándo SmartBudget debe pedirte confirmación antes de registrar un gasto grande.',
+highExpenseWarningOptions: {
+  30: '30% del saldo disponible — más sensible',
+  50: '50% del saldo disponible — equilibrado',
+  70: '70% del saldo disponible — menos frecuente',
+},
     themes: {
       LIGHT: 'Claro',
       DARK: 'Oscuro',
@@ -315,6 +323,7 @@ export const es = {
       invalidName:
         'El nombre solo puede contener letras, espacios, apóstrofos o guiones.',
       timezone: 'Selecciona una zona horaria válida.',
+      highExpenseWarningPercent: 'Selecciona un porcentaje de alerta válido.',
     },
   },
   goals: {

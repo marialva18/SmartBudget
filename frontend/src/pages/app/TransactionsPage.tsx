@@ -25,6 +25,7 @@ import {
 } from '../../features/transactions/services/transactionsApi';
 import { es } from '../../i18n/es';
 import { ApiError } from '../../lib/api';
+import { getProfile } from '../../features/profile/profileApi';
 
 export function TransactionsPage() {
   const queryClient = useQueryClient();
@@ -44,6 +45,17 @@ export function TransactionsPage() {
     queryKey: ['accounts'],
     queryFn: getAccounts,
   });
+  const profileQuery = useQuery({
+  queryKey: ['profile'],
+  queryFn: getProfile,
+});
+
+const highExpenseWarningPercent =
+  profileQuery.data?.highExpenseWarningPercent ??
+  DEFAULT_HIGH_EXPENSE_WARNING_PERCENT;
+
+const highExpenseWarningRatio = highExpenseWarningPercent / 100;
+
   const query = useQuery({
     queryKey: ['transactions', page, type, search, scope, accountId],
     queryFn: () =>
@@ -92,11 +104,13 @@ export function TransactionsPage() {
   const summary = getSummary(query.data?.summary ?? []);
 
   const handleSubmitTransaction = (values: TransactionFormValues) => {
-  const warning = getHighExpenseWarning({
-    accounts: accountsQuery.data ?? [],
-    selected,
-    values,
-  });
+ const warning = getHighExpenseWarning({
+  accounts: accountsQuery.data ?? [],
+  selected,
+  values,
+  warningRatio: highExpenseWarningRatio,
+  warningPercent: highExpenseWarningPercent,
+});
 
   if (warning) {
     setHighExpenseWarning(warning);
@@ -323,7 +337,7 @@ export function TransactionsPage() {
   );
 }
 
-const HIGH_EXPENSE_WARNING_PERCENT = 0.5;
+const DEFAULT_HIGH_EXPENSE_WARNING_PERCENT = 50;
 
 type HighExpenseWarning = {
   values: TransactionFormValues;
@@ -481,11 +495,15 @@ function getHighExpenseWarning({
   accounts,
   selected,
   values,
+  warningRatio,
+  warningPercent,
 }: {
   accounts: Account[];
   selected: Transaction | null;
   values: TransactionFormValues;
-}) {
+  warningRatio: number;
+  warningPercent: number;
+}): HighExpenseWarning | null {
   if (values.type !== 'EXPENSE') {
     return null;
   }
@@ -507,13 +525,12 @@ function getHighExpenseWarning({
   const availableBalance = Number(account.availableBalance);
 
   const previousExpenseAmount =
-    selected?.type === 'EXPENSE' &&
-    selected.account.id === values.accountId
+    selected?.type === 'EXPENSE' && selected.account.id === values.accountId
       ? Number(selected.amount)
       : 0;
 
   const comparisonBalance = availableBalance + previousExpenseAmount;
-  const threshold = comparisonBalance * HIGH_EXPENSE_WARNING_PERCENT;
+  const threshold = comparisonBalance * warningRatio;
 
   if (comparisonBalance <= 0 || amount > threshold) {
     return {
@@ -522,7 +539,7 @@ function getHighExpenseWarning({
       availableBalance,
       comparisonBalance,
       threshold,
-      percent: HIGH_EXPENSE_WARNING_PERCENT * 100,
+      percent: warningPercent,
     };
   }
 
@@ -534,7 +551,7 @@ function buildHighExpenseWarningDescription(warning: HighExpenseWarning) {
   const amount = Number(warning.values.amount);
 
   if (warning.comparisonBalance <= 0) {
-    return `${es.transactions.highExpenseWarning.noAvailableBalance}
+    return `Este gasto supera el ${warning.percent}% del saldo disponible de la cuenta seleccionada. SmartBudget recomienda revisarlo antes de registrarlo.
 
 Cuenta: ${warning.account.name}
 Saldo disponible: ${formatMoney(warning.availableBalance, currency)}

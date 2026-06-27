@@ -12,6 +12,12 @@ export const profileSchema = z.object({
   timezone: z.string().trim().min(1, es.settings.validation.timezone).max(80),
   theme: z.enum(['LIGHT', 'DARK', 'SYSTEM']),
   aiEnabled: z.boolean(),
+  highExpenseWarningPercent: z.union(
+    [z.literal(30), z.literal(50), z.literal(70)],
+    {
+      error: es.settings.validation.highExpenseWarningPercent,
+    },
+  ),
 });
 
 export type ProfileFormValues = z.infer<typeof profileSchema>;

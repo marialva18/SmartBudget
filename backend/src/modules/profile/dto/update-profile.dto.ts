@@ -11,6 +11,7 @@ import { es } from '../../../common/i18n/es';
 
 export const PROFILE_CURRENCIES = ['PEN', 'USD'] as const;
 export const PROFILE_THEMES = ['LIGHT', 'DARK', 'SYSTEM'] as const;
+export const HIGH_EXPENSE_WARNING_PERCENTAGES = [30, 50, 70] as const;
 
 export class UpdateProfileDto {
   @IsOptional()
@@ -38,4 +39,8 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsBoolean()
   aiEnabled?: boolean;
+
+  @IsOptional()
+  @IsIn(HIGH_EXPENSE_WARNING_PERCENTAGES)
+  highExpenseWarningPercent?: (typeof HIGH_EXPENSE_WARNING_PERCENTAGES)[number];
 }

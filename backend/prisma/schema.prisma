@@ -54,6 +54,7 @@ model Profile {
   timezone            String   @default("America/Lima") @db.NVarChar(80)
   theme               String   @default("SYSTEM") @db.NVarChar(20)
   aiEnabled           Boolean  @default(true) @map("ai_enabled")
+  highExpenseWarningPercent Int      @default(50) @map("high_expense_warning_percent") @db.SmallInt
   onboardingCompleted Boolean  @default(false) @map("onboarding_completed")
   createdAt           DateTime @default(now()) @map("created_at")
   updatedAt           DateTime @default(now()) @updatedAt @map("updated_at")

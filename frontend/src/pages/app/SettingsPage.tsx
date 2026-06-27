@@ -215,6 +215,30 @@ export function SettingsPage() {
                 </span>
               </span>
             </label>
+            <label className="block rounded-lg border border-slate-200 p-4">
+              <span className="mb-2 block text-xs font-semibold uppercase text-slate-600">
+                {es.settings.highExpenseWarningPercent}
+              </span>
+
+              <select
+                className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700"
+                {...register('highExpenseWarningPercent', { valueAsNumber: true })}
+              >
+                <option value={30}>{es.settings.highExpenseWarningOptions[30]}</option>
+                <option value={50}>{es.settings.highExpenseWarningOptions[50]}</option>
+                <option value={70}>{es.settings.highExpenseWarningOptions[70]}</option>
+              </select>
+
+              <span className="mt-2 block text-sm text-slate-500">
+                {es.settings.highExpenseWarningDescription}
+              </span>
+
+              {errors.highExpenseWarningPercent ? (
+                <span className="mt-1 block text-sm text-red-700">
+                  {errors.highExpenseWarningPercent.message}
+                </span>
+              ) : null}
+            </label>
 
             {message ? (
               <p className="rounded-md bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
@@ -286,6 +310,7 @@ function getDefaults(profile?: Partial<Profile>): ProfileFormValues {
     timezone: profile?.timezone ?? 'America/Lima',
     theme: profile?.theme ?? 'SYSTEM',
     aiEnabled: profile?.aiEnabled ?? true,
+    highExpenseWarningPercent: profile?.highExpenseWarningPercent ?? 50,
   };
 }
 

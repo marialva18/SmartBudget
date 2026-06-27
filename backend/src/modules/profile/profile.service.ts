@@ -14,6 +14,7 @@ export class ProfileService {
     const profile = await this.prisma.profile.findUniqueOrThrow({
       where: { userId },
     });
+
     const objectives = await this.prisma.userOnboardingObjective.findMany({
       where: { userId },
       orderBy: { createdAt: 'asc' },
@@ -26,6 +27,7 @@ export class ProfileService {
       timezone: profile.timezone,
       theme: profile.theme,
       aiEnabled: profile.aiEnabled,
+      highExpenseWarningPercent: profile.highExpenseWarningPercent,
       onboardingCompleted: profile.onboardingCompleted,
       objectives: objectives.map((item) => item.objective),
     };
@@ -35,6 +37,7 @@ export class ProfileService {
     const current = await this.prisma.profile.findUniqueOrThrow({
       where: { userId },
     });
+
     const updated = await this.prisma.$transaction(async (transaction) => {
       const profile = await transaction.profile.update({
         where: { userId },
@@ -44,8 +47,10 @@ export class ProfileService {
           timezone: dto.timezone?.trim(),
           theme: dto.theme,
           aiEnabled: dto.aiEnabled,
+          highExpenseWarningPercent: dto.highExpenseWarningPercent,
         },
       });
+
       await transaction.auditLog.create({
         data: {
           userId,
@@ -57,6 +62,7 @@ export class ProfileService {
           newValuesJson: JSON.stringify(this.preferenceValues(profile)),
         },
       });
+
       return profile;
     });
 
@@ -66,6 +72,7 @@ export class ProfileService {
       timezone: updated.timezone,
       theme: updated.theme,
       aiEnabled: updated.aiEnabled,
+      highExpenseWarningPercent: updated.highExpenseWarningPercent,
       onboardingCompleted: updated.onboardingCompleted,
     };
   }
@@ -79,9 +86,11 @@ export class ProfileService {
       await transaction.userOnboardingObjective.deleteMany({
         where: { userId },
       });
+
       await transaction.userOnboardingObjective.createMany({
         data: dto.objectives.map((objective) => ({ userId, objective })),
       });
+
       await transaction.auditLog.create({
         data: {
           userId,
@@ -111,6 +120,7 @@ export class ProfileService {
         where: { userId },
         data: { onboardingCompleted: true },
       });
+
       await transaction.auditLog.create({
         data: {
           userId,
@@ -120,6 +130,7 @@ export class ProfileService {
           channel,
         },
       });
+
       return profile;
     });
 
@@ -134,6 +145,7 @@ export class ProfileService {
     timezone: string;
     theme: string;
     aiEnabled?: boolean;
+    highExpenseWarningPercent?: number;
   }) {
     return {
       displayName: profile.displayName,
@@ -141,6 +153,7 @@ export class ProfileService {
       timezone: profile.timezone,
       theme: profile.theme,
       aiEnabled: profile.aiEnabled,
+      highExpenseWarningPercent: profile.highExpenseWarningPercent,
     };
   }
 }
