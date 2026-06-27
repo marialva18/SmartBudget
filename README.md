@@ -1,6 +1,6 @@
-# SmartBudget
+# Qori
 
-SmartBudget es una plataforma de finanzas personales orientada a web y preparada
+Qori es una plataforma de finanzas personales orientada a web y preparada
 para una futura aplicacion movil. El sistema centraliza cuentas, movimientos,
 presupuestos, metas de ahorro y gastos compartidos, manteniendo una unica API y
 una unica base de datos para todos los clientes.
@@ -11,7 +11,7 @@ El objetivo del proyecto es ayudar a una persona a entender y organizar su
 dinero sin depender de integraciones bancarias iniciales. La informacion se
 registra manualmente y los saldos se calculan desde movimientos confirmados.
 
-SmartBudget separa claramente:
+Qori separa claramente:
 
 - Saldo real.
 - Dinero reservado para metas.
@@ -35,7 +35,7 @@ entre PEN y USD.
 ## Arquitectura
 
 ```text
-SmartBudget/
+Qori/
 +-- frontend/   # Interfaz web
 +-- backend/    # API REST, validaciones y reglas de negocio
 +-- database/   # Modelo SQL Server, indices, seeds y scripts
@@ -49,7 +49,7 @@ persistencia, integridad relacional, indices y auditoria.
 
 ## Dominio Del Negocio
 
-SmartBudget modela la vida financiera de un usuario desde estas reglas:
+Qori modela la vida financiera de un usuario desde estas reglas:
 
 - Cada usuario administra su propia informacion financiera.
 - Una persona puede manejar cuentas en una o varias monedas.
