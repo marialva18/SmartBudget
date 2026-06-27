@@ -23,6 +23,7 @@ import { GoalsPage as AppGoalsPage } from '../pages/app/GoalsPage'
 import { GroupsPage } from '../pages/app/GroupsPage'
 import { CalendarPage } from '../pages/app/CalendarPage'
 import { RecurringPage } from '../pages/app/RecurringPage'
+import { CoachPage } from '../pages/app/CoachPage'
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -102,6 +103,10 @@ export const router = createBrowserRouter([
           {
             path: 'dashboard',
             element: <DashboardPage />,
+          },
+          {
+            path: 'coach',
+            element: <CoachPage />,
           },
           {
             path: 'accounts',

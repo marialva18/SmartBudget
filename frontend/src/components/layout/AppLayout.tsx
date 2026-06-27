@@ -10,6 +10,7 @@ import {
   Settings,
   Tags,
   Target,
+  Bot,
   Users,
   WalletCards,
   X,
@@ -30,6 +31,11 @@ const navItems = [
     label: es.navigation.dashboard,
     to: '/app/dashboard',
     icon: LayoutDashboard,
+  },
+  {
+    label: 'Coach',
+    to: '/app/coach',
+    icon: Bot,
   },
   {
     label: es.navigation.accounts,
