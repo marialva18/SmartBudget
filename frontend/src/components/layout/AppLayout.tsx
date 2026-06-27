@@ -97,29 +97,37 @@ function AppShell() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { availableScopes, canChooseScope, scope, setScope } =
     useFinanceScope();
   const groupsQuery = useQuery({
-    queryKey: ['groups'],
-    queryFn: getGroups,
-  });
-  const recurringDueQuery = useQuery({
-    queryKey: ['recurring-due'],
-    queryFn: getRecurringDueOccurrences,
-  });
+  queryKey: ['groups'],
+  queryFn: getGroups,
+  enabled: !isLoggingOut,
+});
+
+const recurringDueQuery = useQuery({
+  queryKey: ['recurring-due'],
+  queryFn: getRecurringDueOccurrences,
+  enabled: !isLoggingOut,
+});
   const pendingInvitations =
     groupsQuery.data?.filter(
       (group) => group.currentMemberStatus === 'INVITED',
     ).length ?? 0;
   const pendingRecurringDue = recurringDueQuery.data?.length ?? 0;
-  const logoutMutation = useMutation({
-    mutationFn: logout,
-    onSettled: () => {
-      clearAuthSession();
-      queryClient.clear();
-      navigate('/login', { replace: true });
-    },
-  });
+const logoutMutation = useMutation({
+  mutationFn: async () => {
+    setIsLoggingOut(true);
+    await queryClient.cancelQueries();
+    return logout();
+  },
+  onSettled: () => {
+    clearAuthSession();
+    queryClient.clear();
+    navigate('/login', { replace: true });
+  },
+});
 
   return (
     <div className="min-h-screen bg-[#f4f8f7] text-slate-950">

@@ -40,14 +40,15 @@ export async function apiRequest<TResponse>(
   path: string,
   options: ApiOptions = {},
 ): Promise<TResponse> {
-  let response = await performRequest(path, options);
+const hadAccessToken = Boolean(getAuthSession()?.accessToken);
+let response = await performRequest(path, options);
 
-  if (response.status === 401 && shouldAttemptRefresh(path)) {
-    const refreshed = await refreshAccessToken();
-    if (refreshed) {
-      response = await performRequest(path, options);
-    }
+if (response.status === 401 && hadAccessToken && shouldAttemptRefresh(path)) {
+  const refreshed = await refreshAccessToken();
+  if (refreshed) {
+    response = await performRequest(path, options);
   }
+}
 
   return parseResponse<TResponse>(response);
 }

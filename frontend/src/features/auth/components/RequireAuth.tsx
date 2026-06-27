@@ -1,7 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { es } from '../../../i18n/es';
-import { getCurrentUser } from '../services/authApi';
+import {
+  clearAuthSession,
+  getAuthSession,
+  setAuthSession,
+} from '../../../lib/auth-session';
+import { getCurrentUser, refreshSession } from '../services/authApi';
 
 type RequireAuthProps = {
   onboarding?: 'complete' | 'incomplete';
@@ -9,10 +14,12 @@ type RequireAuthProps = {
 
 export function RequireAuth({ onboarding }: RequireAuthProps) {
   const location = useLocation();
+
   const query = useQuery({
     queryKey: ['auth', 'me'],
-    queryFn: getCurrentUser,
+    queryFn: resolveCurrentUser,
     retry: false,
+    staleTime: 30_000,
   });
 
   if (query.isLoading) {
@@ -30,6 +37,7 @@ export function RequireAuth({ onboarding }: RequireAuthProps) {
   }
 
   const user = query.data;
+
   if (!user) {
     return <Navigate replace state={{ from: location }} to="/login" />;
   }
@@ -43,4 +51,20 @@ export function RequireAuth({ onboarding }: RequireAuthProps) {
   }
 
   return <Outlet />;
+}
+
+async function resolveCurrentUser() {
+  try {
+    const currentSession = getAuthSession();
+
+    if (!currentSession?.accessToken) {
+      const refreshedSession = await refreshSession();
+      setAuthSession(refreshedSession);
+    }
+
+    return await getCurrentUser();
+  } catch (error) {
+    clearAuthSession();
+    throw error;
+  }
 }

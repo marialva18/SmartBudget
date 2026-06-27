@@ -71,13 +71,16 @@ export function SettingsPage() {
   });
 
   const logoutMutation = useMutation({
-    mutationFn: logout,
-    onSettled: () => {
-      clearAuthSession();
-      queryClient.clear();
-      navigate('/login', { replace: true });
-    },
-  });
+  mutationFn: async () => {
+    await queryClient.cancelQueries();
+    return logout();
+  },
+  onSettled: () => {
+    clearAuthSession();
+    queryClient.clear();
+    navigate('/login', { replace: true });
+  },
+});
 
   return (
     <section className="space-y-7">

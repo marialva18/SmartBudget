@@ -65,8 +65,9 @@ export class CoachService {
     }
 
     const message = dto.message.trim();
+    const aiEnabled = await this.isUserAiEnabled(userId);
     const summary = await this.buildFinancialSummary(userId);
-    const provider = this.isCoachEnabled() ? 'GEMINI' : 'LOCAL';
+    const provider = this.isCoachEnabled() && aiEnabled ? 'GEMINI' : 'LOCAL';
 
     let answer: string;
     let resolvedProvider: CoachProvider = provider;
@@ -183,16 +184,15 @@ export class CoachService {
           occurredAt: 'desc',
         },
         take: 120,
-        select: {
-          type: true,
-          amount: true,
-          description: true,
-          category: {
-            select: {
-              name: true,
+                select: {
+            type: true,
+            amount: true,
+            category: {
+                select: {
+                name: true,
+                },
             },
-          },
-        },
+            },
       }),
 
       this.prisma.goal.findMany({
@@ -434,7 +434,14 @@ Respuesta:
       },
     });
   }
+    private async isUserAiEnabled(userId: string) {
+    const profile = await this.prisma.profile.findUnique({
+        where: { userId },
+        select: { aiEnabled: true },
+    });
 
+    return profile?.aiEnabled ?? true;
+    }
   private isCoachEnabled() {
     return this.configService.get<boolean>('AI_COACH_ENABLED', false);
   }
