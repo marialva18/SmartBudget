@@ -1,6 +1,7 @@
 ﻿import {
   ConflictException,
   Injectable,
+  Logger,
   NotFoundException,
   ServiceUnavailableException,
   UnauthorizedException,
@@ -60,12 +61,19 @@ type EmailConfig = {
   smtpPass?: string;
 };
 
+type RequiredEmailUrls = {
+  reset?: boolean;
+  verification?: boolean;
+};
+
 const TERMS_VERSION = '2026-06-27';
 const PRIVACY_VERSION = '2026-06-27';
 const EMAIL_SEND_TIMEOUT_MS = 10_000;
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
@@ -73,7 +81,9 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto): Promise<MessageResponse> {
-    const emailConfig = this.getEmailConfig(es.auth.emailUnavailable);
+    const emailConfig = this.getEmailConfig(es.auth.emailUnavailable, {
+      verification: true,
+    });
     const email = dto.email.trim().toLowerCase();
 
     const existingUser = await this.prisma.user.findUnique({
@@ -395,7 +405,9 @@ export class AuthService {
   }
 
   async forgotPassword(dto: ForgotPasswordDto): Promise<MessageResponse> {
-    const emailConfig = this.getEmailConfig(es.auth.recoveryUnavailable);
+    const emailConfig = this.getEmailConfig(es.auth.recoveryUnavailable, {
+      reset: true,
+    });
     const email = dto.email.trim().toLowerCase();
     const user = await this.prisma.user.findUnique({
       where: { email },
@@ -599,7 +611,10 @@ export class AuthService {
     }
   }
 
-  private getEmailConfig(errorMessage: string): EmailConfig {
+  private getEmailConfig(
+    errorMessage: string,
+    requiredUrls: RequiredEmailUrls,
+  ): EmailConfig {
     const provider = this.configService
       .get<string>('EMAIL_PROVIDER', '')
       .trim();
@@ -621,7 +636,14 @@ export class AuthService {
       1440,
     );
 
-    if (!from || !resetAppUrl || !verificationAppUrl) {
+    const missingResetUrl = requiredUrls.reset === true && !resetAppUrl;
+    const missingVerificationUrl =
+      requiredUrls.verification === true && !verificationAppUrl;
+
+    if (!from || missingResetUrl || missingVerificationUrl) {
+      this.logger.warn(
+        `Email config missing base values: EMAIL_FROM=${Boolean(from)}, PASSWORD_RESET_APP_URL=${Boolean(resetAppUrl)}, EMAIL_VERIFICATION_APP_URL=${Boolean(verificationAppUrl)}`,
+      );
       throw new ServiceUnavailableException(errorMessage);
     }
 
@@ -631,6 +653,7 @@ export class AuthService {
         .trim();
 
       if (!resendApiKey) {
+        this.logger.warn('Email config missing RESEND_API_KEY.');
         throw new ServiceUnavailableException(errorMessage);
       }
 
@@ -653,6 +676,9 @@ export class AuthService {
       const smtpPass = this.configService.get<string>('SMTP_PASS', '').trim();
 
       if (!smtpHost || !smtpUser || !smtpPass) {
+        this.logger.warn(
+          `SMTP config missing values: SMTP_HOST=${Boolean(smtpHost)}, SMTP_USER=${Boolean(smtpUser)}, SMTP_PASS=${Boolean(smtpPass)}`,
+        );
         throw new ServiceUnavailableException(errorMessage);
       }
 
@@ -671,6 +697,9 @@ export class AuthService {
       };
     }
 
+    this.logger.warn(
+      `Email config has unsupported provider: ${provider || '(empty)'}.`,
+    );
     throw new ServiceUnavailableException(errorMessage);
   }
 
@@ -766,13 +795,17 @@ export class AuthService {
           }),
           signal: controller.signal,
         });
-      } catch {
+      } catch (error) {
+        this.logger.warn(
+          `Resend email request failed: ${this.formatEmailError(error)}`,
+        );
         throw new ServiceUnavailableException(es.auth.emailUnavailable);
       } finally {
         clearTimeout(timeout);
       }
 
       if (!response.ok) {
+        this.logger.warn(`Resend email request returned ${response.status}.`);
         throw new ServiceUnavailableException(es.auth.emailUnavailable);
       }
 
@@ -799,13 +832,50 @@ export class AuthService {
         subject,
         html,
       });
-    } catch {
+    } catch (error) {
+      this.logger.warn(
+        `SMTP email send failed: ${this.formatEmailError(error)}`,
+      );
       throw new ServiceUnavailableException(es.auth.emailUnavailable);
     }
   }
 
   private addMinutes(minutes: number): Date {
     return new Date(Date.now() + minutes * 60_000);
+  }
+
+  private formatEmailError(error: unknown): string {
+    if (!error || typeof error !== 'object') {
+      return 'unknown error';
+    }
+
+    const details = error as {
+      code?: unknown;
+      command?: unknown;
+      message?: unknown;
+      name?: unknown;
+      responseCode?: unknown;
+    };
+
+    return [
+      `name=${this.safeLogValue(details.name)}`,
+      `code=${this.safeLogValue(details.code)}`,
+      `command=${this.safeLogValue(details.command)}`,
+      `responseCode=${this.safeLogValue(details.responseCode)}`,
+      `message=${this.safeLogValue(details.message)}`,
+    ].join(', ');
+  }
+
+  private safeLogValue(value: unknown): string {
+    if (typeof value === 'string') {
+      return value;
+    }
+
+    if (typeof value === 'number' || typeof value === 'boolean') {
+      return String(value);
+    }
+
+    return 'unknown';
   }
 }
 
