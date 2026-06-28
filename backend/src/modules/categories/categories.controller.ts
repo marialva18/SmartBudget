@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/auth/authenticated-user';
+import { WriteThrottle } from '../../common/rate-limit/rate-limit.decorators';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { ListCategoriesDto } from './dto/list-categories.dto';
@@ -26,6 +27,7 @@ export class CategoriesController {
     return this.categoriesService.findAll(user.userId, query);
   }
 
+  @WriteThrottle()
   @Post()
   create(
     @CurrentUser() user: AuthenticatedUser,
@@ -34,6 +36,7 @@ export class CategoriesController {
     return this.categoriesService.create(user.userId, user.platform, dto);
   }
 
+  @WriteThrottle()
   @Patch(':categoryId')
   update(
     @CurrentUser() user: AuthenticatedUser,
@@ -48,6 +51,7 @@ export class CategoriesController {
     );
   }
 
+  @WriteThrottle()
   @Patch(':categoryId/archive')
   archive(
     @CurrentUser() user: AuthenticatedUser,

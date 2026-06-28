@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQueryClient } from '@tanstack/react-query';
 import { Banknote, Landmark, WalletCards } from 'lucide-react';
 import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
@@ -24,6 +25,7 @@ const accountTypes = [
 
 export function AccountPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [serverError, setServerError] = useState('');
   const {
     control,
@@ -53,6 +55,14 @@ export function AccountPage() {
           user: { ...session.user, onboardingCompleted: true },
         });
       }
+      queryClient.setQueryData(['auth', 'me'], (currentUser: unknown) => {
+        if (!currentUser || typeof currentUser !== 'object') {
+          return currentUser;
+        }
+
+        return { ...currentUser, onboardingCompleted: true };
+      });
+      await queryClient.invalidateQueries({ queryKey: ['profile'] });
       navigate('/app/dashboard');
     } catch (error) {
       setServerError(
@@ -138,7 +148,7 @@ export function AccountPage() {
             {...register('openingBalance', { valueAsNumber: true })}
           />
           <span className="mt-1 block text-sm text-slate-500">
-            Se registrará como un movimiento de apertura auditable.
+            Lo usaremos como punto de partida para calcular tus saldos.
           </span>
           {errors.openingBalance ? (
             <span className="mt-1 block text-sm text-red-700">

@@ -41,7 +41,7 @@ describe('AuthCookieService', () => {
     );
   });
 
-  it('sets a Secure cookie in production', () => {
+  it('sets a cross-site compatible Secure cookie in production', () => {
     const service = createService('production');
 
     service.setRefreshToken(
@@ -52,7 +52,7 @@ describe('AuthCookieService', () => {
     expect(response.cookie).toHaveBeenCalledWith(
       'smartbudget_refresh',
       'token-id.token-secret',
-      expect.objectContaining({ secure: true }),
+      expect.objectContaining({ sameSite: 'none', secure: true }),
     );
   });
 

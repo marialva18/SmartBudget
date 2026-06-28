@@ -9,7 +9,7 @@ export function AuthCard({ children, className = '' }: AuthCardProps) {
   return (
     <section
       className={[
-        'rounded-xl border border-[#e0e3e5] bg-white p-6 shadow-[0_10px_30px_rgba(13,148,136,0.08)] md:p-10',
+        'rounded-xl border border-[#dde8e4] bg-white/95 p-6 shadow-[0_18px_45px_rgba(9,60,54,0.08)] backdrop-blur md:p-8',
         className,
       ].join(' ')}
     >

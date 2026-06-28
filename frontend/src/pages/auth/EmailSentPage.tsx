@@ -12,17 +12,17 @@ export function EmailSentPage() {
   const protectedEmail = email ? maskEmail(email) : null;
 
   return (
-    <main className="grid min-h-screen place-items-center bg-[#f4f8f7] px-4 py-10">
-      <section className="w-full max-w-md rounded-3xl bg-white p-8 text-center shadow-xl shadow-emerald-900/10">
-        <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-100 text-emerald-800">
+    <main className="grid min-h-screen place-items-center bg-[#f7f9fb] px-4 py-10">
+      <section className="w-full max-w-md rounded-xl border border-[#e0e3e5] bg-white p-8 text-center shadow-[0_18px_45px_rgba(13,148,136,0.10)]">
+        <div className="mx-auto grid h-14 w-14 place-items-center rounded-lg bg-[#dcfbf5] text-[#006b5f]">
           <Mail size={28} />
         </div>
 
-        <h1 className="mt-6 text-3xl font-black text-slate-950">
+        <h1 className="mt-6 text-3xl font-black text-[#191c1e]">
           {isVerification ? 'Verifica tu correo' : 'Revisa tu correo'}
         </h1>
 
-        <p className="mt-3 leading-7 text-slate-600">
+        <p className="mt-3 leading-7 text-[#3c4a46]">
           {message ??
             (isVerification
               ? 'Si el registro fue válido, enviaremos un enlace para activar la cuenta.'
@@ -30,12 +30,12 @@ export function EmailSentPage() {
         </p>
 
         {protectedEmail ? (
-          <p className="mt-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
+          <p className="mt-4 rounded-lg bg-[#dcfbf5] px-4 py-3 text-sm font-semibold text-[#006b5f]">
             {protectedEmail}
           </p>
         ) : null}
 
-        <p className="mt-5 text-sm leading-6 text-slate-500">
+        <p className="mt-5 text-sm leading-6 text-[#6b7a76]">
           {isVerification
             ? 'Por seguridad, revisa tu bandeja de entrada y abre el enlace recibido para activar la cuenta.'
             : 'Por seguridad, no confirmamos si el correo existe o si está habilitado.'}
@@ -43,14 +43,14 @@ export function EmailSentPage() {
 
         <div className="mt-8 grid gap-3">
           <Link
-            className="rounded-full bg-emerald-800 px-5 py-3 font-bold text-white transition hover:bg-emerald-900"
+            className="rounded-lg bg-[#006b5f] px-5 py-3 font-bold text-white transition hover:bg-[#005047]"
             to="/login"
           >
             Ir a iniciar sesión
           </Link>
 
           <Link
-            className="rounded-full border border-emerald-200 px-5 py-3 font-bold text-emerald-800 transition hover:bg-emerald-50"
+            className="rounded-lg border border-[#bacac5] px-5 py-3 font-bold text-[#006b5f] transition hover:bg-[#f2f4f6]"
             to="/"
           >
             Volver al inicio

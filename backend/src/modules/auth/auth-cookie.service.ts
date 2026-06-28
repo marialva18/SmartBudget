@@ -38,12 +38,14 @@ export class AuthCookieService {
 
   private baseOptions(): CookieOptions {
     const apiPrefix = this.configService.get<string>('API_PREFIX', 'api/v1');
+    const isProduction =
+      this.configService.get<string>('NODE_ENV', 'development') ===
+      'production';
+
     return {
       httpOnly: true,
-      secure:
-        this.configService.get<string>('NODE_ENV', 'development') ===
-        'production',
-      sameSite: 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       path: `/${apiPrefix}/auth`,
     };
   }

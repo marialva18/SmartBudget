@@ -40,6 +40,7 @@ export function register(values: RegisterFormValues) {
       displayName: values.displayName,
       email: values.email,
       password: values.password,
+      acceptedTerms: values.acceptedTerms,
     },
   });
 }

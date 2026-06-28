@@ -15,11 +15,11 @@ export function FormField({
 }: FormFieldProps) {
   return (
     <label className="block">
-      <span className="px-1 text-xs font-semibold uppercase tracking-wide text-[#3c4a46]">
+      <span className="px-1 font-mono text-xs font-semibold uppercase tracking-[0.12em] text-[#52625d]">
         {label}
       </span>
       <input
-        className="mt-1 h-12 w-full rounded-lg border-2 border-transparent bg-[#f2f4f6] px-4 text-[#191c1e] outline-none transition focus:border-[#006b5f] focus:bg-white"
+        className="mt-1 h-12 w-full rounded-lg border border-[#dfe8e4] bg-[#f7faf8] px-4 text-[#191c1e] outline-none transition placeholder:text-[#6b7a76]/70 hover:border-[#bacac5] focus:border-[#006b5f] focus:bg-white focus:shadow-[0_0_0_4px_rgba(0,107,95,0.12)]"
         {...registration}
         {...inputProps}
       />

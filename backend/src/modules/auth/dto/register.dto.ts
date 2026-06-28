@@ -1,4 +1,5 @@
 import {
+  Equals,
   IsEmail,
   IsString,
   Matches,
@@ -31,4 +32,9 @@ export class RegisterDto {
     message: es.validation.password,
   })
   password!: string;
+
+  @Equals(true, {
+    message: 'Debes aceptar los términos y la política de privacidad.',
+  })
+  acceptedTerms!: boolean;
 }

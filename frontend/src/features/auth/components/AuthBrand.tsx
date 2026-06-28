@@ -1,13 +1,15 @@
-﻿import { WalletCards } from 'lucide-react';
+import { QoriMark } from '../../../components/brand/QoriMark';
 
 export function AuthBrand() {
   return (
     <div className="flex flex-col items-center text-center">
-      <div className="mb-4 rounded-xl bg-[#2dd4bf] p-3 text-[#00574d]">
-        <WalletCards className="h-8 w-8" aria-hidden="true" />
+      <div className="mb-4">
+        <QoriMark size="md" />
       </div>
-      <p className="font-semibold text-[#006b5f]">Qori</p>
+      <p className="text-xl font-black text-[#063c36]">Qori</p>
+      <p className="mt-1 text-sm font-semibold text-[#52625d]">
+        Finanzas claras, paso a paso.
+      </p>
     </div>
   );
 }
-

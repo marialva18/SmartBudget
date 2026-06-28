@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/auth/authenticated-user';
+import { WriteThrottle } from '../../common/rate-limit/rate-limit.decorators';
 import { CreateGoalDto } from './dto/create-goal.dto';
 import { CreateGoalReservationDto } from './dto/create-goal-reservation.dto';
 import { ListGoalsDto } from './dto/list-goals.dto';
@@ -29,11 +30,13 @@ export class GoalsController {
     return this.goalsService.findAll(user.userId, query);
   }
 
+  @WriteThrottle()
   @Post()
   create(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateGoalDto) {
     return this.goalsService.create(user.userId, user.platform, dto);
   }
 
+  @WriteThrottle()
   @Patch(':goalId')
   update(
     @CurrentUser() user: AuthenticatedUser,
@@ -43,6 +46,7 @@ export class GoalsController {
     return this.goalsService.update(user.userId, user.platform, goalId, dto);
   }
 
+  @WriteThrottle()
   @Patch(':goalId/complete')
   complete(
     @CurrentUser() user: AuthenticatedUser,
@@ -51,6 +55,7 @@ export class GoalsController {
     return this.goalsService.complete(user.userId, user.platform, goalId);
   }
 
+  @WriteThrottle()
   @Patch(':goalId/cancel')
   cancel(
     @CurrentUser() user: AuthenticatedUser,
@@ -59,6 +64,7 @@ export class GoalsController {
     return this.goalsService.cancel(user.userId, user.platform, goalId);
   }
 
+  @WriteThrottle()
   @Delete(':goalId')
   remove(
     @CurrentUser() user: AuthenticatedUser,
@@ -67,6 +73,7 @@ export class GoalsController {
     return this.goalsService.remove(user.userId, user.platform, goalId);
   }
 
+  @WriteThrottle()
   @Post(':goalId/reservations')
   reserve(
     @CurrentUser() user: AuthenticatedUser,
@@ -76,6 +83,7 @@ export class GoalsController {
     return this.goalsService.reserve(user.userId, user.platform, goalId, dto);
   }
 
+  @WriteThrottle()
   @Patch(':goalId/reservations/:reservationId/reverse')
   reverseReservation(
     @CurrentUser() user: AuthenticatedUser,

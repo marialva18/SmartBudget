@@ -1,0 +1,19 @@
+<svg width="900" height="720" viewBox="0 0 900 720" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title">
+  <title id="title">Fondo visual Qori</title>
+  <rect width="900" height="720" fill="#F7F9FB"/>
+  <rect x="96" y="82" width="708" height="556" rx="28" fill="#FFFFFF" stroke="#D9E3E1" stroke-width="2"/>
+  <rect x="136" y="126" width="628" height="92" rx="18" fill="#EEF8F6" stroke="#D1E7E2"/>
+  <circle cx="184" cy="172" r="24" fill="#006B5F"/>
+  <path d="M174 172.7L181.2 179.8L195 164.2" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="230" y="151" width="178" height="14" rx="7" fill="#1F2A2E"/>
+  <rect x="230" y="177" width="304" height="12" rx="6" fill="#8CA19B"/>
+  <rect x="136" y="254" width="284" height="260" rx="22" fill="#FFFFFF" stroke="#D9E3E1" stroke-width="2"/>
+  <rect x="176" y="384" width="46" height="86" rx="10" fill="#006B5F"/>
+  <rect x="240" y="354" width="46" height="116" rx="10" fill="#2DD4BF"/>
+  <rect x="304" y="409" width="46" height="61" rx="10" fill="#0F766E"/>
+  <rect x="456" y="254" width="308" height="260" rx="22" fill="#0B2B28"/>
+  <path d="M610 300L700 342V409C700 463 662.2 494.8 610 510C557.8 494.8 520 463 520 409V342L610 300Z" fill="#DDFBF5" stroke="#89F5E7" stroke-width="4"/>
+  <path d="M574 404L600 430L650 374" stroke="#006B5F" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="136" y="540" width="284" height="58" rx="16" fill="#F8FAFA" stroke="#D9E3E1"/>
+  <circle cx="176" cy="569" r="14" fill="#006B5F"/>
+</svg>

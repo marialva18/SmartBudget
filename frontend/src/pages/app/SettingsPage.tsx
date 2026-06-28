@@ -37,15 +37,18 @@ export function SettingsPage() {
     queryFn: getProfile,
   });
   const accountsQuery = useQuery({
-  queryKey: ['accounts'],
-  queryFn: getAccounts,
-});
-const activeAccounts = accountsQuery.data?.filter(
-  (account) => account.status === 'ACTIVE',
-) ?? [];
+    queryKey: ['accounts'],
+    queryFn: getAccounts,
+  });
+  const activeAccounts =
+    accountsQuery.data?.filter((account) => account.status === 'ACTIVE') ?? [];
 
-const hasPenAccount = activeAccounts.some((account) => account.currency === 'PEN');
-const hasUsdAccount = activeAccounts.some((account) => account.currency === 'USD');
+  const hasPenAccount = activeAccounts.some(
+    (account) => account.currency === 'PEN',
+  );
+  const hasUsdAccount = activeAccounts.some(
+    (account) => account.currency === 'USD',
+  );
   const {
     formState: { errors, isDirty },
     handleSubmit,
@@ -97,14 +100,14 @@ const hasUsdAccount = activeAccounts.some((account) => account.currency === 'USD
     <section className="space-y-7">
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <p className="text-sm font-semibold text-emerald-700">
+          <p className="font-mono text-xs font-semibold uppercase tracking-[0.14em] text-[#006b5f]">
             {es.settings.section}
           </p>
-          <h1 className="mt-1 text-3xl font-bold">{es.settings.title}</h1>
-          <p className="mt-2 text-slate-600">{es.settings.subtitle}</p>
+          <h1 className="mt-2 text-3xl font-extrabold text-[#191c1e]">{es.settings.title}</h1>
+          <p className="mt-2 text-[#3c4a46]">{es.settings.subtitle}</p>
         </div>
         <button
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-red-200 bg-white px-5 py-3 font-semibold text-red-700"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-red-200 bg-white px-5 py-3 font-semibold text-red-700 hover:bg-red-50"
           disabled={logoutMutation.isPending}
           onClick={() => logoutMutation.mutate()}
           type="button"
@@ -116,13 +119,13 @@ const hasUsdAccount = activeAccounts.some((account) => account.currency === 'USD
 
       {query.isLoading ? (
         <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
-          <div className="h-80 animate-pulse rounded-lg bg-slate-200" />
-          <div className="h-80 animate-pulse rounded-lg bg-slate-200" />
+          <div className="h-80 animate-pulse rounded-xl bg-[#eceef0]" />
+          <div className="h-80 animate-pulse rounded-xl bg-[#eceef0]" />
         </div>
       ) : null}
 
       {query.isError ? (
-        <div className="flex items-center justify-between border-y border-red-200 bg-red-50 p-4 text-red-800">
+        <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
           <span>{es.settings.loadError}</span>
           <button
             className="inline-flex items-center gap-2 font-semibold"
@@ -138,20 +141,24 @@ const hasUsdAccount = activeAccounts.some((account) => account.currency === 'USD
       {query.data ? (
         <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
           <form
-            className="space-y-6 rounded-lg bg-white p-5 shadow-[0_10px_30px_rgba(13,148,136,0.08)]"
+            className="space-y-6 rounded-xl border border-[#e0e3e5] bg-white p-5 shadow-[0_10px_30px_rgba(13,148,136,0.08)]"
             onSubmit={handleSubmit((values) =>
-  saveMutation.mutate({
-    ...values,
-    maxExpenseAmountPen: hasPenAccount ? values.maxExpenseAmountPen : null,
-    maxExpenseAmountUsd: hasUsdAccount ? values.maxExpenseAmountUsd : null,
-  }),
-)}
+              saveMutation.mutate({
+                ...values,
+                maxExpenseAmountPen: hasPenAccount
+                  ? values.maxExpenseAmountPen
+                  : null,
+                maxExpenseAmountUsd: hasUsdAccount
+                  ? values.maxExpenseAmountUsd
+                  : null,
+              }),
+            )}
           >
             <div>
-              <h2 className="text-xl font-bold">
+              <h2 className="text-xl font-bold text-[#191c1e]">
                 {es.settings.profileTitle}
               </h2>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-[#3c4a46]">
                 {es.settings.profileDescription}
               </p>
             </div>
@@ -174,7 +181,7 @@ const hasUsdAccount = activeAccounts.some((account) => account.currency === 'USD
 
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block">
-                <span className="mb-2 block text-xs font-semibold uppercase text-slate-600">
+                <span className="mb-2 block font-mono text-xs font-semibold uppercase tracking-[0.12em] text-[#6b7a76]">
                   {es.settings.preferredCurrency}
                 </span>
                 <select
@@ -206,7 +213,7 @@ const hasUsdAccount = activeAccounts.some((account) => account.currency === 'USD
                 {es.settings.timezone}
               </span>
               <select
-                className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700"
+                className="w-full rounded-lg bg-[#f2f4f6] px-4 py-3 outline-none focus:ring-2 focus:ring-[#006b5f]"
                 {...register('timezone')}
               >
                 {timezoneOptions.map((timezone) => (

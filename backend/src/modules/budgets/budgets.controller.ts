@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/auth/authenticated-user';
+import { WriteThrottle } from '../../common/rate-limit/rate-limit.decorators';
 import { BudgetsService } from './budgets.service';
 import { CreateBudgetDto } from './dto/create-budget.dto';
 import { ListBudgetsDto } from './dto/list-budgets.dto';
@@ -27,11 +28,13 @@ export class BudgetsController {
     return this.budgetsService.findAll(user.userId, query);
   }
 
+  @WriteThrottle()
   @Post()
   create(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateBudgetDto) {
     return this.budgetsService.create(user.userId, user.platform, dto);
   }
 
+  @WriteThrottle()
   @Patch(':budgetId')
   update(
     @CurrentUser() user: AuthenticatedUser,

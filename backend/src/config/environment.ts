@@ -3,6 +3,7 @@ type Environment = Record<string, unknown>;
 const REQUIRED_PRODUCTION_VALUES = [
   'DATABASE_URL',
   'JWT_ACCESS_SECRET',
+  'FRONTEND_ORIGIN',
 ] as const;
 
 const EMAIL_PROVIDERS = ['resend', 'smtp'] as const;
@@ -27,6 +28,18 @@ export function validateEnvironment(config: Environment): Environment {
 
     if (accessSecret.length < 32) {
       throw new Error('JWT_ACCESS_SECRET must contain at least 32 characters.');
+    }
+
+    if (readString(config.FRONTEND_ORIGIN).includes('localhost')) {
+      throw new Error('FRONTEND_ORIGIN must use the production frontend URL.');
+    }
+
+    if (!readBoolean(config.TRUST_PROXY, false)) {
+      throw new Error('TRUST_PROXY must be true in production.');
+    }
+
+    if (!readString(config.EMAIL_PROVIDER)) {
+      throw new Error('EMAIL_PROVIDER must be configured in production.');
     }
   }
 
@@ -106,6 +119,8 @@ export function validateEnvironment(config: Environment): Environment {
     REFRESH_COOKIE_MAX_AGE_MS: Number(
       config.REFRESH_COOKIE_MAX_AGE_MS ?? 604_800_000,
     ),
+    THROTTLE_TTL_MS: readPositiveInteger(config.THROTTLE_TTL_MS, 60_000),
+    THROTTLE_LIMIT: readPositiveInteger(config.THROTTLE_LIMIT, 100),
 
     EMAIL_PROVIDER: emailProvider,
     EMAIL_FROM: readString(config.EMAIL_FROM),

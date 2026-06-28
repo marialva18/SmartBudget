@@ -72,27 +72,27 @@ function VerifyEmailLayout({
     status === 'success' ? '\u2705' : status === 'error' ? '\u26A0\uFE0F' : '\u23F3';
 
   return (
-    <main className="grid min-h-screen place-items-center bg-[#f4f8f7] px-4 py-10">
-      <section className="w-full max-w-md rounded-3xl bg-white p-8 text-center shadow-xl shadow-emerald-900/10">
-        <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-100 text-2xl">
+    <main className="grid min-h-screen place-items-center bg-[#f7f9fb] px-4 py-10">
+      <section className="w-full max-w-md rounded-xl border border-[#e0e3e5] bg-white p-8 text-center shadow-[0_18px_45px_rgba(13,148,136,0.10)]">
+        <div className="mx-auto grid h-14 w-14 place-items-center rounded-lg bg-[#dcfbf5] text-2xl">
           {icon}
         </div>
 
-        <h1 className="mt-6 text-3xl font-black text-slate-950">{title}</h1>
+        <h1 className="mt-6 text-3xl font-black text-[#191c1e]">{title}</h1>
 
-        <p className="mt-3 leading-7 text-slate-600">{description}</p>
+        <p className="mt-3 leading-7 text-[#3c4a46]">{description}</p>
 
         {status !== 'loading' ? (
           <div className="mt-8 grid gap-3">
             <Link
-              className="rounded-full bg-emerald-800 px-5 py-3 font-bold text-white transition hover:bg-emerald-900"
+              className="rounded-lg bg-[#006b5f] px-5 py-3 font-bold text-white transition hover:bg-[#005047]"
               to="/login"
             >
               Iniciar sesión
             </Link>
 
             <Link
-              className="rounded-full border border-emerald-200 px-5 py-3 font-bold text-emerald-800 transition hover:bg-emerald-50"
+              className="rounded-lg border border-[#bacac5] px-5 py-3 font-bold text-[#006b5f] transition hover:bg-[#f2f4f6]"
               to="/"
             >
               Volver al inicio

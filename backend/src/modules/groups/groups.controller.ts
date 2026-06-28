@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/auth/authenticated-user';
+import { WriteThrottle } from '../../common/rate-limit/rate-limit.decorators';
 import { CreateGroupExpenseDto } from './dto/create-group-expense.dto';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { InviteGroupMemberDto } from './dto/invite-group-member.dto';
@@ -23,11 +24,13 @@ export class GroupsController {
     return this.groupsService.findAll(user.userId);
   }
 
+  @WriteThrottle()
   @Post()
   create(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateGroupDto) {
     return this.groupsService.create(user.userId, user.platform, dto);
   }
 
+  @WriteThrottle()
   @Post(':groupId/invitations')
   invite(
     @CurrentUser() user: AuthenticatedUser,
@@ -45,6 +48,7 @@ export class GroupsController {
     return this.groupsService.findExpenses(user.userId, groupId);
   }
 
+  @WriteThrottle()
   @Post(':groupId/expenses')
   createExpense(
     @CurrentUser() user: AuthenticatedUser,
@@ -59,6 +63,7 @@ export class GroupsController {
     );
   }
 
+  @WriteThrottle()
   @Patch(':groupId/accept')
   accept(
     @CurrentUser() user: AuthenticatedUser,
@@ -67,6 +72,7 @@ export class GroupsController {
     return this.groupsService.accept(user.userId, user.platform, groupId);
   }
 
+  @WriteThrottle()
   @Patch(':groupId/decline')
   decline(
     @CurrentUser() user: AuthenticatedUser,
@@ -75,6 +81,7 @@ export class GroupsController {
     return this.groupsService.decline(user.userId, user.platform, groupId);
   }
 
+  @WriteThrottle()
   @Patch(':groupId/archive')
   archive(
     @CurrentUser() user: AuthenticatedUser,

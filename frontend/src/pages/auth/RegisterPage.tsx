@@ -1,16 +1,16 @@
 ﻿import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowRight, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { ArrowRight, CheckCircle, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthCard } from '../../features/auth/components/AuthCard';
+import { AuthImage } from '../../features/auth/components/AuthImage';
 import { FormField } from '../../features/auth/components/FormField';
 import {
   registerSchema,
   type RegisterFormValues,
 } from '../../features/auth/schemas/authSchemas';
 import { register as registerUser } from '../../features/auth/services/authApi';
-
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -46,8 +46,7 @@ export function RegisterPage() {
     setServerError(null);
     try {
       const result = await registerUser(values);
-
-navigate(
+      navigate(
         `/email-sent?mode=verify&message=${encodeURIComponent(result.message)}`,
       );
     } catch (error) {
@@ -58,25 +57,34 @@ navigate(
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-5 py-10 md:px-16">
-      <div className="grid w-full max-w-6xl overflow-hidden rounded-xl bg-white shadow-[0_10px_30px_rgba(13,148,136,0.08)] md:grid-cols-2">
-        <aside className="hidden bg-gradient-to-br from-[#6dfe9c] to-[#2dd4bf] p-10 text-white md:flex md:flex-col md:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide">
-              Qori
+    <div className="qori-auth-surface flex min-h-screen items-center justify-center px-4 py-6 sm:px-5 lg:px-10">
+      <div className="grid w-full max-w-5xl overflow-hidden rounded-xl border border-[#dde8e4] bg-white shadow-[0_18px_45px_rgba(9,60,54,0.08)] lg:grid-cols-[0.92fr_1.08fr]">
+        <aside className="relative hidden overflow-hidden bg-[#063c36] p-10 text-white lg:flex lg:flex-col lg:justify-between">
+          <AuthImage
+            className="qori-auth-bg absolute inset-0 h-full w-full object-cover opacity-55"
+            fallbackSrc="/images/qori_register_background.svg"
+            src="/images/qori_register_background.png"
+          />
+          <div className="absolute inset-0 bg-[#063c36]/55" />
+          <div className="relative z-10">
+            <p className="font-mono text-sm font-semibold uppercase tracking-[0.18em] text-[#89f5e7]">
+              Empieza con calma
             </p>
-            <h1 className="mt-6 text-5xl font-extrabold leading-tight">
-              Domina tu futuro financiero.
+            <h1 className="mt-6 text-4xl font-extrabold leading-tight">
+              Empieza a ordenar tu dinero.
             </h1>
             <p className="mt-5 text-lg text-white/90">
-              Registra movimientos, entiende tus hábitos y construye metas con
-              una experiencia clara y segura.
+              Qori te acompaña paso a paso para entender tus gastos, cuidar tus
+              metas y decidir con más tranquilidad.
             </p>
           </div>
-          <div className="space-y-4">
-            {['Análisis de gastos', 'Seguridad desde backend', 'Metas de ahorro'].map(
+          <div className="relative z-10 space-y-4">
+            {['Entiende tus gastos', 'Cuida tu dinero', 'Avanza hacia tus metas'].map(
               (item) => (
-                <div className="flex items-center gap-3" key={item}>
+                <div
+                  className="qori-card-motion flex items-center gap-3 rounded-xl border border-white/15 bg-white/10 p-3 backdrop-blur"
+                  key={item}
+                >
                   <span className="rounded-lg bg-white/20 p-2">
                     <CheckCircle size={20} />
                   </span>
@@ -85,11 +93,24 @@ navigate(
               ),
             )}
           </div>
+          <div className="relative z-10 rounded-xl border border-white/20 bg-white/10 p-5 backdrop-blur">
+            <div className="mb-3 flex items-center gap-2 font-semibold">
+              <ShieldCheck size={18} />
+              Registro claro y seguro
+            </div>
+            <p className="text-sm leading-6 text-white/85">
+              Te pedimos solo lo necesario para crear tu cuenta y ayudarte a
+              ordenar tus finanzas desde el primer paso.
+            </p>
+          </div>
         </aside>
 
         <AuthCard className="rounded-none border-0 shadow-none">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold">Crea tu cuenta</h1>
+            <p className="mb-3 font-mono text-xs font-semibold uppercase tracking-[0.18em] text-[#00796b]">
+              Alta protegida
+            </p>
+            <h1 className="text-3xl font-extrabold">Crea tu cuenta</h1>
             <p className="mt-2 text-[#3c4a46]">
               Empieza a tomar el control de tus finanzas.
             </p>
@@ -118,7 +139,7 @@ navigate(
               </span>
               <div className="relative mt-1">
                 <input
-                  className="h-12 w-full rounded-lg border-2 border-transparent bg-[#f2f4f6] px-4 pr-12 outline-none transition focus:border-[#006b5f] focus:bg-white"
+                  className="h-12 w-full rounded-lg border-2 border-transparent bg-[#f2f4f6] px-4 pr-12 outline-none transition focus:border-[#006b5f] focus:bg-white focus:shadow-[0_0_0_4px_rgba(45,212,191,0.16)]"
                   placeholder="••••••••"
                   type={showPassword ? 'text' : 'password'}
                   {...register('password')}
@@ -140,7 +161,7 @@ navigate(
                 {passwordChecks.map((check) => (
                   <span
                     className={[
-                      'flex items-center gap-1 text-xs font-semibold uppercase',
+                      'flex items-center gap-1 font-mono text-xs font-semibold uppercase tracking-[0.08em]',
                       check.met ? 'text-[#006d36]' : 'text-[#6b7a76]',
                     ].join(' ')}
                     key={check.label}
@@ -160,13 +181,15 @@ navigate(
               type="password"
             />
 
-            <label className="flex items-start gap-3 text-sm text-[#3c4a46]">
+            <label className="flex items-start gap-3 rounded-lg border border-[#e0e3e5] bg-[#f7f9fb] p-3 text-sm text-[#3c4a46]">
               <input
                 className="mt-1 h-5 w-5 rounded border-[#6b7a76] text-[#006b5f]"
                 type="checkbox"
                 {...register('acceptedTerms')}
               />
-              <span>Acepto los términos y condiciones y la política de privacidad.</span>
+              <span>
+                Acepto los términos y condiciones y la política de privacidad.
+              </span>
             </label>
             {errors.acceptedTerms?.message ? (
               <span className="block text-sm text-red-700">
@@ -175,13 +198,13 @@ navigate(
             ) : null}
 
             {serverError ? (
-              <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+              <p className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {serverError}
               </p>
             ) : null}
 
             <button
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#006b5f] font-semibold text-white transition hover:bg-[#005047] active:scale-[0.98] disabled:opacity-70"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#006b5f] font-semibold text-white shadow-[0_10px_30px_rgba(13,148,136,0.18)] transition hover:bg-[#005047] active:scale-[0.98] disabled:opacity-70"
               disabled={isSubmitting}
               type="submit"
             >
@@ -208,5 +231,3 @@ function sanitizeNameInput(event: React.FormEvent<HTMLInputElement>) {
     '',
   );
 }
-
-

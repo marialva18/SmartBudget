@@ -12,6 +12,7 @@ import {
 import { randomUUID } from 'node:crypto';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/auth/authenticated-user';
+import { WriteThrottle } from '../../common/rate-limit/rate-limit.decorators';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { ListTransactionsDto } from './dto/list-transactions.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
@@ -38,6 +39,7 @@ export class TransactionsController {
     return this.transactionsService.findOne(user.userId, transactionId);
   }
 
+  @WriteThrottle()
   @Post()
   create(
     @CurrentUser() user: AuthenticatedUser,
@@ -52,6 +54,7 @@ export class TransactionsController {
     );
   }
 
+  @WriteThrottle()
   @Patch(':transactionId')
   update(
     @CurrentUser() user: AuthenticatedUser,
@@ -66,6 +69,7 @@ export class TransactionsController {
     );
   }
 
+  @WriteThrottle()
   @Delete(':transactionId')
   remove(
     @CurrentUser() user: AuthenticatedUser,

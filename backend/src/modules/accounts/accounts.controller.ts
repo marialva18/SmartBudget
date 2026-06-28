@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/auth/authenticated-user';
+import { WriteThrottle } from '../../common/rate-limit/rate-limit.decorators';
 import { AccountsService } from './accounts.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { ParseSqlServerGuidPipe } from '../../common/validation/sql-server-guid';
@@ -16,6 +17,7 @@ import { UpdateOpeningBalanceDto } from './dto/update-opening-balance.dto';
 export class AccountsController {
   constructor(private readonly accountsService: AccountsService) {}
 
+  @WriteThrottle()
   @Post()
   create(
     @CurrentUser() user: AuthenticatedUser,
@@ -37,7 +39,8 @@ export class AccountsController {
     return this.accountsService.findOne(user.userId, accountId);
   }
 
-    @Patch(':accountId/opening-balance')
+  @WriteThrottle()
+  @Patch(':accountId/opening-balance')
   updateOpeningBalance(
     @CurrentUser() user: AuthenticatedUser,
     @Param('accountId', ParseSqlServerGuidPipe) accountId: string,
@@ -51,6 +54,7 @@ export class AccountsController {
     );
   }
 
+  @WriteThrottle()
   @Patch(':accountId/archive')
   archive(
     @CurrentUser() user: AuthenticatedUser,

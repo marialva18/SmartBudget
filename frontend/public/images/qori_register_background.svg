@@ -1,0 +1,18 @@
+<svg width="900" height="720" viewBox="0 0 900 720" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title">
+  <title id="title">Fondo visual Qori</title>
+  <rect width="900" height="720" fill="#F7F9FB"/>
+  <rect x="96" y="82" width="708" height="556" rx="28" fill="#FFFFFF" stroke="#D9E3E1" stroke-width="2"/>
+  <rect x="136" y="126" width="188" height="118" rx="22" fill="#EEF8F6" stroke="#D1E7E2"/>
+  <rect x="356" y="126" width="188" height="118" rx="22" fill="#FFFFFF" stroke="#D9E3E1"/>
+  <rect x="576" y="126" width="188" height="118" rx="22" fill="#FFFFFF" stroke="#D9E3E1"/>
+  <circle cx="192" cy="185" r="24" fill="#006B5F"/>
+  <path d="M181 185.5L189 193L204 176" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="412" cy="185" r="24" fill="#2DD4BF"/>
+  <circle cx="632" cy="185" r="24" fill="#D6A84F"/>
+  <rect x="154" y="266" width="592" height="86" rx="20" fill="#0B2B28"/>
+  <rect x="154" y="386" width="276" height="188" rx="22" fill="#FFFFFF" stroke="#D9E3E1" stroke-width="2"/>
+  <rect x="470" y="386" width="276" height="188" rx="22" fill="#FFFFFF" stroke="#D9E3E1" stroke-width="2"/>
+  <path d="M206 513C229 468 269 441 321 432" stroke="#006B5F" stroke-width="14" stroke-linecap="round"/>
+  <path d="M522 512H692" stroke="#D9E3E1" stroke-width="12" stroke-linecap="round"/>
+  <path d="M522 476H640" stroke="#006B5F" stroke-width="12" stroke-linecap="round"/>
+</svg>

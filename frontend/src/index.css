@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   min-width: 320px;
@@ -9,4 +19,265 @@ body {
     sans-serif;
   background: #f8fafc;
   color: #0f172a;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+::selection {
+  background: #2dd4bf;
+  color: #00201c;
+}
+
+* {
+  scrollbar-color: #bacac5 transparent;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  transition-duration: 180ms;
+  transition-property:
+    background-color, border-color, color, box-shadow, opacity, transform;
+  transition-timing-function: ease;
+}
+
+.qori-app-surface {
+  background:
+    radial-gradient(circle at top right, rgba(214, 168, 79, 0.09), transparent 28rem),
+    radial-gradient(circle at bottom left, rgba(0, 121, 107, 0.08), transparent 30rem),
+    linear-gradient(180deg, #f7faf8 0%, #f2f7f4 100%);
+}
+
+.qori-home-surface {
+  background:
+    radial-gradient(circle at 8% 18%, rgba(0, 121, 107, 0.09), transparent 18rem),
+    radial-gradient(circle at 82% 14%, rgba(214, 168, 79, 0.1), transparent 20rem),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.74) 25%, transparent 25%) 0 0 / 28px 28px,
+    #f4f8f5;
+}
+
+.qori-login-surface {
+  background:
+    radial-gradient(circle at 18% 20%, rgba(214, 168, 79, 0.18), transparent 22rem),
+    radial-gradient(circle at 82% 82%, rgba(0, 121, 107, 0.18), transparent 24rem),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.06) 25%, transparent 25%) 0 0 / 30px 30px,
+    #073f38;
+}
+
+.qori-auth-surface {
+  background:
+    radial-gradient(circle at top left, rgba(214, 168, 79, 0.12), transparent 22rem),
+    radial-gradient(circle at bottom right, rgba(0, 121, 107, 0.14), transparent 24rem),
+    #f3f8f5;
+}
+
+.qori-mark {
+  animation: qori-mark-breathe 3.8s ease-in-out infinite;
+}
+
+.qori-mark-coin {
+  position: absolute;
+  right: -3px;
+  top: -4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: #d6a84f;
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.32),
+    0 8px 18px rgba(214, 168, 79, 0.34);
+  animation: qori-coin-drop 2.8s ease-in-out infinite;
+}
+
+.qori-piggy-mark {
+  position: relative;
+  overflow: visible;
+  animation: qori-piggy-breathe 3.8s ease-in-out infinite;
+}
+
+.qori-piggy-coin {
+  position: absolute;
+  top: -10px;
+  right: 9px;
+  width: 13px;
+  height: 13px;
+  border-radius: 999px;
+  background: #d6a84f;
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.32),
+    0 8px 18px rgba(214, 168, 79, 0.34);
+  animation: qori-coin-drop 2.8s ease-in-out infinite;
+}
+
+.qori-card-motion {
+  animation: qori-card-in 620ms ease both;
+  transform-origin: center;
+}
+
+.qori-card-delay-0 {
+  animation-delay: 0ms;
+}
+
+.qori-card-delay-1 {
+  animation-delay: 90ms;
+}
+
+.qori-card-delay-2 {
+  animation-delay: 180ms;
+}
+
+.qori-card-delay-3 {
+  animation-delay: 270ms;
+}
+
+.qori-icon-motion {
+  transition:
+    transform 220ms ease,
+    background-color 220ms ease,
+    color 220ms ease;
+}
+
+.qori-card-motion:hover .qori-icon-motion {
+  transform: translateY(-2px) rotate(-3deg);
+  background: #006b5f;
+  color: #ffffff;
+}
+
+.qori-soft-float {
+  animation: qori-soft-float 4.8s ease-in-out infinite;
+}
+
+.qori-auth-bg {
+  animation: qori-auth-bg 12s ease-in-out infinite alternate;
+}
+
+.qori-image-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    transparent 42%,
+    rgba(255, 255, 255, 0.32) 50%,
+    transparent 58%,
+    transparent 100%
+  );
+  transform: translateX(-120%);
+  animation: qori-card-sheen 6.5s ease-in-out infinite;
+}
+
+@keyframes qori-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes qori-mark-breathe {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes qori-piggy-breathe {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes qori-coin-drop {
+  0%,
+  100% {
+    opacity: 0.78;
+    transform: translateY(0) rotate(0deg);
+  }
+
+  45% {
+    opacity: 1;
+    transform: translateY(9px) rotate(18deg);
+  }
+
+  70% {
+    opacity: 0.9;
+    transform: translateY(5px) rotate(-8deg);
+  }
+}
+
+@keyframes qori-soft-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes qori-auth-bg {
+  from {
+    transform: scale(1);
+  }
+
+  to {
+    transform: scale(1.035);
+  }
+}
+
+@keyframes qori-card-sheen {
+  0%,
+  42% {
+    transform: translateX(-120%);
+  }
+
+  58%,
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qori-card-motion,
+  .qori-soft-float,
+  .qori-auth-bg,
+  .qori-mark,
+  .qori-mark-coin,
+  .qori-piggy-mark,
+  .qori-piggy-coin,
+  .qori-image-card::after {
+    animation: none;
+  }
+
+  .qori-card-motion:hover .qori-icon-motion {
+    transform: none;
+  }
 }

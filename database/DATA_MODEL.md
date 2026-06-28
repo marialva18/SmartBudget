@@ -1,4 +1,4 @@
-# SmartBudget Data Model
+# Qori Data Model
 
 ## Principios
 
@@ -12,7 +12,8 @@
 
 ## Identidad
 
-- `users`: identidad, estado y hash de contrasena.
+- `users`: identidad, estado, hash de contrasena y aceptacion de terminos y
+  privacidad.
 - `profiles`: preferencias, zona horaria y consentimiento de IA.
 - `user_onboarding_objectives`: objetivos seleccionados durante la configuracion
   inicial.

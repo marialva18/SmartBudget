@@ -96,7 +96,7 @@ export function CoachPage() {
     }
 
     if (isUsageUnavailable) {
-      return 'No pudimos consultar tu uso diario. Revisa si el backend está levantado.';
+      return 'No pudimos consultar tu uso diario. Inténtalo nuevamente en unos minutos.';
     }
 
     if (isDailyLimitReached) {
@@ -146,40 +146,40 @@ export function CoachPage() {
 
   return (
     <section className="space-y-6">
-      <header className="overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-700 p-6 text-white shadow-[0_18px_45px_rgba(13,148,136,0.25)]">
+      <header className="overflow-hidden rounded-xl border border-[#e0e3e5] bg-white p-6 shadow-[0_18px_45px_rgba(13,148,136,0.10)]">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-1 text-sm font-semibold text-emerald-50">
+            <p className="inline-flex items-center gap-2 rounded-lg bg-[#dcfbf5] px-3 py-1 font-mono text-xs font-semibold uppercase tracking-[0.14em] text-[#006b5f]">
               <Sparkles size={16} />
               Coach financiero con IA
             </p>
 
-            <h1 className="mt-4 text-3xl font-bold">
+            <h1 className="mt-4 text-3xl font-extrabold text-[#191c1e]">
               Hablemos de tu dinero sin estrés
             </h1>
 
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-emerald-50/90">
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-[#3c4a46]">
               Pregunta sobre tus gastos, metas o hábitos del mes. Qori
               revisa un resumen de tus datos y te responde con recomendaciones
               claras, cercanas y accionables.
             </p>
           </div>
 
-          <div className="rounded-2xl bg-white/12 p-4 text-sm backdrop-blur">
-            <p className="font-semibold">Uso diario</p>
-            <p className="mt-2 text-2xl font-bold">
+          <div className="rounded-lg border border-[#e0e3e5] bg-[#f7f9fb] p-4 text-sm">
+            <p className="font-mono text-xs font-semibold uppercase tracking-[0.14em] text-[#3c4a46]">Uso diario</p>
+            <p className="mt-2 text-2xl font-bold text-[#006b5f]">
               {used}/{limit}
             </p>
-            <p className="mt-1 text-emerald-50/85">{helperText}</p>
+            <p className="mt-1 text-[#3c4a46]">{helperText}</p>
           </div>
         </div>
       </header>
 
       <div className="grid gap-5 lg:grid-cols-[1.5fr_0.8fr]">
-        <div className="flex min-h-[560px] flex-col rounded-2xl bg-white shadow-[0_10px_30px_rgba(13,148,136,0.08)]">
+        <div className="flex min-h-[560px] flex-col rounded-xl border border-[#e0e3e5] bg-white shadow-[0_10px_30px_rgba(13,148,136,0.08)]">
           <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
             <div className="flex items-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-full bg-emerald-100 text-emerald-800">
+              <span className="grid h-10 w-10 place-items-center rounded-lg bg-[#dcfbf5] text-[#006b5f]">
                 <Bot size={20} />
               </span>
 
@@ -192,7 +192,7 @@ export function CoachPage() {
             </div>
 
             <button
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-600"
+              className="inline-flex items-center gap-2 rounded-lg border border-[#e0e3e5] px-3 py-2 text-sm font-semibold text-[#3c4a46] hover:bg-[#f2f4f6]"
               onClick={() => usageQuery.refetch()}
               type="button"
             >
@@ -206,8 +206,8 @@ export function CoachPage() {
               <article
                 className={
                   item.role === 'USER'
-                    ? 'ml-auto max-w-[85%] rounded-2xl bg-emerald-800 px-4 py-3 text-white'
-                    : 'mr-auto max-w-[85%] rounded-2xl bg-slate-100 px-4 py-3 text-slate-800'
+                    ? 'ml-auto max-w-[85%] rounded-lg bg-[#006b5f] px-4 py-3 text-white'
+                    : 'mr-auto max-w-[85%] rounded-lg bg-[#f2f4f6] px-4 py-3 text-[#191c1e]'
                 }
                 key={item.id}
               >
@@ -226,7 +226,7 @@ export function CoachPage() {
             ))}
 
             {sendMutation.isPending ? (
-              <div className="mr-auto inline-flex items-center gap-2 rounded-2xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-600">
+              <div className="mr-auto inline-flex items-center gap-2 rounded-lg bg-[#f2f4f6] px-4 py-3 text-sm font-semibold text-[#3c4a46]">
                 <Loader2 className="animate-spin" size={17} />
                 Pensando una recomendación...
               </div>
@@ -245,7 +245,7 @@ export function CoachPage() {
           >
             <div className="flex flex-col gap-3 sm:flex-row">
               <input
-                className="min-h-12 flex-1 rounded-full bg-slate-100 px-5 outline-none focus:ring-2 focus:ring-emerald-700 disabled:opacity-60"
+                className="min-h-12 flex-1 rounded-lg bg-[#f2f4f6] px-5 outline-none focus:ring-2 focus:ring-[#006b5f] disabled:opacity-60"
                 disabled={isMessageDisabled}
                 maxLength={500}
                 onChange={(event) => setMessage(event.target.value)}
@@ -254,7 +254,7 @@ export function CoachPage() {
               />
 
               <button
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-emerald-800 px-5 font-semibold text-white disabled:opacity-60"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-[#006b5f] px-5 font-semibold text-white disabled:opacity-60"
                 disabled={message.trim().length < 3 || isMessageDisabled}
                 type="submit"
               >
@@ -270,9 +270,9 @@ export function CoachPage() {
         </div>
 
         <aside className="space-y-5">
-          <div className="rounded-2xl bg-white p-5 shadow-[0_10px_30px_rgba(13,148,136,0.08)]">
+          <div className="rounded-xl border border-[#e0e3e5] bg-white p-5 shadow-[0_10px_30px_rgba(13,148,136,0.08)]">
             <div className="flex items-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-full bg-teal-100 text-teal-800">
+              <span className="grid h-10 w-10 place-items-center rounded-lg bg-[#dcfbf5] text-[#006b5f]">
                 <MessageCircle size={20} />
               </span>
 
@@ -287,7 +287,7 @@ export function CoachPage() {
             <div className="mt-4 space-y-2">
               {suggestedQuestions.map((question) => (
                 <button
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-left text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:bg-emerald-50 disabled:opacity-60"
+                  className="w-full rounded-lg border border-[#e0e3e5] px-4 py-3 text-left text-sm font-semibold text-[#3c4a46] transition hover:border-[#bacac5] hover:bg-[#f2f4f6] disabled:opacity-60"
                   disabled={isMessageDisabled}
                   key={question}
                   onClick={() => handleSuggestedQuestion(question)}
@@ -299,7 +299,7 @@ export function CoachPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
             <h2 className="font-bold">Importante</h2>
             <p className="mt-2 leading-6">
               El coach usa un resumen financiero de Qori para orientarte,

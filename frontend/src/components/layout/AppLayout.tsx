@@ -25,6 +25,7 @@ import { getGroups } from '../../features/groups/groupsApi';
 import { es } from '../../i18n/es';
 import { markLoggedOut } from '../../lib/auth-session';
 import { getRecurringDueOccurrences } from '../../features/recurring/services/recurringApi';
+import { QoriMark } from '../brand/QoriMark';
 
 const navItems = [
   {
@@ -48,11 +49,11 @@ const navItems = [
     icon: ReceiptText,
   },
   {
-  label: es.navigation.calendar,
-  to: '/app/calendar',
-  icon: CalendarDays,
+    label: es.navigation.calendar,
+    to: '/app/calendar',
+    icon: CalendarDays,
   },
-    {
+  {
     label: es.navigation.recurring,
     to: '/app/recurring',
     icon: CalendarClock,
@@ -101,40 +102,38 @@ function AppShell() {
   const { availableScopes, canChooseScope, scope, setScope } =
     useFinanceScope();
   const groupsQuery = useQuery({
-  queryKey: ['groups'],
-  queryFn: getGroups,
-  enabled: !isLoggingOut,
-});
+    queryKey: ['groups'],
+    queryFn: getGroups,
+    enabled: !isLoggingOut,
+  });
 
-const recurringDueQuery = useQuery({
-  queryKey: ['recurring-due'],
-  queryFn: getRecurringDueOccurrences,
-  enabled: !isLoggingOut,
-});
+  const recurringDueQuery = useQuery({
+    queryKey: ['recurring-due'],
+    queryFn: getRecurringDueOccurrences,
+    enabled: !isLoggingOut,
+  });
   const pendingInvitations =
     groupsQuery.data?.filter(
       (group) => group.currentMemberStatus === 'INVITED',
     ).length ?? 0;
   const pendingRecurringDue = recurringDueQuery.data?.length ?? 0;
-const logoutMutation = useMutation({
-  mutationFn: async () => {
-    setIsLoggingOut(true);
-    await queryClient.cancelQueries();
-    return logout();
-  },
-  onSettled: () => {
-    markLoggedOut();
-    queryClient.clear();
-    navigate('/', { replace: true });
-  },
-});
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      setIsLoggingOut(true);
+      await queryClient.cancelQueries();
+      return logout();
+    },
+    onSettled: () => {
+      markLoggedOut();
+      queryClient.clear();
+      navigate('/', { replace: true });
+    },
+  });
 
   return (
-    <div className="min-h-screen bg-[#f4f8f7] text-slate-950">
-      <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 md:hidden">
-        <span className="text-lg font-extrabold text-emerald-800">
-          {es.brand}
-        </span>
+    <div className="qori-app-surface min-h-screen text-[#191c1e]">
+      <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-white/10 bg-[#073f38]/96 px-4 shadow-[0_10px_30px_rgba(3,32,29,0.18)] backdrop-blur md:hidden">
+        <BrandMark tone="light" />
         <div className="flex items-center gap-2">
           <NotificationBell
             pendingInvitations={pendingInvitations}
@@ -144,7 +143,7 @@ const logoutMutation = useMutation({
             aria-label={
               isMenuOpen ? es.navigation.menuClose : es.navigation.menuOpen
             }
-            className="grid size-10 place-items-center rounded-md hover:bg-slate-100"
+            className="grid size-10 place-items-center rounded-lg text-[#d4e6df] transition hover:bg-white/10 hover:text-white"
             onClick={() => setIsMenuOpen((current) => !current)}
             type="button"
           >
@@ -154,22 +153,22 @@ const logoutMutation = useMutation({
       </header>
 
       <aside
-        className={`fixed inset-y-0 left-0 z-30 w-64 border-r border-slate-200 bg-white p-4 transition-transform md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-30 w-64 border-r border-white/10 bg-[#073f38] p-4 shadow-[10px_0_30px_rgba(3,32,29,0.22)] transition-transform md:translate-x-0 md:shadow-none ${
           isMenuOpen ? 'translate-x-0 pt-20' : '-translate-x-full'
         }`}
       >
-        <div className="hidden px-2 pb-8 pt-2 text-xl font-extrabold text-emerald-800 md:block">
-          {es.brand}
+        <div className="hidden px-2 pb-8 pt-2 md:block">
+          <BrandMark tone="light" />
         </div>
         <nav className="space-y-1">
           {navItems.map(({ icon: Icon, label, to }) => (
             <NavLink
               className={({ isActive }) =>
                 [
-                  'flex min-h-11 items-center gap-3 rounded-md px-4 py-3 text-sm font-semibold transition-colors',
+                  'flex min-h-11 items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold transition-all',
                   isActive
-                    ? 'bg-teal-300 text-emerald-950 shadow-[0_0_15px_rgba(0,107,95,0.16)]'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950',
+                    ? 'bg-[#e5f5ef] text-[#063c36] shadow-[0_12px_28px_rgba(0,0,0,0.16)]'
+                    : 'text-[#d4e6df] hover:bg-white/10 hover:text-white',
                 ].join(' ')
               }
               key={to}
@@ -182,7 +181,7 @@ const logoutMutation = useMutation({
           ))}
         </nav>
         <button
-          className="mt-4 flex min-h-11 w-full items-center gap-3 rounded-md px-4 py-3 text-left text-sm font-semibold text-red-700 transition-colors hover:bg-red-50"
+          className="mt-4 flex min-h-11 w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-semibold text-red-100 transition-colors hover:bg-red-500/15 hover:text-white disabled:opacity-60"
           disabled={logoutMutation.isPending}
           onClick={() => logoutMutation.mutate()}
           type="button"
@@ -195,14 +194,14 @@ const logoutMutation = useMutation({
       {isMenuOpen ? (
         <button
           aria-label={es.navigation.navigationClose}
-          className="fixed inset-0 z-20 bg-slate-950/20 md:hidden"
+          className="fixed inset-0 z-20 bg-slate-950/25 backdrop-blur-sm md:hidden"
           onClick={() => setIsMenuOpen(false)}
           type="button"
         />
       ) : null}
 
-      <main className="min-h-screen md:pl-64">
-        <div className="sticky top-0 z-20 hidden h-16 items-center justify-end gap-4 border-b border-slate-200 bg-white px-6 md:flex lg:px-10">
+      <main className="min-h-screen min-w-0 md:pl-64">
+        <div className="sticky top-0 z-20 hidden h-16 items-center justify-end gap-4 border-b border-[#e0e3e5] bg-white/90 px-6 shadow-[0_10px_30px_rgba(13,148,136,0.04)] backdrop-blur md:flex lg:px-10">
           <NotificationBell
             pendingInvitations={pendingInvitations}
             pendingRecurringDue={pendingRecurringDue}
@@ -215,7 +214,7 @@ const logoutMutation = useMutation({
             />
           ) : null}
         </div>
-        <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 md:py-8 lg:px-10">
+        <div className="mx-auto w-full max-w-7xl min-w-0 overflow-x-hidden px-4 py-6 sm:px-6 md:py-8 lg:px-10">
           {canChooseScope ? (
             <FinanceScopeSelector
               availableScopes={availableScopes}
@@ -244,21 +243,21 @@ function NotificationBell({
     <div className="relative">
       <button
         aria-label={es.navigation.notifications}
-        className="relative grid size-10 place-items-center rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+        className="relative grid size-10 place-items-center rounded-lg border border-[#e0e3e5] bg-white text-[#3c4a46] shadow-[0_10px_30px_rgba(13,148,136,0.06)] transition hover:border-[#bacac5] hover:text-[#006b5f]"
         onClick={() => setIsOpen((current) => !current)}
         type="button"
       >
         <Bell size={19} />
         {totalNotifications > 0 ? (
-          <span className="absolute -right-1 -top-1 grid min-w-5 place-items-center rounded-full bg-red-700 px-1 text-xs font-bold text-white">
+          <span className="absolute -right-1 -top-1 grid min-w-5 place-items-center rounded-full bg-red-700 px-1 text-xs font-bold text-white ring-2 ring-white">
             {totalNotifications}
           </span>
         ) : null}
       </button>
       {isOpen ? (
-        <div className="absolute right-0 top-12 z-50 w-72 rounded-lg border border-slate-200 bg-white p-4 shadow-xl">
+        <div className="absolute right-0 top-12 z-50 w-72 rounded-lg border border-[#e0e3e5] bg-white p-4 shadow-[0_18px_45px_rgba(13,148,136,0.14)]">
           <p className="font-bold">{es.navigation.notifications}</p>
-                    {totalNotifications > 0 ? (
+          {totalNotifications > 0 ? (
             <div className="mt-3 space-y-2">
               {pendingRecurringDue > 0 ? (
                 <NavLink
@@ -306,11 +305,11 @@ function FinanceScopeSelector({
 }) {
   return (
     <label
-      className={`${className} items-center justify-between gap-3 rounded-md bg-white px-4 py-3 text-sm font-semibold text-slate-600 md:rounded-none md:px-0 md:py-0`}
+      className={`${className} items-center justify-between gap-3 rounded-lg border border-[#e0e3e5] bg-white px-4 py-3 text-sm font-semibold text-[#3c4a46] shadow-[0_10px_30px_rgba(13,148,136,0.06)] md:border-0 md:bg-transparent md:px-0 md:py-0 md:shadow-none`}
     >
       {es.navigation.financeView}
       <select
-        className="rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-950 outline-none focus:ring-2 focus:ring-emerald-700"
+        className="rounded-lg border border-[#bacac5] bg-white px-3 py-2 text-[#191c1e] outline-none transition focus:border-[#006b5f] focus:ring-2 focus:ring-[#2dd4bf]/40"
         onChange={(event) =>
           setScope(event.target.value as 'ALL' | 'PEN' | 'USD')
         }
@@ -323,5 +322,21 @@ function FinanceScopeSelector({
         ))}
       </select>
     </label>
+  );
+}
+
+function BrandMark({ tone = 'dark' }: { tone?: 'dark' | 'light' }) {
+  return (
+    <div className="flex items-center gap-3">
+      <QoriMark size="sm" />
+      <span
+        className={[
+          'text-xl font-black',
+          tone === 'light' ? 'text-white' : 'text-[#005f55]',
+        ].join(' ')}
+      >
+        {es.brand}
+      </span>
+    </div>
   );
 }

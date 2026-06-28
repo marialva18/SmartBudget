@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Patch, Post } from '@nestjs/common';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/auth/authenticated-user';
+import { WriteThrottle } from '../../common/rate-limit/rate-limit.decorators';
 import { UpdateOnboardingObjectivesDto } from './dto/update-onboarding-objectives.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ProfileService } from './profile.service';
@@ -14,6 +15,7 @@ export class ProfileController {
     return this.profileService.findOne(user.userId);
   }
 
+  @WriteThrottle()
   @Patch()
   update(
     @CurrentUser() user: AuthenticatedUser,
@@ -22,6 +24,7 @@ export class ProfileController {
     return this.profileService.update(user.userId, user.platform, dto);
   }
 
+  @WriteThrottle()
   @Post('objectives')
   updateObjectives(
     @CurrentUser() user: AuthenticatedUser,
@@ -34,6 +37,7 @@ export class ProfileController {
     );
   }
 
+  @WriteThrottle()
   @Post('complete-onboarding')
   completeOnboarding(@CurrentUser() user: AuthenticatedUser) {
     return this.profileService.completeOnboarding(user.userId, user.platform);

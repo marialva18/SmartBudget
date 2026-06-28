@@ -36,18 +36,18 @@ export function DashboardPage() {
     <section className="space-y-8">
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <p className="text-sm font-semibold text-emerald-700">
+          <p className="font-mono text-xs font-semibold uppercase tracking-[0.14em] text-[#006b5f]">
             {es.dashboard.section}
           </p>
-          <h1 className="mt-1 text-3xl font-bold text-slate-950">
+          <h1 className="mt-2 text-3xl font-extrabold text-[#191c1e]">
             {es.dashboard.title}
           </h1>
-          <p className="mt-2 text-slate-600">
+          <p className="mt-2 text-[#3c4a46]">
             {es.dashboard.subtitle(getMonthLabel(monthStart))}
           </p>
         </div>
         <Link
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-emerald-800 px-5 py-3 font-semibold text-white"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#006b5f] px-5 py-3 font-semibold text-white shadow-[0_10px_30px_rgba(13,148,136,0.14)] hover:bg-[#005047]"
           to="/app/transactions"
         >
           {es.dashboard.addMovement}
@@ -58,16 +58,13 @@ export function DashboardPage() {
       {dashboardQuery.isLoading ? (
         <div className="grid gap-4 lg:grid-cols-3">
           {[1, 2, 3].map((item) => (
-            <div
-              className="h-36 animate-pulse rounded-lg bg-slate-200"
-              key={item}
-            />
+            <div className="h-36 animate-pulse rounded-lg bg-[#eceef0]" key={item} />
           ))}
         </div>
       ) : null}
 
       {dashboardQuery.isError ? (
-        <div className="border-y border-red-100 py-10 text-center">
+        <div className="rounded-lg border border-red-100 bg-white py-10 text-center">
           <p className="font-semibold text-red-700">
             {es.dashboard.loadError}
           </p>
@@ -75,16 +72,16 @@ export function DashboardPage() {
       ) : null}
 
       {summary && summary.currencies.length === 0 ? (
-        <div className="border-y border-slate-200 py-12 text-center">
+        <div className="rounded-xl border border-[#e0e3e5] bg-white py-12 text-center shadow-[0_10px_30px_rgba(13,148,136,0.08)]">
           <WalletCards className="mx-auto text-emerald-700" size={40} />
           <h2 className="mt-4 text-xl font-bold">
             {es.dashboard.emptyTitle}
           </h2>
-          <p className="mt-2 text-slate-600">
+          <p className="mt-2 text-[#3c4a46]">
             {es.dashboard.emptyDescription}
           </p>
           <Link
-            className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-emerald-800 px-5 py-3 font-semibold text-white"
+            className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#006b5f] px-5 py-3 font-semibold text-white"
             to="/app/accounts"
           >
             {es.dashboard.manageAccounts}
@@ -103,17 +100,17 @@ export function DashboardPage() {
       {summary && summary.recentTransactions.length > 0 ? (
         <section className="space-y-3">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-xl font-bold">
+            <h2 className="text-xl font-bold text-[#191c1e]">
               {es.dashboard.recentMovements}
             </h2>
             <Link
-              className="text-sm font-semibold text-emerald-800"
+              className="text-sm font-semibold text-[#006b5f]"
               to="/app/transactions"
             >
               {es.dashboard.viewAll}
             </Link>
           </div>
-          <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+          <div className="overflow-hidden rounded-xl border border-[#e0e3e5] bg-white shadow-[0_10px_30px_rgba(13,148,136,0.06)]">
             {summary.recentTransactions.map((transaction) => (
               <TransactionRow
                 key={transaction.id}
@@ -131,10 +128,10 @@ function CurrencySection({ summary }: { summary: DashboardCurrencySummary }) {
   return (
     <section className="space-y-5">
       <div>
-        <p className="text-xs font-semibold uppercase text-slate-500">
+        <p className="font-mono text-xs font-semibold uppercase tracking-[0.14em] text-[#6b7a76]">
           {es.accounts.currencies[summary.currency].plural}
         </p>
-        <h2 className="mt-1 text-xl font-bold">{summary.currency}</h2>
+        <h2 className="mt-1 text-xl font-bold text-[#191c1e]">{summary.currency}</h2>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -160,7 +157,7 @@ function CurrencySection({ summary }: { summary: DashboardCurrencySummary }) {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-        <section className="rounded-lg bg-white p-5 shadow-[0_10px_30px_rgba(13,148,136,0.08)]">
+        <section className="rounded-xl border border-[#e0e3e5] bg-white p-5 shadow-[0_10px_30px_rgba(13,148,136,0.08)]">
           <h3 className="text-lg font-bold">{es.dashboard.monthActivity}</h3>
           <div className="mt-5 grid gap-4 sm:grid-cols-3">
             <CompactMetric
@@ -187,11 +184,11 @@ function CurrencySection({ summary }: { summary: DashboardCurrencySummary }) {
           <BudgetProgress summary={summary} />
         </section>
 
-        <section className="rounded-lg bg-white p-5 shadow-[0_10px_30px_rgba(13,148,136,0.08)]">
+        <section className="rounded-xl border border-[#e0e3e5] bg-white p-5 shadow-[0_10px_30px_rgba(13,148,136,0.08)]">
           <div className="flex items-center justify-between gap-3">
             <h3 className="text-lg font-bold">{es.dashboard.activeGoals}</h3>
             <Link
-              className="text-sm font-semibold text-emerald-800"
+              className="text-sm font-semibold text-[#006b5f]"
               to="/app/goals"
             >
               {es.dashboard.viewAll}
@@ -207,9 +204,9 @@ function CurrencySection({ summary }: { summary: DashboardCurrencySummary }) {
                       {Number(goal.progressPercent).toFixed(0)}%
                     </span>
                   </div>
-                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#eceef0]">
                     <div
-                      className="h-full rounded-full bg-emerald-700"
+                      className="h-full rounded-full bg-[#006b5f]"
                       style={{
                         width: `${Math.min(Number(goal.progressPercent), 100)}%`,
                       }}
@@ -251,16 +248,16 @@ function MetricCard({
   value: number;
 }) {
   return (
-    <article className="rounded-lg border border-white bg-white p-5 shadow-[0_10px_30px_rgba(13,148,136,0.08)]">
-      <span className="grid size-10 place-items-center rounded-md bg-emerald-50 text-emerald-800">
+    <article className="rounded-xl border border-[#e0e3e5] bg-white p-5 shadow-[0_10px_30px_rgba(13,148,136,0.08)]">
+      <span className="grid size-10 place-items-center rounded-lg bg-[#dcfbf5] text-[#006b5f]">
         <Icon size={20} />
       </span>
-      <p className="mt-5 text-xs font-semibold uppercase text-slate-500">
+      <p className="mt-5 font-mono text-xs font-semibold uppercase tracking-[0.12em] text-[#6b7a76]">
         {label}
       </p>
       <p
         className={`mt-1 break-words text-2xl font-bold ${
-          accent ? 'text-emerald-800' : 'text-slate-950'
+          accent ? 'text-[#006b5f]' : 'text-[#191c1e]'
         }`}
       >
         {formatMoney(value, currency)}
@@ -283,17 +280,17 @@ function CompactMetric({
   value: number;
 }) {
   return (
-    <div className="rounded-md bg-slate-50 p-4">
+    <div className="rounded-lg bg-[#f7f9fb] p-4">
       <span
         className={`inline-grid size-9 place-items-center rounded-md ${
           tone === 'danger'
             ? 'bg-red-50 text-red-700'
-            : 'bg-emerald-50 text-emerald-800'
+            : 'bg-[#dcfbf5] text-[#006b5f]'
         }`}
       >
         <Icon size={18} />
       </span>
-      <p className="mt-3 text-xs font-semibold uppercase text-slate-500">
+      <p className="mt-3 font-mono text-xs font-semibold uppercase tracking-[0.12em] text-[#6b7a76]">
         {label}
       </p>
       <p className="mt-1 break-words text-lg font-bold">
@@ -309,11 +306,11 @@ function BudgetProgress({ summary }: { summary: DashboardCurrencySummary }) {
   const percent = planned > 0 ? Math.min((used / planned) * 100, 100) : 0;
 
   return (
-    <div className="mt-6 border-t border-slate-100 pt-5">
+    <div className="mt-6 border-t border-[#e0e3e5] pt-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="font-bold">{es.dashboard.budgetProgress}</p>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-[#3c4a46]">
             {planned > 0
               ? es.dashboard.budgetUsed(
                   formatMoney(used, summary.currency),
@@ -323,15 +320,15 @@ function BudgetProgress({ summary }: { summary: DashboardCurrencySummary }) {
           </p>
         </div>
         <Link
-          className="text-sm font-semibold text-emerald-800"
+          className="text-sm font-semibold text-[#006b5f]"
           to="/app/budgets"
         >
           {es.dashboard.manageBudgets}
         </Link>
       </div>
-      <div className="mt-4 h-3 overflow-hidden rounded-full bg-slate-100">
+      <div className="mt-4 h-3 overflow-hidden rounded-full bg-[#eceef0]">
         <div
-          className="h-full rounded-full bg-emerald-700"
+          className="h-full rounded-full bg-[#006b5f]"
           style={{ width: `${percent}%` }}
         />
       </div>
@@ -346,7 +343,7 @@ function TransactionRow({
 }) {
   const isExpense = transaction.type === 'EXPENSE';
   return (
-    <div className="grid gap-3 border-b border-slate-100 px-4 py-4 last:border-b-0 sm:grid-cols-[1fr_auto] sm:items-center">
+    <div className="grid gap-3 border-b border-[#e0e3e5] px-4 py-4 last:border-b-0 sm:grid-cols-[1fr_auto] sm:items-center">
       <div className="min-w-0">
         <p className="font-semibold">{transaction.description}</p>
         <p className="mt-1 text-sm text-slate-500">

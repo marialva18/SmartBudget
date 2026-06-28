@@ -60,6 +60,9 @@ type EmailConfig = {
   smtpPass?: string;
 };
 
+const TERMS_VERSION = '2026-06-27';
+const PRIVACY_VERSION = '2026-06-27';
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -99,11 +102,16 @@ export class AuthService {
     }
 
     const passwordHash = await argon2.hash(dto.password);
+    const acceptedAt = new Date();
     const user = await this.prisma.user.create({
       data: {
         email,
         passwordHash,
         status: 'ACTIVE',
+        termsAcceptedAt: acceptedAt,
+        privacyAcceptedAt: acceptedAt,
+        termsVersion: TERMS_VERSION,
+        privacyVersion: PRIVACY_VERSION,
         profile: {
           create: {
             displayName: dto.displayName.trim(),

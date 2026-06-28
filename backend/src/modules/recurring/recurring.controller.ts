@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/auth/authenticated-user';
+import { WriteThrottle } from '../../common/rate-limit/rate-limit.decorators';
 import { ParseSqlServerGuidPipe } from '../../common/validation/sql-server-guid';
 import { CreateRecurringScheduleDto } from './dto/create-recurring-schedule.dto';
 import { ListRecurringSchedulesDto } from './dto/list-recurring-schedules.dto';
@@ -22,6 +23,7 @@ export class RecurringController {
     return this.recurringService.findAll(user.userId, query);
   }
 
+  @WriteThrottle()
   @Post()
   create(
     @CurrentUser() user: AuthenticatedUser,
@@ -29,7 +31,8 @@ export class RecurringController {
   ) {
     return this.recurringService.create(user.userId, user.platform, dto);
   }
-    @Patch(':scheduleId/confirm')
+  @WriteThrottle()
+  @Patch(':scheduleId/confirm')
   confirm(
     @CurrentUser() user: AuthenticatedUser,
     @Param('scheduleId', ParseSqlServerGuidPipe) scheduleId: string,
@@ -41,6 +44,7 @@ export class RecurringController {
     );
   }
 
+  @WriteThrottle()
   @Patch(':scheduleId/skip')
   skip(
     @CurrentUser() user: AuthenticatedUser,
@@ -53,6 +57,7 @@ export class RecurringController {
     );
   }
 
+  @WriteThrottle()
   @Patch(':scheduleId/pause')
   pause(
     @CurrentUser() user: AuthenticatedUser,
@@ -66,6 +71,7 @@ export class RecurringController {
     );
   }
 
+  @WriteThrottle()
   @Patch(':scheduleId/resume')
   resume(
     @CurrentUser() user: AuthenticatedUser,
@@ -79,6 +85,7 @@ export class RecurringController {
     );
   }
 
+  @WriteThrottle()
   @Patch(':scheduleId/cancel')
   cancel(
     @CurrentUser() user: AuthenticatedUser,
