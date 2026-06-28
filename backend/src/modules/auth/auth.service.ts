@@ -9,6 +9,7 @@
 import { ConfigService } from '@nestjs/config';
 import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
+import { setDefaultResultOrder } from 'node:dns';
 import { randomBytes } from 'node:crypto';
 import * as nodemailer from 'nodemailer';
 import type { AuthenticatedUser } from '../../common/auth/authenticated-user';
@@ -811,6 +812,8 @@ export class AuthService {
 
       return;
     }
+
+    setDefaultResultOrder('ipv4first');
 
     const transporter = nodemailer.createTransport({
       host: config.smtpHost,
