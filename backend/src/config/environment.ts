@@ -6,7 +6,7 @@ const REQUIRED_PRODUCTION_VALUES = [
   'FRONTEND_ORIGIN',
 ] as const;
 
-const EMAIL_PROVIDERS = ['resend', 'smtp'] as const;
+const EMAIL_PROVIDERS = ['mailjet', 'resend', 'smtp'] as const;
 
 export function validateEnvironment(config: Environment): Environment {
   const nodeEnv = readString(config.NODE_ENV, 'development');
@@ -49,7 +49,23 @@ export function validateEnvironment(config: Environment): Environment {
     emailProvider &&
     !EMAIL_PROVIDERS.includes(emailProvider as (typeof EMAIL_PROVIDERS)[number])
   ) {
-    throw new Error('EMAIL_PROVIDER must be empty, resend or smtp.');
+    throw new Error('EMAIL_PROVIDER must be empty, mailjet, resend or smtp.');
+  }
+
+  if (emailProvider === 'mailjet') {
+    for (const key of [
+      'MAILJET_API_KEY',
+      'MAILJET_SECRET_KEY',
+      'EMAIL_FROM',
+      'PASSWORD_RESET_APP_URL',
+      'EMAIL_VERIFICATION_APP_URL',
+    ]) {
+      if (!readString(config[key])) {
+        throw new Error(
+          `${key} must be configured when EMAIL_PROVIDER=mailjet.`,
+        );
+      }
+    }
   }
 
   if (emailProvider === 'resend') {
@@ -119,6 +135,9 @@ export function validateEnvironment(config: Environment): Environment {
 
     EMAIL_PROVIDER: emailProvider,
     EMAIL_FROM: readString(config.EMAIL_FROM),
+
+    MAILJET_API_KEY: readString(config.MAILJET_API_KEY),
+    MAILJET_SECRET_KEY: readString(config.MAILJET_SECRET_KEY),
 
     RESEND_API_KEY: readString(config.RESEND_API_KEY),
 

@@ -49,12 +49,14 @@ type MessageResponse = {
 };
 
 type EmailConfig = {
-  provider: 'resend' | 'smtp';
+  provider: 'mailjet' | 'resend' | 'smtp';
   from: string;
   resetAppUrl: string;
   verificationAppUrl: string;
   passwordResetExpiresInMinutes: number;
   emailVerificationExpiresInMinutes: number;
+  mailjetApiKey?: string;
+  mailjetSecretKey?: string;
   resendApiKey?: string;
   smtpHost?: string;
   smtpPort?: number;
@@ -649,6 +651,33 @@ export class AuthService {
       throw new ServiceUnavailableException(errorMessage);
     }
 
+    if (provider === 'mailjet') {
+      const mailjetApiKey = this.configService
+        .get<string>('MAILJET_API_KEY', '')
+        .trim();
+      const mailjetSecretKey = this.configService
+        .get<string>('MAILJET_SECRET_KEY', '')
+        .trim();
+
+      if (!mailjetApiKey || !mailjetSecretKey) {
+        this.logger.warn(
+          `Mailjet config missing values: MAILJET_API_KEY=${Boolean(mailjetApiKey)}, MAILJET_SECRET_KEY=${Boolean(mailjetSecretKey)}`,
+        );
+        throw new ServiceUnavailableException(errorMessage);
+      }
+
+      return {
+        provider,
+        from,
+        resetAppUrl,
+        verificationAppUrl,
+        passwordResetExpiresInMinutes,
+        emailVerificationExpiresInMinutes,
+        mailjetApiKey,
+        mailjetSecretKey,
+      };
+    }
+
     if (provider === 'resend') {
       const resendApiKey = this.configService
         .get<string>('RESEND_API_KEY', '')
@@ -773,6 +802,43 @@ export class AuthService {
     subject: string;
     html: string;
   }) {
+    if (config.provider === 'mailjet') {
+      const from = parseEmailIdentity(config.from);
+      const response = await fetch('https://api.mailjet.com/v3.1/send', {
+        method: 'POST',
+        headers: {
+          Authorization: `Basic ${Buffer.from(
+            `${config.mailjetApiKey}:${config.mailjetSecretKey}`,
+          ).toString('base64')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          Messages: [
+            {
+              From: {
+                Email: from.email,
+                Name: from.name,
+              },
+              To: [
+                {
+                  Email: to,
+                },
+              ],
+              Subject: subject,
+              HTMLPart: html,
+            },
+          ],
+        }),
+      });
+
+      if (!response.ok) {
+        this.logger.warn(`Mailjet email request returned ${response.status}.`);
+        throw new ServiceUnavailableException(es.auth.emailUnavailable);
+      }
+
+      return;
+    }
+
     if (config.provider === 'resend') {
       const controller = new AbortController();
       const timeout = setTimeout(
@@ -974,4 +1040,20 @@ function renderQoriEmail({
     </table>
   </body>
 </html>`;
+}
+
+function parseEmailIdentity(value: string) {
+  const match = value.match(/^\s*(.*?)\s*<([^<>]+)>\s*$/);
+
+  if (match) {
+    return {
+      name: match[1]?.trim() || 'Qori',
+      email: match[2]?.trim() ?? value.trim(),
+    };
+  }
+
+  return {
+    name: 'Qori',
+    email: value.trim(),
+  };
 }

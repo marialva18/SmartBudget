@@ -4,6 +4,12 @@ import * as nodemailer from 'nodemailer';
 
 type MailConfig =
   | {
+      provider: 'mailjet';
+      from: string;
+      mailjetApiKey: string;
+      mailjetSecretKey: string;
+    }
+  | {
       provider: 'resend';
       from: string;
       resendApiKey: string;
@@ -96,6 +102,19 @@ export class MailService {
       return null;
     }
 
+    if (provider === 'mailjet') {
+      const mailjetApiKey = this.configService
+        .get<string>('MAILJET_API_KEY', '')
+        .trim();
+      const mailjetSecretKey = this.configService
+        .get<string>('MAILJET_SECRET_KEY', '')
+        .trim();
+
+      return mailjetApiKey && mailjetSecretKey
+        ? { provider: 'mailjet', from, mailjetApiKey, mailjetSecretKey }
+        : null;
+    }
+
     if (provider === 'resend') {
       const resendApiKey = this.configService
         .get<string>('RESEND_API_KEY', '')
@@ -128,6 +147,42 @@ export class MailService {
   }
 
   private async sendMail(config: MailConfig, params: SendMailParams) {
+    if (config.provider === 'mailjet') {
+      const from = parseEmailIdentity(config.from);
+      const response = await fetch('https://api.mailjet.com/v3.1/send', {
+        method: 'POST',
+        headers: {
+          Authorization: `Basic ${Buffer.from(
+            `${config.mailjetApiKey}:${config.mailjetSecretKey}`,
+          ).toString('base64')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          Messages: [
+            {
+              From: {
+                Email: from.email,
+                Name: from.name,
+              },
+              To: [
+                {
+                  Email: params.to,
+                },
+              ],
+              Subject: params.subject,
+              HTMLPart: params.html,
+            },
+          ],
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Email provider rejected the message.');
+      }
+
+      return;
+    }
+
     if (config.provider === 'resend') {
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
@@ -176,6 +231,22 @@ function escapeHtml(value: string) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+function parseEmailIdentity(value: string) {
+  const match = value.match(/^\s*(.*?)\s*<([^<>]+)>\s*$/);
+
+  if (match) {
+    return {
+      name: match[1]?.trim() || 'Qori',
+      email: match[2]?.trim() ?? value.trim(),
+    };
+  }
+
+  return {
+    name: 'Qori',
+    email: value.trim(),
+  };
 }
 
 function renderQoriEmail({

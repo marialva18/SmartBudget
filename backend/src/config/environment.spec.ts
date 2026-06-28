@@ -76,7 +76,19 @@ describe('environment configuration', () => {
         NODE_ENV: 'development',
         EMAIL_PROVIDER: 'mailgun',
       }),
-    ).toThrow('EMAIL_PROVIDER must be empty, resend or smtp.');
+    ).toThrow('EMAIL_PROVIDER must be empty, mailjet, resend or smtp.');
+  });
+
+  it('requires email settings when Mailjet is enabled', () => {
+    expect(() =>
+      validateEnvironment({
+        NODE_ENV: 'development',
+        EMAIL_PROVIDER: 'mailjet',
+        MAILJET_API_KEY: 'key',
+      }),
+    ).toThrow(
+      'MAILJET_SECRET_KEY must be configured when EMAIL_PROVIDER=mailjet.',
+    );
   });
 
   it('requires email settings when Resend is enabled', () => {
