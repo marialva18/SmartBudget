@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { setDefaultResultOrder } from 'node:dns';
+import { resolve4 } from 'node:dns/promises';
 import { randomBytes } from 'node:crypto';
 import * as nodemailer from 'nodemailer';
 import type { AuthenticatedUser } from '../../common/auth/authenticated-user';
@@ -814,14 +815,25 @@ export class AuthService {
     }
 
     setDefaultResultOrder('ipv4first');
+    const smtpHost = config.smtpHost;
+
+    if (!smtpHost) {
+      this.logger.warn('SMTP config missing host at send time.');
+      throw new ServiceUnavailableException(es.auth.emailUnavailable);
+    }
+
+    const resolvedSmtpHost = await this.resolveSmtpHostForIpv4(smtpHost);
 
     const transporter = nodemailer.createTransport({
-      host: config.smtpHost,
+      host: resolvedSmtpHost,
       port: config.smtpPort,
       secure: config.smtpSecure,
       connectionTimeout: EMAIL_SEND_TIMEOUT_MS,
       greetingTimeout: EMAIL_SEND_TIMEOUT_MS,
       socketTimeout: EMAIL_SEND_TIMEOUT_MS,
+      tls: {
+        servername: smtpHost,
+      },
       auth: {
         user: config.smtpUser,
         pass: config.smtpPass,
@@ -845,6 +857,24 @@ export class AuthService {
 
   private addMinutes(minutes: number): Date {
     return new Date(Date.now() + minutes * 60_000);
+  }
+
+  private async resolveSmtpHostForIpv4(host: string): Promise<string> {
+    try {
+      const addresses = await resolve4(host);
+      const [address] = addresses;
+
+      if (address) {
+        this.logger.log(`SMTP host ${host} resolved to IPv4.`);
+        return address;
+      }
+    } catch (error) {
+      this.logger.warn(
+        `SMTP IPv4 resolution failed for ${host}: ${this.formatEmailError(error)}`,
+      );
+    }
+
+    return host;
   }
 
   private formatEmailError(error: unknown): string {
