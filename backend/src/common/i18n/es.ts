@@ -12,19 +12,16 @@ export const es = {
     missingSession: 'La sesión no existe.',
     invalidResetLink: 'El enlace no es válido o expiró.',
     passwordUpdated: 'Contraseña actualizada correctamente.',
-    recoveryRequested: 'Si el correo está registrado y habilitado, enviaremos las instrucciones correspondientes.',
+    recoveryRequested:
+      'Si el correo está registrado y habilitado, enviaremos las instrucciones correspondientes.',
     recoveryUnavailable:
       'La recuperación de contraseña aún no está configurada. Inténtalo más tarde.',
-    emailVerificationSent:
-  'Te enviamos un correo para verificar tu cuenta.',
-emailNotVerified:
-  'Primero verifica tu correo para iniciar sesión.',
-invalidVerificationLink:
-  'El enlace de verificación no es válido o expiró.',
-emailVerified:
-  'Correo verificado correctamente. Ya puedes iniciar sesión.',
-emailUnavailable:
-  'El envío de correo aún no está configurado. Inténtalo más tarde.',
+    emailVerificationSent: 'Te enviamos un correo para verificar tu cuenta.',
+    emailNotVerified: 'Primero verifica tu correo para iniciar sesión.',
+    invalidVerificationLink: 'El enlace de verificación no es válido o expiró.',
+    emailVerified: 'Correo verificado correctamente. Ya puedes iniciar sesión.',
+    emailUnavailable:
+      'El envío de correo aún no está configurado. Inténtalo más tarde.',
   },
   accounts: {
     missing: 'La cuenta no existe.',
@@ -77,6 +74,7 @@ emailUnavailable:
   profile: {
     incompleteOnboarding:
       'Completa tus objetivos y crea una cuenta antes de finalizar.',
+    accountDeleted: 'Cuenta eliminada correctamente.',
   },
   transactions: {
     missing: 'El movimiento no existe.',

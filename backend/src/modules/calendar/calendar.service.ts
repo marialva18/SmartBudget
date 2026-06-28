@@ -171,7 +171,11 @@ function buildMonthDays(monthStart: Date) {
     let current = new Date(monthStart);
     current < nextMonthStart;
     current = new Date(
-      Date.UTC(current.getUTCFullYear(), current.getUTCMonth(), current.getUTCDate() + 1),
+      Date.UTC(
+        current.getUTCFullYear(),
+        current.getUTCMonth(),
+        current.getUTCDate() + 1,
+      ),
     )
   ) {
     days.push(toDateKey(current));

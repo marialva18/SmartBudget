@@ -37,3 +37,10 @@ export function updateProfileObjectives(objectives: OnboardingObjective[]) {
     },
   );
 }
+
+export function deleteAccount(password: string) {
+  return apiRequest<{ message: string }>('/profile/account', {
+    method: 'DELETE',
+    body: { password },
+  });
+}

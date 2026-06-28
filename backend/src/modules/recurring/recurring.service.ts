@@ -65,16 +65,12 @@ export class RecurringService {
           },
         },
       },
-      orderBy: [
-        { status: 'asc' },
-        { nextDueOn: 'asc' },
-        { createdAt: 'desc' },
-      ],
+      orderBy: [{ status: 'asc' }, { nextDueOn: 'asc' }, { createdAt: 'desc' }],
     });
 
     return schedules.map((schedule) => this.toResponse(schedule));
   }
-    async findDue(userId: string) {
+  async findDue(userId: string) {
     const today = toDateOnly(new Date());
 
     const dueSchedules = await this.prisma.recurringSchedule.findMany({
@@ -148,7 +144,7 @@ export class RecurringService {
 
     return occurrences.map((occurrence) => this.toDueResponse(occurrence));
   }
-    async confirmDue(
+  async confirmDue(
     userId: string,
     channel: 'WEB' | 'MOBILE',
     scheduleId: string,
@@ -261,11 +257,7 @@ export class RecurringService {
 
     return this.toResponse(result);
   }
-    async skipDue(
-    userId: string,
-    channel: 'WEB' | 'MOBILE',
-    scheduleId: string,
-  ) {
+  async skipDue(userId: string, channel: 'WEB' | 'MOBILE', scheduleId: string) {
     const schedule = await this.findDueSchedule(userId, scheduleId);
     const scheduledFor = toDateOnly(schedule.nextDueOn);
 
@@ -380,14 +372,14 @@ export class RecurringService {
       throw new NotFoundException(es.accounts.missing);
     }
 
-   const category = await this.prisma.category.findFirst({
-  where: {
-    id: dto.categoryId,
-    status: 'ACTIVE',
-    type: dto.operationType,
-    OR: [{ userId }, { userId: null }],
-  },
-});
+    const category = await this.prisma.category.findFirst({
+      where: {
+        id: dto.categoryId,
+        status: 'ACTIVE',
+        type: dto.operationType,
+        OR: [{ userId }, { userId: null }],
+      },
+    });
 
     if (!category) {
       throw new BadRequestException('Selecciona una categoría válida.');
@@ -526,7 +518,7 @@ export class RecurringService {
     return this.toResponse(updated);
   }
 
-    private async findDueSchedule(userId: string, scheduleId: string) {
+  private async findDueSchedule(userId: string, scheduleId: string) {
     const today = toDateOnly(new Date());
 
     const schedule = await this.prisma.recurringSchedule.findFirst({
@@ -565,9 +557,7 @@ export class RecurringService {
     }
 
     if (schedule.endsOn && schedule.nextDueOn > schedule.endsOn) {
-      throw new BadRequestException(
-        'Esta recurrencia ya terminó.',
-      );
+      throw new BadRequestException('Esta recurrencia ya terminó.');
     }
 
     return schedule;

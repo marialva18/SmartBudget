@@ -47,9 +47,7 @@ export function validateEnvironment(config: Environment): Environment {
 
   if (
     emailProvider &&
-    !EMAIL_PROVIDERS.includes(
-      emailProvider as (typeof EMAIL_PROVIDERS)[number],
-    )
+    !EMAIL_PROVIDERS.includes(emailProvider as (typeof EMAIL_PROVIDERS)[number])
   ) {
     throw new Error('EMAIL_PROVIDER must be empty, resend or smtp.');
   }
@@ -87,10 +85,7 @@ export function validateEnvironment(config: Environment): Environment {
 
   const aiCoachEnabled = readBoolean(config.AI_COACH_ENABLED, false);
   const geminiApiKey = readString(config.GEMINI_API_KEY);
-  const geminiModel = readString(
-    config.GEMINI_MODEL,
-    'gemini-3-flash-preview',
-  );
+  const geminiModel = readString(config.GEMINI_MODEL, 'gemini-3-flash-preview');
   const aiCoachDailyLimit = readPositiveInteger(
     config.AI_COACH_DAILY_LIMIT,
     20,

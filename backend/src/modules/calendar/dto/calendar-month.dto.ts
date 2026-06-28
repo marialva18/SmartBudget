@@ -16,5 +16,5 @@ export class CalendarMonthDto {
 
   @IsOptional()
   @IsSqlServerGuid({ message: 'Selecciona una cuenta válida.' })
-accountId?: string;
+  accountId?: string;
 }

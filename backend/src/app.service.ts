@@ -3,7 +3,6 @@
 @Injectable()
 export class AppService {
   getHello(): string {
-   return 'Qori API is running';
+    return 'Qori API is running';
   }
 }
-

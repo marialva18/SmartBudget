@@ -15,8 +15,8 @@ export const BUDGET_CURRENCIES = ['PEN', 'USD'] as const;
 
 export class CreateBudgetDto {
   @IsOptional()
- @IsSqlServerGuid({ message: 'Selecciona una categoría válida.' })
-categoryId!: string;
+  @IsSqlServerGuid({ message: 'Selecciona una categoría válida.' })
+  categoryId!: string;
 
   @Type(() => Number)
   @IsNumber(

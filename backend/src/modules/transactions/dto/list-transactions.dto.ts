@@ -34,8 +34,8 @@ export class ListTransactionsDto {
   currency?: 'PEN' | 'USD';
 
   @IsOptional()
- @IsSqlServerGuid({ message: 'Selecciona una cuenta válida.' })
-accountId?: string;
+  @IsSqlServerGuid({ message: 'Selecciona una cuenta válida.' })
+  accountId?: string;
 
   @IsOptional()
   @IsSqlServerGuid({ message: 'Selecciona una categoría válida.' })

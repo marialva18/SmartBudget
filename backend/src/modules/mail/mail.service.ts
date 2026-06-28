@@ -101,18 +101,13 @@ export class MailService {
         .get<string>('RESEND_API_KEY', '')
         .trim();
 
-      return resendApiKey
-        ? { provider: 'resend', from, resendApiKey }
-        : null;
+      return resendApiKey ? { provider: 'resend', from, resendApiKey } : null;
     }
 
     if (provider === 'smtp') {
       const smtpHost = this.configService.get<string>('SMTP_HOST', '').trim();
       const smtpPort = this.configService.get<number>('SMTP_PORT', 587);
-      const smtpSecure = this.configService.get<boolean>(
-        'SMTP_SECURE',
-        false,
-      );
+      const smtpSecure = this.configService.get<boolean>('SMTP_SECURE', false);
       const smtpUser = this.configService.get<string>('SMTP_USER', '').trim();
       const smtpPass = this.configService.get<string>('SMTP_PASS', '').trim();
 

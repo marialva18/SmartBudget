@@ -298,6 +298,17 @@
     objectivesSaveError: 'No se pudieron actualizar los objetivos.',
     loadError: 'No pudimos cargar tu perfil.',
     logout: 'Cerrar sesión',
+    deleteAccountTitle: 'Eliminar cuenta',
+    deleteAccountDescription:
+      'Esta acción cerrará tu acceso y eliminará tus datos financieros personales de Qori. No podrás deshacerla.',
+    deleteAccountButton: 'Eliminar mi cuenta',
+    deleteAccountConfirmTitle: 'Confirma la eliminación',
+    deleteAccountConfirmDescription:
+      'Para proteger tu cuenta, escribe tu contraseña actual. Después eliminaremos tus movimientos, cuentas, metas, presupuestos, sesiones y preferencias personales.',
+    deleteAccountPassword: 'Contraseña actual',
+    deleteAccountPasswordPlaceholder: 'Ingresa tu contraseña',
+    deleteAccountConfirmAction: 'Eliminar definitivamente',
+    deleteAccountError: 'No pudimos eliminar tu cuenta.',
     objectives: 'Objetivos iniciales',
     objectivesDescription:
       'Elige los objetivos generales que quieres priorizar en Qori.',

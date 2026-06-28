@@ -62,6 +62,7 @@ type EmailConfig = {
 
 const TERMS_VERSION = '2026-06-27';
 const PRIVACY_VERSION = '2026-06-27';
+const EMAIL_SEND_TIMEOUT_MS = 10_000;
 
 @Injectable()
 export class AuthService {
@@ -410,9 +411,7 @@ export class AuthService {
         data: {
           userId: user.id,
           tokenHash: await argon2.hash(resetTokenSecret),
-          expiresAt: this.addMinutes(
-            emailConfig.passwordResetExpiresInMinutes,
-          ),
+          expiresAt: this.addMinutes(emailConfig.passwordResetExpiresInMinutes),
         },
       });
 
@@ -576,16 +575,13 @@ export class AuthService {
     config: EmailConfig,
   ) {
     const verificationSecret = randomBytes(32).toString('base64url');
-    const verificationToken =
-      await this.prisma.emailVerificationToken.create({
-        data: {
-          userId,
-          tokenHash: await argon2.hash(verificationSecret),
-          expiresAt: this.addMinutes(
-            config.emailVerificationExpiresInMinutes,
-          ),
-        },
-      });
+    const verificationToken = await this.prisma.emailVerificationToken.create({
+      data: {
+        userId,
+        tokenHash: await argon2.hash(verificationSecret),
+        expiresAt: this.addMinutes(config.emailVerificationExpiresInMinutes),
+      },
+    });
 
     try {
       await this.sendEmailVerificationEmail(
@@ -652,10 +648,7 @@ export class AuthService {
     if (provider === 'smtp') {
       const smtpHost = this.configService.get<string>('SMTP_HOST', '').trim();
       const smtpPort = this.configService.get<number>('SMTP_PORT', 587);
-      const smtpSecure = this.configService.get<boolean>(
-        'SMTP_SECURE',
-        false,
-      );
+      const smtpSecure = this.configService.get<boolean>('SMTP_SECURE', false);
       const smtpUser = this.configService.get<string>('SMTP_USER', '').trim();
       const smtpPass = this.configService.get<string>('SMTP_PASS', '').trim();
 
@@ -750,19 +743,34 @@ export class AuthService {
     html: string;
   }) {
     if (config.provider === 'resend') {
-      const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${config.resendApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: config.from,
-          to,
-          subject,
-          html,
-        }),
-      });
+      const controller = new AbortController();
+      const timeout = setTimeout(
+        () => controller.abort(),
+        EMAIL_SEND_TIMEOUT_MS,
+      );
+
+      let response: Response;
+
+      try {
+        response = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${config.resendApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: config.from,
+            to,
+            subject,
+            html,
+          }),
+          signal: controller.signal,
+        });
+      } catch {
+        throw new ServiceUnavailableException(es.auth.emailUnavailable);
+      } finally {
+        clearTimeout(timeout);
+      }
 
       if (!response.ok) {
         throw new ServiceUnavailableException(es.auth.emailUnavailable);
@@ -775,6 +783,9 @@ export class AuthService {
       host: config.smtpHost,
       port: config.smtpPort,
       secure: config.smtpSecure,
+      connectionTimeout: EMAIL_SEND_TIMEOUT_MS,
+      greetingTimeout: EMAIL_SEND_TIMEOUT_MS,
+      socketTimeout: EMAIL_SEND_TIMEOUT_MS,
       auth: {
         user: config.smtpUser,
         pass: config.smtpPass,

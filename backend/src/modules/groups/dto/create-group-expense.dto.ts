@@ -45,10 +45,10 @@ export class CreateGroupExpenseDto {
   @IsArray()
   @ArrayMinSize(1)
   @IsSqlServerGuid({
-  each: true,
-  message: 'Selecciona participantes válidos.',
-})
-participantMemberIds!: string[];
+    each: true,
+    message: 'Selecciona participantes válidos.',
+  })
+  participantMemberIds!: string[];
 
   @IsOptional()
   @IsISO8601()

@@ -1,12 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { LogOut, RefreshCw, Save } from 'lucide-react';
+import { LogOut, RefreshCw, Save, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { getAccounts } from '../../features/accounts/services/accountsApi';
 import {
   getProfile,
+  deleteAccount,
   updateProfile,
   updateProfileObjectives,
   type Profile,
@@ -40,6 +41,8 @@ export function SettingsPage() {
   const queryClient = useQueryClient();
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
   const [objectiveDraft, setObjectiveDraft] = useState<
     Profile['objectives']
   >();
@@ -127,6 +130,24 @@ export function SettingsPage() {
     queryClient.clear();
     navigate('/', { replace: true });
   },
+  });
+
+  const deleteAccountMutation = useMutation({
+    mutationFn: deleteAccount,
+    onSuccess: async () => {
+      await queryClient.cancelQueries();
+      markLoggedOut();
+      queryClient.clear();
+      navigate('/', { replace: true });
+    },
+    onError: (reason) => {
+      setMessage('');
+      setError(
+        reason instanceof ApiError
+          ? reason.message
+          : es.settings.deleteAccountError,
+      );
+    },
   });
 
   return (
@@ -455,7 +476,100 @@ export function SettingsPage() {
                   : es.settings.saveObjectives}
               </button>
             </div>
+
+            <div className="border-t border-red-100 pt-4">
+              <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                <h2 className="flex items-center gap-2 text-base font-bold text-red-900">
+                  <Trash2 size={18} />
+                  {es.settings.deleteAccountTitle}
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-red-800">
+                  {es.settings.deleteAccountDescription}
+                </p>
+                <button
+                  className="mt-4 inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-800"
+                  onClick={() => {
+                    setError('');
+                    setDeletePassword('');
+                    setDeleteAccountOpen(true);
+                  }}
+                  type="button"
+                >
+                  <Trash2 size={16} />
+                  {es.settings.deleteAccountButton}
+                </button>
+              </div>
+            </div>
           </aside>
+        </div>
+      ) : null}
+
+      {deleteAccountOpen ? (
+        <div className="fixed inset-0 z-[70] grid place-items-center bg-slate-950/35 px-4 backdrop-blur-[2px]">
+          <section className="w-full max-w-md rounded-lg bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-slate-950">
+                  {es.settings.deleteAccountConfirmTitle}
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  {es.settings.deleteAccountConfirmDescription}
+                </p>
+              </div>
+              <button
+                className="grid size-9 shrink-0 place-items-center rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50"
+                onClick={() => setDeleteAccountOpen(false)}
+                type="button"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <label className="mt-5 block">
+              <span className="mb-2 block text-xs font-semibold uppercase text-slate-600">
+                {es.settings.deleteAccountPassword}
+              </span>
+              <input
+                autoComplete="current-password"
+                className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-red-700"
+                onChange={(event) => setDeletePassword(event.target.value)}
+                placeholder={es.settings.deleteAccountPasswordPlaceholder}
+                type="password"
+                value={deletePassword}
+              />
+            </label>
+
+            {error ? (
+              <p className="mt-4 rounded-md bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+                {error}
+              </p>
+            ) : null}
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <button
+                className="rounded-full border border-emerald-800 px-5 py-3 font-semibold text-emerald-900"
+                onClick={() => setDeleteAccountOpen(false)}
+                type="button"
+              >
+                {es.common.cancel}
+              </button>
+              <button
+                className="rounded-full bg-red-700 px-5 py-3 font-semibold text-white disabled:opacity-60"
+                disabled={
+                  deletePassword.length < 8 || deleteAccountMutation.isPending
+                }
+                onClick={() => {
+                  setError('');
+                  deleteAccountMutation.mutate(deletePassword);
+                }}
+                type="button"
+              >
+                {deleteAccountMutation.isPending
+                  ? es.common.saving
+                  : es.settings.deleteAccountConfirmAction}
+              </button>
+            </div>
+          </section>
         </div>
       ) : null}
     </section>

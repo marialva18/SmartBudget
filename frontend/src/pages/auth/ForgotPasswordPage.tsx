@@ -25,6 +25,7 @@ export function ForgotPasswordPage() {
 
   async function onSubmit(values: ForgotPasswordFormValues) {
     setServerError(null);
+
     try {
       await forgotPassword(values);
       navigate('/email-sent?mode=reset');

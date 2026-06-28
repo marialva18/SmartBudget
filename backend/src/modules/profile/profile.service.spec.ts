@@ -1,12 +1,20 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import * as argon2 from 'argon2';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { ProfileService } from './profile.service';
+
+jest.mock('argon2', () => ({
+  verify: jest.fn(),
+}));
 
 describe('ProfileService', () => {
   const prisma = {
     profile: {
       findUniqueOrThrow: jest.fn(),
       update: jest.fn(),
+    },
+    user: {
+      findFirst: jest.fn(),
     },
     userOnboardingObjective: {
       findMany: jest.fn(),
@@ -21,11 +29,42 @@ describe('ProfileService', () => {
     $transaction: jest.fn(),
   };
   const transactionClient = {
-    profile: { update: jest.fn() },
+    account: { updateMany: jest.fn() },
+    accountChannelDefault: { deleteMany: jest.fn() },
+    budget: { deleteMany: jest.fn() },
+    category: { updateMany: jest.fn() },
+    coachConversation: {
+      findMany: jest.fn(),
+      updateMany: jest.fn(),
+    },
+    coachMessage: { updateMany: jest.fn() },
+    emailVerificationToken: { deleteMany: jest.fn() },
+    externalChannelLink: { updateMany: jest.fn() },
+    fileObject: { updateMany: jest.fn() },
+    financialGroup: { updateMany: jest.fn() },
+    goal: { updateMany: jest.fn() },
+    goalReservation: { updateMany: jest.fn() },
+    groupExpense: { updateMany: jest.fn() },
+    groupMember: { updateMany: jest.fn() },
+    groupSettlement: { updateMany: jest.fn() },
+    passwordResetToken: { deleteMany: jest.fn() },
+    profile: {
+      deleteMany: jest.fn(),
+      update: jest.fn(),
+    },
+    recurringOccurrence: { updateMany: jest.fn() },
+    recurringSchedule: { updateMany: jest.fn() },
+    refreshToken: { deleteMany: jest.fn() },
+    transaction: { updateMany: jest.fn() },
+    transactionAttachment: { deleteMany: jest.fn() },
+    transactionDraft: { updateMany: jest.fn() },
+    user: { update: jest.fn() },
     userOnboardingObjective: {
       deleteMany: jest.fn(),
       createMany: jest.fn(),
     },
+    userSession: { deleteMany: jest.fn() },
+    voiceTranscription: { updateMany: jest.fn() },
     auditLog: { create: jest.fn() },
   };
 
@@ -142,5 +181,69 @@ describe('ProfileService', () => {
       where: { userId: 'user-id' },
       data: { onboardingCompleted: true },
     });
+  });
+
+  it('deletes account data and marks the user as deleted', async () => {
+    prisma.user.findFirst.mockResolvedValue({
+      id: 'user-id',
+      passwordHash: 'hash',
+    });
+    (argon2.verify as jest.Mock).mockResolvedValue(true);
+    transactionClient.coachConversation.findMany.mockResolvedValue([
+      { id: 'conversation-id' },
+    ]);
+    transactionClient.refreshToken.deleteMany.mockResolvedValue({ count: 2 });
+    transactionClient.userSession.deleteMany.mockResolvedValue({ count: 1 });
+    transactionClient.passwordResetToken.deleteMany.mockResolvedValue({
+      count: 0,
+    });
+    transactionClient.emailVerificationToken.deleteMany.mockResolvedValue({
+      count: 0,
+    });
+    transactionClient.user.update.mockResolvedValue({});
+    transactionClient.auditLog.create.mockResolvedValue({});
+
+    const result = await service.deleteAccount('user-id', 'WEB', {
+      password: 'Password1!',
+    });
+
+    expect(result.message).toBe('Cuenta eliminada correctamente.');
+    expect(argon2.verify).toHaveBeenCalledWith('hash', 'Password1!');
+    expect(transactionClient.refreshToken.deleteMany).toHaveBeenCalledWith({
+      where: { userId: 'user-id' },
+    });
+    expect(transactionClient.transaction.updateMany).toHaveBeenCalledWith({
+      where: { userId: 'user-id', deletedAt: null },
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      data: { deletedAt: expect.any(Date) },
+    });
+    expect(transactionClient.profile.deleteMany).toHaveBeenCalledWith({
+      where: { userId: 'user-id' },
+    });
+    expect(transactionClient.user.update).toHaveBeenCalledWith({
+      where: { id: 'user-id' },
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      data: expect.objectContaining({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        email: expect.stringMatching(/^deleted-/),
+        status: 'DELETED',
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        deletedAt: expect.any(Date),
+      }),
+    });
+  });
+
+  it('does not delete account data when the password is invalid', async () => {
+    prisma.user.findFirst.mockResolvedValue({
+      id: 'user-id',
+      passwordHash: 'hash',
+    });
+    (argon2.verify as jest.Mock).mockResolvedValue(false);
+
+    await expect(
+      service.deleteAccount('user-id', 'WEB', { password: 'wrong-password' }),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+
+    expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 });

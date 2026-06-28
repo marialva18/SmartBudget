@@ -55,7 +55,11 @@ export class CoachService {
     };
   }
 
-  async sendMessage(userId: string, channel: Channel, dto: SendCoachMessageDto) {
+  async sendMessage(
+    userId: string,
+    channel: Channel,
+    dto: SendCoachMessageDto,
+  ) {
     const usage = await this.getUsage(userId);
 
     if (usage.used >= usage.limit) {
@@ -184,15 +188,15 @@ export class CoachService {
           occurredAt: 'desc',
         },
         take: 120,
-                select: {
-            type: true,
-            amount: true,
-            category: {
-                select: {
-                name: true,
-                },
+        select: {
+          type: true,
+          amount: true,
+          category: {
+            select: {
+              name: true,
             },
-            },
+          },
+        },
       }),
 
       this.prisma.goal.findMany({
@@ -307,7 +311,9 @@ export class CoachService {
     const apiKey = this.configService.get<string>('GEMINI_API_KEY');
 
     if (!apiKey) {
-      throw new ServiceUnavailableException('Gemini API key is not configured.');
+      throw new ServiceUnavailableException(
+        'Gemini API key is not configured.',
+      );
     }
 
     const ai = new GoogleGenAI({ apiKey });
@@ -320,7 +326,9 @@ export class CoachService {
     const answer = response.text?.trim();
 
     if (!answer) {
-      throw new ServiceUnavailableException('Gemini did not return a response.');
+      throw new ServiceUnavailableException(
+        'Gemini did not return a response.',
+      );
     }
 
     return answer;
@@ -406,9 +414,7 @@ Respuesta:
     }
 
     return `Viendo tu mes, tu saldo estimado es ${balanceText} y registraste ${expenseText} en gastos. ${
-      topCategory
-        ? `La categoría que más destaca es ${topCategory.name}.`
-        : ''
+      topCategory ? `La categoría que más destaca es ${topCategory.name}.` : ''
     } Una buena acción para hoy sería revisar si ese gasto se puede reducir un poco la próxima semana sin afectar lo necesario.`;
   }
 
@@ -434,14 +440,14 @@ Respuesta:
       },
     });
   }
-    private async isUserAiEnabled(userId: string) {
+  private async isUserAiEnabled(userId: string) {
     const profile = await this.prisma.profile.findUnique({
-        where: { userId },
-        select: { aiEnabled: true },
+      where: { userId },
+      select: { aiEnabled: true },
     });
 
     return profile?.aiEnabled ?? true;
-    }
+  }
   private isCoachEnabled() {
     return this.configService.get<boolean>('AI_COACH_ENABLED', false);
   }

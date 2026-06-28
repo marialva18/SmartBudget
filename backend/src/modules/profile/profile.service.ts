@@ -1,6 +1,13 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { randomUUID } from 'crypto';
+import * as argon2 from 'argon2';
 import { es } from '../../common/i18n/es';
 import { PrismaService } from '../../database/prisma/prisma.service';
+import { DeleteAccountDto } from './dto/delete-account.dto';
 import { UpdateOnboardingObjectivesDto } from './dto/update-onboarding-objectives.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 
@@ -151,6 +158,178 @@ export class ProfileService {
     return {
       onboardingCompleted: updated.onboardingCompleted,
     };
+  }
+
+  async deleteAccount(userId: string, channel: Channel, dto: DeleteAccountDto) {
+    const user = await this.prisma.user.findFirst({
+      where: { id: userId, status: 'ACTIVE' },
+      select: {
+        id: true,
+        passwordHash: true,
+      },
+    });
+
+    if (!user || !(await argon2.verify(user.passwordHash, dto.password))) {
+      throw new UnauthorizedException(es.auth.invalidCredentials);
+    }
+
+    const deletedAt = new Date();
+    const anonymizedEmail = `deleted-${randomUUID()}@deleted.qori.local`;
+
+    await this.prisma.$transaction(async (transaction) => {
+      await transaction.refreshToken.deleteMany({ where: { userId } });
+      await transaction.userSession.deleteMany({ where: { userId } });
+      await transaction.passwordResetToken.deleteMany({ where: { userId } });
+      await transaction.emailVerificationToken.deleteMany({
+        where: { userId },
+      });
+
+      const coachConversations = await transaction.coachConversation.findMany({
+        where: { userId },
+        select: { id: true },
+      });
+      const coachConversationIds = coachConversations.map(({ id }) => id);
+
+      if (coachConversationIds.length > 0) {
+        await transaction.coachMessage.updateMany({
+          where: {
+            conversationId: { in: coachConversationIds },
+            deletedAt: null,
+          },
+          data: { deletedAt },
+        });
+      }
+
+      await transaction.coachConversation.updateMany({
+        where: { userId, deletedAt: null },
+        data: { deletedAt },
+      });
+
+      await transaction.transactionAttachment.deleteMany({
+        where: { transaction: { userId } },
+      });
+      await transaction.transactionDraft.updateMany({
+        where: { userId },
+        data: {
+          status: 'EXPIRED',
+          resolvedAt: deletedAt,
+        },
+      });
+      await transaction.recurringOccurrence.updateMany({
+        where: { userId, status: 'PENDING' },
+        data: {
+          status: 'SKIPPED',
+          reviewedAt: deletedAt,
+        },
+      });
+      await transaction.recurringSchedule.updateMany({
+        where: { userId, status: { not: 'CANCELLED' } },
+        data: { status: 'CANCELLED' },
+      });
+      await transaction.goalReservation.updateMany({
+        where: { userId, status: 'ACTIVE' },
+        data: {
+          status: 'REVERSED',
+          reversedAt: deletedAt,
+        },
+      });
+      await transaction.goal.updateMany({
+        where: { userId, deletedAt: null },
+        data: {
+          status: 'CANCELLED',
+          deletedAt,
+        },
+      });
+      await transaction.budget.deleteMany({ where: { userId } });
+      await transaction.transaction.updateMany({
+        where: { userId, deletedAt: null },
+        data: { deletedAt },
+      });
+      await transaction.accountChannelDefault.deleteMany({
+        where: { userId },
+      });
+      await transaction.account.updateMany({
+        where: { userId, status: { not: 'ARCHIVED' } },
+        data: {
+          status: 'ARCHIVED',
+          archivedAt: deletedAt,
+        },
+      });
+      await transaction.category.updateMany({
+        where: { userId, status: { not: 'ARCHIVED' } },
+        data: {
+          status: 'ARCHIVED',
+          archivedAt: deletedAt,
+        },
+      });
+      await transaction.groupExpense.updateMany({
+        where: { createdByUserId: userId, deletedAt: null },
+        data: { deletedAt },
+      });
+      await transaction.groupSettlement.updateMany({
+        where: { createdByUserId: userId, deletedAt: null },
+        data: { deletedAt },
+      });
+      await transaction.groupMember.updateMany({
+        where: { userId, status: { in: ['ACTIVE', 'INVITED'] } },
+        data: {
+          status: 'LEFT',
+          leftAt: deletedAt,
+        },
+      });
+      await transaction.financialGroup.updateMany({
+        where: { ownerId: userId, status: { not: 'ARCHIVED' } },
+        data: {
+          status: 'ARCHIVED',
+          archivedAt: deletedAt,
+        },
+      });
+      await transaction.voiceTranscription.updateMany({
+        where: { userId, deletedAt: null },
+        data: { deletedAt },
+      });
+      await transaction.fileObject.updateMany({
+        where: { userId, deletedAt: null },
+        data: {
+          status: 'DELETED',
+          deletedAt,
+        },
+      });
+      await transaction.externalChannelLink.updateMany({
+        where: { userId, status: { not: 'REVOKED' } },
+        data: {
+          status: 'REVOKED',
+          revokedAt: deletedAt,
+        },
+      });
+      await transaction.userOnboardingObjective.deleteMany({
+        where: { userId },
+      });
+      await transaction.profile.deleteMany({ where: { userId } });
+      await transaction.auditLog.create({
+        data: {
+          userId,
+          action: 'ACCOUNT_DELETED',
+          entity: 'USER',
+          entityId: userId,
+          channel,
+          metadataJson: JSON.stringify({
+            deletedAt: deletedAt.toISOString(),
+          }),
+        },
+      });
+      await transaction.user.update({
+        where: { id: userId },
+        data: {
+          email: anonymizedEmail,
+          passwordHash: `deleted:${randomUUID()}`,
+          status: 'DELETED',
+          deletedAt,
+        },
+      });
+    });
+
+    return { message: es.profile.accountDeleted };
   }
 
   private preferenceValues(profile: {

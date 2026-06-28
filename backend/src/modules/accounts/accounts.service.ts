@@ -123,7 +123,7 @@ export class AccountsService {
     return this.toResponse(account, balances.get(account.id));
   }
 
-    async updateOpeningBalance(
+  async updateOpeningBalance(
     userId: string,
     accountId: string,
     channel: 'WEB' | 'MOBILE',
