@@ -1,10 +1,10 @@
-﻿import { Mail } from 'lucide-react';
+import { Mail } from 'lucide-react';
 
 const currentYear = new Date().getFullYear();
 
 const contactEmail = 'malva0418@gmail.com';
 const contactSubject = 'Consulta sobre Qori';
-const contactBody = 'Hola, quiero conocer mas sobre Qori.';
+const contactBody = 'Hola, quiero conocer más sobre Qori.';
 
 const contactHref = `mailto:${contactEmail}?subject=${encodeURIComponent(
   contactSubject,
@@ -20,11 +20,11 @@ export function HomeFooter() {
           </p>
 
           <h2 className="mt-2 max-w-2xl text-3xl font-black text-[#191c1e]">
-            Quieres saber mas sobre Qori?
+            ¿Quieres saber más sobre Qori?
           </h2>
 
           <p className="mt-3 max-w-xl leading-7 text-[#3c4a46]">
-            Si tienes comentarios, dudas o quieres conocer mas sobre la
+            Si tienes comentarios, dudas o quieres conocer más sobre la
             propuesta, puedes ponerte en contacto directamente.
           </p>
         </div>

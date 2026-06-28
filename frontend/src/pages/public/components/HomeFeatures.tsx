@@ -1,4 +1,4 @@
-﻿import { Bot, CalendarDays, PiggyBank, WalletCards } from 'lucide-react';
+import { Bot, CalendarDays, PiggyBank, WalletCards } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 type Feature = {
@@ -12,17 +12,17 @@ const features: Feature[] = [
     icon: WalletCards,
     title: 'Todo tu dinero en un solo lugar',
     description:
-      'Organiza cuentas, saldos y monedas para saber cuanto tienes disponible y como se mueve tu dinero.',
+      'Organiza cuentas, saldos y monedas para saber cuánto tienes disponible y cómo se mueve tu dinero.',
   },
   {
     icon: CalendarDays,
-    title: 'Anticipate a tus pagos',
+    title: 'Anticípate a tus pagos',
     description:
-      'Consulta tus movimientos por dia, revisa pagos frecuentes y evita sorpresas cuando llega fin de mes.',
+      'Consulta tus movimientos por día, revisa pagos frecuentes y evita sorpresas cuando llega fin de mes.',
   },
   {
     icon: PiggyBank,
-    title: 'Ahorra con intencion',
+    title: 'Ahorra con intención',
     description:
       'Crea metas, separa reservas y protege el dinero que ya destinaste a objetivos importantes.',
   },
@@ -30,7 +30,7 @@ const features: Feature[] = [
     icon: Bot,
     title: 'Coach financiero con IA',
     description:
-      'Recibe orientacion cercana y practica para entender tus habitos y decidir mejor sin sentirte juzgada.',
+      'Recibe orientación cercana y práctica para entender tus hábitos y decidir mejor sin sentirte juzgada.',
   },
 ];
 
@@ -43,11 +43,11 @@ export function HomeFeatures() {
         </p>
 
         <h2 className="mt-2 text-3xl font-black text-[#191c1e]">
-          Una forma mas simple de manejar tus finanzas.
+          Una forma más simple de manejar tus finanzas.
         </h2>
 
         <p className="mt-3 text-[#3c4a46]">
-          Qori combina organizacion, alertas y recomendaciones inteligentes para
+          Qori combina organización, alertas y recomendaciones inteligentes para
           ayudarte a pasar de solo registrar gastos a entender realmente tu dinero.
         </p>
       </div>

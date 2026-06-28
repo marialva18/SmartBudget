@@ -1,11 +1,11 @@
-﻿import { BellRing, Eye, ShieldCheck } from 'lucide-react';
+import { BellRing, Eye, ShieldCheck } from 'lucide-react';
 
 const trustItems = [
   {
     icon: Eye,
     title: 'Claridad sin complicarte',
     description:
-      'Qori transforma tus movimientos en resumenes faciles de entender para que sepas que esta pasando con tu dinero sin revisar todo manualmente.',
+      'Qori transforma tus movimientos en resúmenes fáciles de entender para que sepas qué está pasando con tu dinero sin revisar todo manualmente.',
   },
   {
     icon: BellRing,
@@ -15,9 +15,9 @@ const trustItems = [
   },
   {
     icon: ShieldCheck,
-    title: 'Tu mantienes el control',
+    title: 'Tú mantienes el control',
     description:
-      'El coach te orienta, pero la decision final siempre es tuya. Qori no registra movimientos ni cambia tus metas sin que tu lo confirmes.',
+      'El coach te orienta, pero la decisión final siempre es tuya. Qori no registra movimientos ni cambia tus metas sin que tú lo confirmes.',
   },
 ];
 
@@ -30,12 +30,12 @@ export function HomeSecuritySection() {
         </p>
 
         <h2 className="mt-2 text-3xl font-black text-[#191c1e]">
-          Informacion clara para decidir mejor.
+          Información clara para decidir mejor.
         </h2>
 
         <p className="mt-3 text-[#3c4a46]">
-          Qori esta pensado para ayudarte a entender tu dinero, no para abrumarte
-          con reportes dificiles o decisiones automaticas.
+          Qori está pensado para ayudarte a entender tu dinero, no para abrumarte
+          con reportes difíciles o decisiones automáticas.
         </p>
       </div>
 
