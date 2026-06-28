@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { join } from 'node:path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { JwtAuthGuard } from './common/auth/jwt-auth.guard';
@@ -25,6 +26,7 @@ import { RecurringModule } from './modules/recurring/recurring.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: ['.env', join(process.cwd(), 'backend', '.env')],
       validate: validateEnvironment,
     }),
     ThrottlerModule.forRootAsync({

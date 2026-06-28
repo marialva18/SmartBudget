@@ -36,11 +36,18 @@ describe('GroupsService', () => {
       create: jest.fn(),
     },
   };
+  const mailService = {
+    sendGroupInvitationEmail: jest.fn(),
+  };
   let service: GroupsService;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new GroupsService(prisma as unknown as PrismaService);
+    mailService.sendGroupInvitationEmail.mockResolvedValue(true);
+    service = new GroupsService(
+      prisma as unknown as PrismaService,
+      mailService as never,
+    );
     prisma.$transaction.mockImplementation(
       (callback: (client: typeof transactionClient) => unknown) =>
         callback(transactionClient),
@@ -87,6 +94,61 @@ describe('GroupsService', () => {
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
+  it('invites a registered user and sends an email notification', async () => {
+    prisma.groupMember.findFirst.mockResolvedValue(memberRecord());
+    prisma.user.findFirst.mockResolvedValue({
+      id: 'user-2',
+      email: 'friend@example.com',
+    });
+    transactionClient.groupMember.findUnique.mockResolvedValue(null);
+    transactionClient.groupMember.create.mockResolvedValue(
+      memberRecord({
+        id: 'member-2',
+        userId: 'user-2',
+        role: 'MEMBER',
+        status: 'INVITED',
+      }),
+    );
+    transactionClient.auditLog.create.mockResolvedValue({});
+    transactionClient.financialGroup.findUniqueOrThrow.mockResolvedValue(
+      groupRecord({
+        members: [
+          memberRecord(),
+          memberRecord({
+            id: 'member-2',
+            userId: 'user-2',
+            role: 'MEMBER',
+            status: 'INVITED',
+            user: {
+              id: 'user-2',
+              email: 'friend@example.com',
+              profile: { displayName: 'Friend' },
+            },
+          }),
+        ],
+      }),
+    );
+
+    const result = await service.invite('user-id', 'WEB', 'group-id', {
+      email: 'friend@example.com',
+    });
+
+    expect(transactionClient.groupMember.create).toHaveBeenCalledWith({
+      data: {
+        groupId: 'group-id',
+        userId: 'user-2',
+        role: 'MEMBER',
+        status: 'INVITED',
+      },
+    });
+    expect(mailService.sendGroupInvitationEmail).toHaveBeenCalledWith({
+      groupName: 'Viaje familiar',
+      invitedBy: 'Maria',
+      to: 'friend@example.com',
+    });
+    expect(result.notificationEmailSent).toBe(true);
+  });
+
   it('creates a group expense with equal splits', async () => {
     prisma.groupMember.findFirst.mockResolvedValue(memberRecord());
     prisma.groupMember.findMany.mockResolvedValue([
@@ -127,7 +189,11 @@ describe('GroupsService', () => {
   });
 });
 
-function groupRecord() {
+function groupRecord(overrides: Partial<ReturnType<typeof groupBase>> = {}) {
+  return { ...groupBase(), ...overrides };
+}
+
+function groupBase() {
   return {
     id: 'group-id',
     ownerId: 'user-id',

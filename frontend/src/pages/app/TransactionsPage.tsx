@@ -25,6 +25,7 @@ import {
 } from '../../features/transactions/services/transactionsApi';
 import { es } from '../../i18n/es';
 import { ApiError } from '../../lib/api';
+import { formatMoney, formatSignedMoney } from '../../lib/money';
 import { getProfile } from '../../features/profile/profileApi';
 
 export function TransactionsPage() {
@@ -387,8 +388,11 @@ function TransactionRow({
           transaction.type === 'EXPENSE' ? 'text-red-700' : 'text-emerald-700'
         }`}
       >
-        {transaction.type === 'EXPENSE' ? 'âˆ’ ' : '+ '}
-        {formatMoney(Number(transaction.amount), transaction.currency)}
+        {formatSignedMoney(
+          Number(transaction.amount),
+          transaction.currency,
+          transaction.type === 'EXPENSE' ? '-' : '+',
+        )}
       </td>
       <td className="px-4 py-4">
         {editable ? (
@@ -572,10 +576,3 @@ Gasto ingresado: ${formatMoney(amount, currency)}
 
 ¿Deseas registrarlo de todas formas?`;
 }
-function formatMoney(value: number, currency: 'PEN' | 'USD') {
-  return new Intl.NumberFormat('es-PE', {
-    style: 'currency',
-    currency,
-  }).format(value);
-}
-

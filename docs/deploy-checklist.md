@@ -14,7 +14,9 @@
 - No usar `localhost`, `change_me` ni `replace_...` en variables de produccion.
 - Configurar `THROTTLE_TTL_MS=60000` y `THROTTLE_LIMIT=100` como limite global inicial; las escrituras financieras quedan ademas limitadas a 30/min por IP y coach a 10/min por IP.
 - No crear variables `VITE_` para secretos.
-- Usar `npm --prefix backend run build` como verificacion de build.
+- Ejecutar `npm --prefix backend run prisma:generate` si necesitas generar Prisma Client manualmente.
+- Usar `npm --prefix backend run build` como verificacion de build; el script ejecuta `prebuild` y genera Prisma Client antes de compilar.
+- Las invitaciones a grupos crean la invitacion dentro de Qori y, si `EMAIL_PROVIDER` esta configurado, tambien envian correo con enlace a `/app/groups`. Si el correo falla, la invitacion interna se conserva.
 
 ## Vercel Frontend
 
@@ -32,3 +34,6 @@
 - Registrar un usuario nuevo aceptando terminos y privacidad.
 - Verificar que `users.terms_accepted_at`, `privacy_accepted_at`, `terms_version` y `privacy_version` queden poblados.
 - Verificar correo, iniciar sesion, cerrar sesion, recuperar contrasena y volver a iniciar sesion.
+- Editar preferencias, desactivar/activar el coach y recargar la pagina para confirmar que el estado se conserva.
+- Editar objetivos generales desde configuracion y confirmar que no se repite onboarding.
+- Si vuelves a ejecutar el seed de categorias en Azure, revisar antes que no existan categorias del sistema duplicadas con nombres escritos manualmente.

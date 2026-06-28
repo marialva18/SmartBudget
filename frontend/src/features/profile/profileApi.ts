@@ -27,3 +27,13 @@ export function updateProfile(values: ProfileFormValues) {
     body: values,
   });
 }
+
+export function updateProfileObjectives(objectives: OnboardingObjective[]) {
+  return apiRequest<{ objectives: OnboardingObjective[] }>(
+    '/profile/objectives',
+    {
+      method: 'POST',
+      body: { objectives },
+    },
+  );
+}

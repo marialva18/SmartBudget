@@ -48,6 +48,9 @@ describe('ProfileService', () => {
       timezone: 'America/Lima',
       theme: 'SYSTEM',
       aiEnabled: true,
+      highExpenseWarningPercent: 50,
+      maxExpenseAmountPen: null,
+      maxExpenseAmountUsd: null,
     });
     transactionClient.profile.update.mockResolvedValue({
       id: 'profile-id',
@@ -56,6 +59,9 @@ describe('ProfileService', () => {
       timezone: 'America/Lima',
       theme: 'SYSTEM',
       aiEnabled: false,
+      highExpenseWarningPercent: 70,
+      maxExpenseAmountPen: 120,
+      maxExpenseAmountUsd: null,
       onboardingCompleted: false,
     });
     transactionClient.auditLog.create.mockResolvedValue({});
@@ -64,6 +70,9 @@ describe('ProfileService', () => {
       displayName: ' Maria Jesus ',
       preferredCurrency: 'USD',
       aiEnabled: false,
+      highExpenseWarningPercent: 70,
+      maxExpenseAmountPen: 120,
+      maxExpenseAmountUsd: null,
     });
 
     expect(transactionClient.profile.update).toHaveBeenCalledWith({
@@ -74,11 +83,15 @@ describe('ProfileService', () => {
         timezone: undefined,
         theme: undefined,
         aiEnabled: false,
+        highExpenseWarningPercent: 70,
+        maxExpenseAmountPen: 120,
+        maxExpenseAmountUsd: null,
       },
     });
     expect(result.displayName).toBe('Maria Jesus');
     expect(result.preferredCurrency).toBe('USD');
     expect(result.aiEnabled).toBe(false);
+    expect(result.maxExpenseAmountPen).toBe(120);
   });
 
   it('replaces onboarding objectives atomically', async () => {

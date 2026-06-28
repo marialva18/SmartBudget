@@ -29,7 +29,7 @@ entre PEN y USD.
 - Backend: NestJS, TypeScript, Prisma, JWT, cookies HttpOnly, Argon2 y rate limiting.
 - Base de datos: SQL Server.
 - Persistencia: scripts SQL versionados y ejecutables desde SSMS.
-- Email transaccional: Resend, configurable desde backend.
+- Email transaccional: Resend o SMTP, configurable solo desde backend.
 - Arquitectura prevista: web primero, app movil despues consumiendo la misma API.
 
 ## Arquitectura
@@ -60,7 +60,7 @@ Qori modela la vida financiera de un usuario desde estas reglas:
 - Las metas reservan dinero sin modificar el saldo real.
 - Las reservas reducen el disponible de una cuenta.
 - Los grupos permiten coordinar gastos compartidos sin compartir cuentas personales.
-- Las invitaciones a grupos son notificables y accionables.
+- Las invitaciones a grupos son accionables dentro de la aplicacion y pueden notificarse por correo cuando el proveedor transaccional esta configurado.
 - Los gastos grupales calculan balances por miembro y por moneda.
 - Las operaciones relevantes conservan auditoria.
 

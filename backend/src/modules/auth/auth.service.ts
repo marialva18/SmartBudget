@@ -687,18 +687,25 @@ export class AuthService {
     config: EmailConfig,
   ) {
     const resetUrl = `${config.resetAppUrl.replace(
-  /\/+$/g,
-  '',
-)}?token=${encodeURIComponent(token)}`;
+      /\/+$/g,
+      '',
+    )}?token=${encodeURIComponent(token)}`;
     await this.sendEmail({
       config,
       to: email,
       subject: 'Recupera tu contraseña de Qori',
-      html: [
-        '<p>Recibimos una solicitud para restablecer tu contraseña.</p>',
-        `<p><a href="${resetUrl}">Restablecer contraseña</a></p>`,
-        '<p>Si no solicitaste este cambio, puedes ignorar este correo.</p>',
-      ].join(''),
+      html: renderQoriEmail({
+        eyebrow: 'Acceso seguro',
+        title: 'Recupera tu contraseña',
+        intro:
+          'Recibimos una solicitud para cambiar la contraseña de tu cuenta Qori.',
+        buttonLabel: 'Restablecer contraseña',
+        buttonUrl: resetUrl,
+        details: [
+          `Este enlace estará disponible por ${config.passwordResetExpiresInMinutes} minutos.`,
+          'Si no solicitaste este cambio, puedes ignorar este correo.',
+        ],
+      }),
     });
   }
 
@@ -716,12 +723,18 @@ export class AuthService {
       config,
       to: email,
       subject: 'Verifica tu cuenta de Qori',
-      html: [
-        '<p>Gracias por crear tu cuenta en Qori.</p>',
-        '<p>Para activar tu cuenta, confirma tu correo usando este enlace:</p>',
-        `<p><a href="${verificationUrl}">Verificar mi correo</a></p>`,
-        '<p>Si no creaste esta cuenta, puedes ignorar este correo.</p>',
-      ].join(''),
+      html: renderQoriEmail({
+        eyebrow: 'Bienvenida a Qori',
+        title: 'Verifica tu correo',
+        intro:
+          'Gracias por crear tu cuenta. Confirma tu correo para empezar a organizar tus finanzas con calma.',
+        buttonLabel: 'Verificar mi correo',
+        buttonUrl: verificationUrl,
+        details: [
+          `Este enlace estará disponible por ${config.emailVerificationExpiresInMinutes} minutos.`,
+          'Si no creaste esta cuenta, puedes ignorar este correo.',
+        ],
+      }),
     });
   }
 
@@ -783,4 +796,68 @@ export class AuthService {
   private addMinutes(minutes: number): Date {
     return new Date(Date.now() + minutes * 60_000);
   }
+}
+
+function renderQoriEmail({
+  buttonLabel,
+  buttonUrl,
+  details,
+  eyebrow,
+  intro,
+  title,
+}: {
+  buttonLabel: string;
+  buttonUrl: string;
+  details: string[];
+  eyebrow: string;
+  intro: string;
+  title: string;
+}) {
+  const detailItems = details
+    .map(
+      (detail) =>
+        `<li style="margin:0 0 8px;color:#52615d;font-size:14px;line-height:1.6;">${detail}</li>`,
+    )
+    .join('');
+
+  return `<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>${title}</title>
+  </head>
+  <body style="margin:0;background:#f3f7f5;font-family:Arial,Helvetica,sans-serif;color:#17201d;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f3f7f5;padding:28px 12px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border:1px solid #dfe8e4;border-radius:18px;overflow:hidden;box-shadow:0 18px 45px rgba(8,64,58,0.10);">
+            <tr>
+              <td style="background:#073f38;padding:28px 32px;">
+                <p style="margin:0;color:#d7b75b;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:700;">Qori</p>
+                <h1 style="margin:10px 0 0;color:#ffffff;font-size:26px;line-height:1.2;">${title}</h1>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:32px;">
+                <p style="margin:0 0 8px;color:#00796b;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:700;">${eyebrow}</p>
+                <p style="margin:0;color:#2d3935;font-size:16px;line-height:1.7;">${intro}</p>
+                <table role="presentation" cellspacing="0" cellpadding="0" style="margin:28px 0;">
+                  <tr>
+                    <td style="border-radius:12px;background:#00796b;">
+                      <a href="${buttonUrl}" style="display:inline-block;padding:14px 22px;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;">${buttonLabel}</a>
+                    </td>
+                  </tr>
+                </table>
+                <ul style="margin:0;padding-left:18px;">${detailItems}</ul>
+                <p style="margin:24px 0 0;color:#6b7a76;font-size:13px;line-height:1.6;">Si el botón no funciona, copia y pega este enlace en tu navegador:<br><span style="word-break:break-all;color:#00796b;">${buttonUrl}</span></p>
+              </td>
+            </tr>
+          </table>
+          <p style="margin:18px 0 0;color:#7a8985;font-size:12px;">Qori · Finanzas claras, paso a paso.</p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
 }

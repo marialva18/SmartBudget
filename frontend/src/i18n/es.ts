@@ -281,6 +281,9 @@
     accountTitle: 'Estado de la cuenta',
     accountDescription:
       'Resumen de configuración actual y preferencias importantes.',
+    financialProfileTitle: 'Perfil financiero',
+    financialProfileDescription:
+      'Tus preferencias principales están configuradas y puedes ajustarlas cuando lo necesites.',
     displayName: 'Nombre visible',
     preferredCurrency: 'Moneda preferida',
     timezone: 'Zona horaria',
@@ -290,17 +293,28 @@
       'El coach podrá usar tu historial financiero autorizado para generar recomendaciones.',
     save: 'Guardar cambios',
     saved: 'Perfil actualizado correctamente.',
+    objectivesSaved: 'Objetivos actualizados correctamente.',
     saveError: 'No se pudo actualizar el perfil.',
+    objectivesSaveError: 'No se pudieron actualizar los objetivos.',
     loadError: 'No pudimos cargar tu perfil.',
     logout: 'Cerrar sesión',
     objectives: 'Objetivos iniciales',
+    objectivesDescription:
+      'Elige los objetivos generales que quieres priorizar en Qori.',
     onboarding: 'Onboarding',
     aiStatus: 'Coach financiero',
     completed: 'Completado',
     pending: 'Pendiente',
     enabled: 'Activo',
     disabled: 'Desactivado',
+    coachActiveTitle: 'Coach financiero activo',
+    coachActiveDescription:
+      'Recibirás sugerencias personalizadas según tus movimientos y objetivos.',
+    coachInactiveTitle: 'Coach financiero desactivado',
+    coachInactiveDescription:
+      'No recibirás recomendaciones automáticas. Puedes volver a activarlo cuando quieras.',
     noObjectives: 'Sin objetivos registrados',
+    saveObjectives: 'Guardar objetivos',
     highExpenseWarningPercent: 'Alerta de gasto alto',
     highExpenseWarningDescription:
       'Define cuándo Qori debe pedirte confirmación antes de registrar un gasto grande.',
@@ -421,6 +435,15 @@
     acceptError: 'No se pudo aceptar la invitación.',
     declineError: 'No se pudo rechazar la invitación.',
     archiveError: 'No se pudo archivar el grupo.',
+    groupCreated: 'Grupo creado correctamente.',
+    inviteSentWithEmail:
+      'Invitación creada y correo enviado. También aparecerá en Qori.',
+    inviteSentInApp:
+      'Invitación creada. Aparecerá en Qori aunque el correo no esté disponible.',
+    expenseCreated: 'Gasto registrado correctamente.',
+    invitationAccepted: 'Invitación aceptada. Ya puedes ver el grupo.',
+    invitationDeclined: 'Invitación rechazada.',
+    groupArchived: 'Grupo archivado correctamente.',
     members: 'Miembros',
     invited: 'Invitado',
     invite: 'Invitar',

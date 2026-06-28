@@ -55,6 +55,7 @@ export type FinancialGroup = {
   currentMemberStatus: GroupMember['status'] | null;
   canInvite: boolean;
   canArchive: boolean;
+  notificationEmailSent?: boolean;
   balances: GroupBalance[];
   recentExpenses: GroupExpense[];
   members: GroupMember[];

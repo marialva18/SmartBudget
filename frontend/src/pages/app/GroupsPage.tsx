@@ -32,10 +32,12 @@ export function GroupsPage() {
   const [expenseGroup, setExpenseGroup] = useState<FinancialGroup | null>(null);
   const [archiveCandidate, setArchiveCandidate] =
     useState<FinancialGroup | null>(null);
+  const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const groupsQuery = useQuery({
     queryKey: ['groups'],
     queryFn: getGroups,
+    refetchInterval: 30_000,
   });
 
   const refreshGroups = async () => {
@@ -47,6 +49,7 @@ export function GroupsPage() {
     onSuccess: async () => {
       setGroupPanelOpen(false);
       setError('');
+      setMessage(es.groups.groupCreated);
       await refreshGroups();
     },
     onError: (reason) =>
@@ -60,9 +63,14 @@ export function GroupsPage() {
       groupId: string;
       values: GroupInvitationFormValues;
     }) => inviteGroupMember(groupId, values),
-    onSuccess: async () => {
+    onSuccess: async (group) => {
       setInviteGroup(null);
       setError('');
+      setMessage(
+        group.notificationEmailSent
+          ? es.groups.inviteSentWithEmail
+          : es.groups.inviteSentInApp,
+      );
       await refreshGroups();
     },
     onError: (reason) =>
@@ -81,6 +89,7 @@ export function GroupsPage() {
     onSuccess: async () => {
       setExpenseGroup(null);
       setError('');
+      setMessage(es.groups.expenseCreated);
       await refreshGroups();
     },
     onError: (reason) =>
@@ -90,7 +99,11 @@ export function GroupsPage() {
   });
   const acceptMutation = useMutation({
     mutationFn: acceptGroupInvitation,
-    onSuccess: refreshGroups,
+    onSuccess: async () => {
+      setError('');
+      setMessage(es.groups.invitationAccepted);
+      await refreshGroups();
+    },
     onError: (reason) =>
       setError(
         reason instanceof ApiError ? reason.message : es.groups.acceptError,
@@ -98,7 +111,11 @@ export function GroupsPage() {
   });
   const declineMutation = useMutation({
     mutationFn: declineGroupInvitation,
-    onSuccess: refreshGroups,
+    onSuccess: async () => {
+      setError('');
+      setMessage(es.groups.invitationDeclined);
+      await refreshGroups();
+    },
     onError: (reason) =>
       setError(
         reason instanceof ApiError ? reason.message : es.groups.declineError,
@@ -109,6 +126,7 @@ export function GroupsPage() {
     onSuccess: async () => {
       setArchiveCandidate(null);
       setError('');
+      setMessage(es.groups.groupArchived);
       await refreshGroups();
     },
     onError: (reason) =>
@@ -183,6 +201,11 @@ export function GroupsPage() {
           {error}
         </p>
       ) : null}
+      {message ? (
+        <p className="fixed bottom-5 left-1/2 z-[60] -translate-x-1/2 rounded-md bg-emerald-800 px-4 py-3 text-white">
+          {message}
+        </p>
+      ) : null}
 
       {groupPanelOpen ? (
         <GroupFormPanel
@@ -190,6 +213,7 @@ export function GroupsPage() {
           onClose={() => {
             setGroupPanelOpen(false);
             setError('');
+            setMessage('');
           }}
           onSubmit={(values) => createMutation.mutate(values)}
         />

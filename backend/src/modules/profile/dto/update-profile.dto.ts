@@ -1,10 +1,13 @@
 import {
   IsBoolean,
   IsIn,
+  IsNumber,
   IsOptional,
   IsString,
   Matches,
+  Max,
   MaxLength,
+  Min,
   MinLength,
 } from 'class-validator';
 import { es } from '../../../common/i18n/es';
@@ -43,4 +46,16 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsIn(HIGH_EXPENSE_WARNING_PERCENTAGES)
   highExpenseWarningPercent?: (typeof HIGH_EXPENSE_WARNING_PERCENTAGES)[number];
+
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(1)
+  @Max(999_999_999)
+  maxExpenseAmountPen?: number | null;
+
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(1)
+  @Max(999_999_999)
+  maxExpenseAmountUsd?: number | null;
 }

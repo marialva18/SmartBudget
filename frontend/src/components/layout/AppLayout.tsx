@@ -105,6 +105,7 @@ function AppShell() {
     queryKey: ['groups'],
     queryFn: getGroups,
     enabled: !isLoggingOut,
+    refetchInterval: isLoggingOut ? false : 30_000,
   });
 
   const recurringDueQuery = useQuery({

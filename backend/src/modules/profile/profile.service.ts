@@ -28,6 +28,12 @@ export class ProfileService {
       theme: profile.theme,
       aiEnabled: profile.aiEnabled,
       highExpenseWarningPercent: profile.highExpenseWarningPercent,
+      maxExpenseAmountPen: profile.maxExpenseAmountPen
+        ? Number(profile.maxExpenseAmountPen)
+        : null,
+      maxExpenseAmountUsd: profile.maxExpenseAmountUsd
+        ? Number(profile.maxExpenseAmountUsd)
+        : null,
       onboardingCompleted: profile.onboardingCompleted,
       objectives: objectives.map((item) => item.objective),
     };
@@ -48,6 +54,8 @@ export class ProfileService {
           theme: dto.theme,
           aiEnabled: dto.aiEnabled,
           highExpenseWarningPercent: dto.highExpenseWarningPercent,
+          maxExpenseAmountPen: dto.maxExpenseAmountPen,
+          maxExpenseAmountUsd: dto.maxExpenseAmountUsd,
         },
       });
 
@@ -73,6 +81,12 @@ export class ProfileService {
       theme: updated.theme,
       aiEnabled: updated.aiEnabled,
       highExpenseWarningPercent: updated.highExpenseWarningPercent,
+      maxExpenseAmountPen: updated.maxExpenseAmountPen
+        ? Number(updated.maxExpenseAmountPen)
+        : null,
+      maxExpenseAmountUsd: updated.maxExpenseAmountUsd
+        ? Number(updated.maxExpenseAmountUsd)
+        : null,
       onboardingCompleted: updated.onboardingCompleted,
     };
   }
@@ -146,6 +160,8 @@ export class ProfileService {
     theme: string;
     aiEnabled?: boolean;
     highExpenseWarningPercent?: number;
+    maxExpenseAmountPen?: unknown;
+    maxExpenseAmountUsd?: unknown;
   }) {
     return {
       displayName: profile.displayName,
@@ -154,6 +170,8 @@ export class ProfileService {
       theme: profile.theme,
       aiEnabled: profile.aiEnabled,
       highExpenseWarningPercent: profile.highExpenseWarningPercent,
+      maxExpenseAmountPen: profile.maxExpenseAmountPen,
+      maxExpenseAmountUsd: profile.maxExpenseAmountUsd,
     };
   }
 }

@@ -2,12 +2,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { LogOut, RefreshCw, Save } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { getAccounts } from '../../features/accounts/services/accountsApi';
 import {
   getProfile,
   updateProfile,
+  updateProfileObjectives,
   type Profile,
 } from '../../features/profile/profileApi';
 import {
@@ -27,11 +28,21 @@ const timezoneOptions = [
   'Europe/Madrid',
 ];
 
+const objectiveOptions: Profile['objectives'] = [
+  'SAVE',
+  'CONTROL_EXPENSES',
+  'ORGANIZE_INCOME',
+  'CREATE_BUDGET',
+];
+
 export function SettingsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [objectiveDraft, setObjectiveDraft] = useState<
+    Profile['objectives']
+  >();
   const query = useQuery({
     queryKey: ['profile'],
     queryFn: getProfile,
@@ -50,6 +61,7 @@ export function SettingsPage() {
     (account) => account.currency === 'USD',
   );
   const {
+    control,
     formState: { errors, isDirty },
     handleSubmit,
     register,
@@ -64,6 +76,9 @@ export function SettingsPage() {
       reset(getDefaults(query.data));
     }
   }, [query.data, reset]);
+
+  const aiEnabled = useWatch({ control, name: 'aiEnabled' });
+  const selectedObjectives = objectiveDraft ?? query.data?.objectives ?? [];
 
   const saveMutation = useMutation({
     mutationFn: updateProfile,
@@ -80,6 +95,24 @@ export function SettingsPage() {
       setMessage('');
       setError(
         reason instanceof ApiError ? reason.message : es.settings.saveError,
+      );
+    },
+  });
+
+  const objectivesMutation = useMutation({
+    mutationFn: updateProfileObjectives,
+    onSuccess: async () => {
+      setError('');
+      setMessage(es.settings.objectivesSaved);
+      setObjectiveDraft(undefined);
+      await queryClient.invalidateQueries({ queryKey: ['profile'] });
+    },
+    onError: (reason) => {
+      setMessage('');
+      setError(
+        reason instanceof ApiError
+          ? reason.message
+          : es.settings.objectivesSaveError,
       );
     },
   });
@@ -355,45 +388,77 @@ export function SettingsPage() {
             </button>
           </form>
 
-          <aside className="space-y-4 rounded-lg bg-white p-5 shadow-[0_10px_30px_rgba(13,148,136,0.08)]">
+          <aside className="space-y-5 rounded-lg bg-white p-5 shadow-[0_10px_30px_rgba(13,148,136,0.08)]">
             <div>
               <h2 className="text-xl font-bold">
-                {es.settings.accountTitle}
+                {es.settings.financialProfileTitle}
               </h2>
               <p className="mt-1 text-sm text-slate-500">
-                {es.settings.accountDescription}
+                {es.settings.financialProfileDescription}
               </p>
             </div>
-            <InfoRow label={es.settings.objectives} value={formatObjectives(query.data.objectives)} />
-            <InfoRow
-              label={es.settings.onboarding}
-              value={
-                query.data.onboardingCompleted
-                  ? es.settings.completed
-                  : es.settings.pending
-              }
-            />
-            <InfoRow
-              label={es.settings.aiStatus}
-              value={
-                query.data.aiEnabled
-                  ? es.settings.enabled
-                  : es.settings.disabled
-              }
-            />
+            <div className="rounded-lg border border-emerald-100 bg-emerald-50/60 p-4">
+              <p className="text-sm font-bold text-emerald-950">
+                {aiEnabled
+                  ? es.settings.coachActiveTitle
+                  : es.settings.coachInactiveTitle}
+              </p>
+              <p className="mt-1 text-sm text-emerald-900">
+                {aiEnabled
+                  ? es.settings.coachActiveDescription
+                  : es.settings.coachInactiveDescription}
+              </p>
+            </div>
+
+            <div className="border-t border-slate-100 pt-4">
+              <p className="text-xs font-semibold uppercase text-slate-500">
+                {es.settings.objectives}
+              </p>
+              <p className="mt-1 text-sm text-slate-500">
+                {es.settings.objectivesDescription}
+              </p>
+              <div className="mt-3 space-y-2">
+                {objectiveOptions.map((objective) => (
+                  <label
+                    className="flex items-center gap-3 rounded-md border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-800"
+                    key={objective}
+                  >
+                    <input
+                      checked={selectedObjectives.includes(objective)}
+                      className="h-4 w-4 rounded border-slate-300 text-emerald-800"
+                      onChange={() =>
+                        setObjectiveDraft((current) => {
+                          const base = current ?? query.data.objectives;
+
+                          return base.includes(objective)
+                            ? base.filter((item) => item !== objective)
+                            : [...base, objective];
+                        })
+                      }
+                      type="checkbox"
+                    />
+                    {es.settings.objectiveLabels[objective]}
+                  </label>
+                ))}
+              </div>
+              <button
+                className="mt-4 inline-flex min-h-10 items-center justify-center rounded-full bg-[#006b5f] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                disabled={
+                  objectivesMutation.isPending ||
+                  selectedObjectives.length === 0
+                }
+                onClick={() => objectivesMutation.mutate(selectedObjectives)}
+                type="button"
+              >
+                {objectivesMutation.isPending
+                  ? es.common.saving
+                  : es.settings.saveObjectives}
+              </button>
+            </div>
           </aside>
         </div>
       ) : null}
     </section>
-  );
-}
-
-function InfoRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="border-t border-slate-100 pt-4">
-      <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
-      <p className="mt-1 font-semibold text-slate-900">{value}</p>
-    </div>
   );
 }
 
@@ -408,15 +473,6 @@ function getDefaults(profile?: Partial<Profile>): ProfileFormValues {
     maxExpenseAmountPen: profile?.maxExpenseAmountPen ?? null,
     maxExpenseAmountUsd: profile?.maxExpenseAmountUsd ?? null,
   };
-}
-
-function formatObjectives(objectives: Profile['objectives']) {
-  if (objectives.length === 0) {
-    return es.settings.noObjectives;
-  }
-  return objectives
-    .map((objective) => es.settings.objectiveLabels[objective])
-    .join(', ');
 }
 
 function sanitizeNameInput(event: React.FormEvent<HTMLInputElement>) {

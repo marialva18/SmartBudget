@@ -8,6 +8,7 @@ import {
 import { Prisma } from '@prisma/client';
 import { es } from '../../common/i18n/es';
 import { PrismaService } from '../../database/prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
 import { CreateGroupExpenseDto } from './dto/create-group-expense.dto';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { InviteGroupMemberDto } from './dto/invite-group-member.dto';
@@ -109,7 +110,10 @@ type MemberSummary = {
 
 @Injectable()
 export class GroupsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailService: MailService,
+  ) {}
 
   async findAll(userId: string) {
     const memberships = await this.prisma.groupMember.findMany({
@@ -242,7 +246,23 @@ export class GroupsService {
       });
     });
 
-    return this.toResponse(group, requester);
+    const requesterSummary = group.members.find(
+      (member) => member.userId === userId,
+    );
+    const notificationEmailSent =
+      await this.mailService.sendGroupInvitationEmail({
+        groupName: group.name,
+        invitedBy:
+          requesterSummary?.user.profile?.displayName ??
+          requesterSummary?.user.email ??
+          'Qori',
+        to: invitedUser.email,
+      });
+
+    return {
+      ...this.toResponse(group, requester),
+      notificationEmailSent,
+    };
   }
 
   async accept(userId: string, channel: Channel, groupId: string) {
