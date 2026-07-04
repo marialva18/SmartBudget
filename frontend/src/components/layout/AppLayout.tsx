@@ -159,44 +159,46 @@ function AppShell() {
         </div>
       </header>
 
-      <aside
-        className={`fixed inset-y-0 left-0 z-30 w-64 border-r border-white/10 bg-[#073f38] p-4 shadow-[10px_0_30px_rgba(3,32,29,0.22)] transition-transform md:translate-x-0 md:shadow-none ${
-          isMenuOpen ? 'translate-x-0 pt-20' : '-translate-x-full'
-        }`}
+     <aside
+  className={`fixed inset-y-0 left-0 z-30 flex w-64 flex-col overflow-y-auto overscroll-contain border-r border-white/10 bg-[#073f38] p-4 shadow-[10px_0_30px_rgba(3,32,29,0.22)] transition-transform md:translate-x-0 md:shadow-none ${
+    isMenuOpen ? 'translate-x-0 pt-20 md:pt-4' : '-translate-x-full'
+  }`}
+>
+  <div className="hidden shrink-0 px-2 pb-8 pt-2 md:block">
+    <BrandMark tone="light" />
+  </div>
+
+  <nav className="space-y-1 pb-4">
+    {navItems.map(({ icon: Icon, label, to }) => (
+      <NavLink
+        className={({ isActive }) =>
+          [
+            'flex min-h-11 items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold transition-all',
+            isActive
+              ? 'bg-[#e5f5ef] text-[#063c36] shadow-[0_12px_28px_rgba(0,0,0,0.16)]'
+              : 'text-[#d4e6df] hover:bg-white/10 hover:text-white',
+          ].join(' ')
+        }
+        key={to}
+        onClick={() => setIsMenuOpen(false)}
+        to={to}
       >
-        <div className="hidden px-2 pb-8 pt-2 md:block">
-          <BrandMark tone="light" />
-        </div>
-        <nav className="space-y-1">
-          {navItems.map(({ icon: Icon, label, to }) => (
-            <NavLink
-              className={({ isActive }) =>
-                [
-                  'flex min-h-11 items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold transition-all',
-                  isActive
-                    ? 'bg-[#e5f5ef] text-[#063c36] shadow-[0_12px_28px_rgba(0,0,0,0.16)]'
-                    : 'text-[#d4e6df] hover:bg-white/10 hover:text-white',
-                ].join(' ')
-              }
-              key={to}
-              onClick={() => setIsMenuOpen(false)}
-              to={to}
-            >
-              <Icon size={19} />
-              {label}
-            </NavLink>
-          ))}
-        </nav>
-        <button
-          className="mt-4 flex min-h-11 w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-semibold text-red-100 transition-colors hover:bg-red-500/15 hover:text-white disabled:opacity-60"
-          disabled={logoutMutation.isPending}
-          onClick={() => logoutMutation.mutate()}
-          type="button"
-        >
-          <LogOut size={19} />
-          {es.navigation.logout}
-        </button>
-      </aside>
+        <Icon size={19} />
+        {label}
+      </NavLink>
+    ))}
+  </nav>
+
+  <button
+    className="mt-2 flex min-h-11 w-full shrink-0 items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-semibold text-red-100 transition-colors hover:bg-red-500/15 hover:text-white disabled:opacity-60"
+    disabled={logoutMutation.isPending}
+    onClick={() => logoutMutation.mutate()}
+    type="button"
+  >
+    <LogOut size={19} />
+    {es.navigation.logout}
+  </button>
+</aside>
 
       {isMenuOpen ? (
         <button
