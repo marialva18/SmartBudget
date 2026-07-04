@@ -3,6 +3,7 @@ import { Banknote, Landmark, WalletCards, X } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { es } from '../../../i18n/es';
+import { preventNumberWheelChange } from '../../../lib/number-input';
 import {
   accountSchema,
   type AccountFormValues,
@@ -204,6 +205,7 @@ export function AccountFormPanel({
                   min="0"
                   onInput={preventNegativeNumberInput}
                   onKeyDown={preventInvalidNumberKeys}
+                  onWheel={preventNumberWheelChange}
                   step="0.01"
                   type="number"
                   {...register('openingBalance', { valueAsNumber: true })}

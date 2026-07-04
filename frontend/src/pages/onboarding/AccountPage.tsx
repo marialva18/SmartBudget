@@ -12,6 +12,7 @@ import {
 } from '../../features/onboarding/schemas/onboardingSchemas';
 import { completeOnboarding } from '../../features/onboarding/services/profileApi';
 import { getAuthSession, setAuthSession } from '../../lib/auth-session';
+import { preventNumberWheelChange } from '../../lib/number-input';
 
 const accountTypes = [
   { value: 'BANK' as const, label: 'Cuenta bancaria', icon: Landmark },
@@ -143,6 +144,7 @@ export function AccountPage() {
             min="0"
             onInput={preventNegativeNumberInput}
             onKeyDown={preventInvalidNumberKeys}
+            onWheel={preventNumberWheelChange}
             step="0.01"
             type="number"
             {...register('openingBalance', { valueAsNumber: true })}

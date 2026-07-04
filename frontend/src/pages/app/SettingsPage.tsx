@@ -20,6 +20,7 @@ import { logout } from '../../features/auth/services/authApi';
 import { es } from '../../i18n/es';
 import { markLoggedOut } from '../../lib/auth-session';
 import { ApiError } from '../../lib/api';
+import { preventNumberWheelChange } from '../../lib/number-input';
 
 const timezoneOptions = [
   'America/Lima',
@@ -340,6 +341,7 @@ export function SettingsPage() {
           <input
             className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700"
             min={1}
+            onWheel={preventNumberWheelChange}
             placeholder="Ej. 50"
             step="0.01"
             type="number"
@@ -365,6 +367,7 @@ export function SettingsPage() {
           <input
             className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700"
             min={1}
+            onWheel={preventNumberWheelChange}
             placeholder="Ej. 20"
             step="0.01"
             type="number"

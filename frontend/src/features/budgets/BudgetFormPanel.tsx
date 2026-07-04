@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { es } from '../../i18n/es';
+import { preventNumberWheelChange } from '../../lib/number-input';
 import type { Category } from '../categories/categoriesApi';
 import type { Budget } from './budgetsApi';
 import { budgetSchema, type BudgetFormValues } from './budgetSchema';
@@ -133,6 +134,7 @@ export function BudgetFormPanel({
               <input
                 className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700"
                 min="0.01"
+                onWheel={preventNumberWheelChange}
                 step="0.01"
                 type="number"
                 {...register('amount', { valueAsNumber: true })}

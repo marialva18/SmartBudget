@@ -40,6 +40,7 @@ import {
 } from '../../features/groups/groupSchema';
 import { es } from '../../i18n/es';
 import { ApiError } from '../../lib/api';
+import { preventNumberWheelChange } from '../../lib/number-input';
 
 export function GroupsPage() {
   const queryClient = useQueryClient();
@@ -685,7 +686,7 @@ function ExpensePanel({
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label={es.groups.form.amount} error={errors.amount?.message}>
-              <input className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700" min="0.01" step="0.01" type="number" {...register('amount', { valueAsNumber: true })} />
+              <input className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700" min="0.01" onWheel={preventNumberWheelChange} step="0.01" type="number" {...register('amount', { valueAsNumber: true })} />
             </Field>
             <Field label={es.groups.form.currency}>
               <select className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700" {...register('currency')}>
@@ -764,6 +765,7 @@ function ExpensePanel({
                     <input
                       className="w-full rounded-md bg-white px-3 py-2 text-right outline-none focus:ring-2 focus:ring-emerald-700"
                       min="0"
+                      onWheel={preventNumberWheelChange}
                       step="0.01"
                       type="number"
                       {...register(
@@ -896,6 +898,7 @@ function SettlementPanel({
               <input
                 className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700"
                 min="0.01"
+                onWheel={preventNumberWheelChange}
                 step="0.01"
                 type="number"
                 {...register('amount', { valueAsNumber: true })}

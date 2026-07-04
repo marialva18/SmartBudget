@@ -32,6 +32,7 @@ import {
 } from '../../features/goals/goalSchema';
 import { es } from '../../i18n/es';
 import { ApiError } from '../../lib/api';
+import { preventNumberWheelChange } from '../../lib/number-input';
 
 export function GoalsPage() {
   const queryClient = useQueryClient();
@@ -387,7 +388,7 @@ function GoalFormPanel({
             <input className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700" {...register('name')} />
           </Field>
           <Field label={es.goals.form.targetAmount} error={errors.targetAmount?.message}>
-            <input className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700" min="0.01" step="0.01" type="number" {...register('targetAmount', { valueAsNumber: true })} />
+            <input className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700" min="0.01" onWheel={preventNumberWheelChange} step="0.01" type="number" {...register('targetAmount', { valueAsNumber: true })} />
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label={es.goals.form.currency}>
@@ -449,7 +450,7 @@ function ReservationPanel({
             </select>
           </Field>
           <Field label={es.goals.form.reserveAmount} error={errors.amount?.message}>
-            <input className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700" min="0.01" step="0.01" type="number" {...register('amount', { valueAsNumber: true })} />
+            <input className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700" min="0.01" onWheel={preventNumberWheelChange} step="0.01" type="number" {...register('amount', { valueAsNumber: true })} />
           </Field>
           <Field label={es.goals.form.note}>
             <textarea className="min-h-24 w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700" {...register('note')} />

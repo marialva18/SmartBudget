@@ -7,6 +7,7 @@ import { getAccounts } from '../../accounts/services/accountsApi';
 import { getCategories } from '../../categories/categoriesApi';
 import { useFinanceScope } from '../../finance-scope/financeScope';
 import { es } from '../../../i18n/es';
+import { preventNumberWheelChange } from '../../../lib/number-input';
 import {
   transactionSchema,
   type TransactionFormValues,
@@ -114,6 +115,7 @@ export function TransactionFormPanel({
                 <input
                   className="min-w-0 flex-1 bg-transparent px-3 py-4 text-2xl font-bold outline-none"
                   min="0.01"
+                  onWheel={preventNumberWheelChange}
                   step="0.01"
                   type="number"
                   {...register('amount', { valueAsNumber: true })}

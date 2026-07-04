@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertTriangle, X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { es } from '../../../i18n/es';
+import { preventNumberWheelChange } from '../../../lib/number-input';
 import {
   balanceAdjustmentSchema,
   type BalanceAdjustmentFormValues,
@@ -111,6 +112,7 @@ export function OpeningBalancePanel({
                   min="0"
                   onInput={preventNegativeNumberInput}
                   onKeyDown={preventInvalidNumberKeys}
+                  onWheel={preventNumberWheelChange}
                   step="0.01"
                   type="number"
                   {...register('actualBalance', { valueAsNumber: true })}

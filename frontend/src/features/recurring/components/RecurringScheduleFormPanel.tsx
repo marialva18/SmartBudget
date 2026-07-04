@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import type { Account } from '../../accounts/services/accountsApi';
 import type { Category } from '../../categories/categoriesApi';
+import { preventNumberWheelChange } from '../../../lib/number-input';
 import {
   recurringScheduleSchema,
   type RecurringScheduleFormValues,
@@ -160,6 +161,7 @@ const accountId = useWatch({
                 className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700"
                 inputMode="decimal"
                 min="0"
+                onWheel={preventNumberWheelChange}
                 step="0.01"
                 type="number"
                 {...register('amount', { valueAsNumber: true })}
@@ -180,6 +182,7 @@ const accountId = useWatch({
                 <input
                   className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700"
                   min="1"
+                  onWheel={preventNumberWheelChange}
                   step="1"
                   type="number"
                   {...register('intervalCount', { valueAsNumber: true })}
