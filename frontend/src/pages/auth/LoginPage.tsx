@@ -86,7 +86,7 @@ export function LoginPage() {
                   Acceso seguro
                 </p>
                 <h1 className="text-3xl font-extrabold text-[#16201d]">
-                  Bienvenida de nuevo
+                  Bienvenido de nuevo
                 </h1>
                 <p className="mx-auto mt-2 max-w-sm text-[#52625d]">
                   Ingresa para seguir organizando tu dinero con calma.

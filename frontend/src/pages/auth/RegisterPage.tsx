@@ -1,5 +1,5 @@
 ﻿import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowRight, CheckCircle, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { ArrowRight, CheckCircle, Eye, EyeOff, ShieldCheck, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
@@ -15,6 +15,7 @@ import { register as registerUser } from '../../features/auth/services/authApi';
 export function RegisterPage() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [legalView, setLegalView] = useState<LegalView | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
   const {
     register,
@@ -188,7 +189,29 @@ export function RegisterPage() {
                 {...register('acceptedTerms')}
               />
               <span>
-                Acepto los términos y condiciones y la política de privacidad.
+                Acepto los{' '}
+                <button
+                  className="font-bold text-[#006b5f] underline-offset-4 hover:underline"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    setLegalView('terms');
+                  }}
+                  type="button"
+                >
+                  términos y condiciones
+                </button>{' '}
+                y la{' '}
+                <button
+                  className="font-bold text-[#006b5f] underline-offset-4 hover:underline"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    setLegalView('privacy');
+                  }}
+                  type="button"
+                >
+                  política de privacidad
+                </button>
+                .
               </span>
             </label>
             {errors.acceptedTerms?.message ? (
@@ -221,6 +244,96 @@ export function RegisterPage() {
           </p>
         </AuthCard>
       </div>
+      {legalView ? (
+        <LegalInfoModal
+          onClose={() => setLegalView(null)}
+          view={legalView}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+type LegalView = 'terms' | 'privacy';
+
+const legalContent: Record<
+  LegalView,
+  { title: string; description: string; items: string[] }
+> = {
+  terms: {
+    title: 'Términos y condiciones',
+    description:
+      'Qori es una herramienta de organización financiera personal. Estos puntos resumen el uso esperado de la aplicación.',
+    items: [
+      'Debes registrar información real y mantener segura tu cuenta.',
+      'La información que ingreses se usa para calcular saldos, movimientos, presupuestos, metas y análisis.',
+      'Qori no reemplaza asesoría financiera profesional ni ejecuta operaciones bancarias reales.',
+      'Puedes editar o eliminar información desde las opciones disponibles en la aplicación.',
+      'El uso de la plataforma implica aceptar un manejo responsable de tus datos financieros.',
+    ],
+  },
+  privacy: {
+    title: 'Política de privacidad',
+    description:
+      'Qori protege tus datos personales y financieros para que solo se usen dentro de la experiencia de la aplicación.',
+    items: [
+      'Tus datos se usan para crear tu cuenta, autenticarte y mostrar tu información financiera.',
+      'Tus contraseñas se almacenan protegidas y no se muestran en la interfaz.',
+      'Los secretos del sistema no viven en el frontend ni se exponen al navegador.',
+      'Tus cuentas, movimientos, metas, presupuestos y grupos se separan por usuario.',
+      'Si activas funciones de IA, Qori puede usar información contextual para generar recomendaciones.',
+    ],
+  },
+};
+
+function LegalInfoModal({
+  onClose,
+  view,
+}: {
+  onClose: () => void;
+  view: LegalView;
+}) {
+  const content = legalContent[view];
+
+  return (
+    <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-950/35 px-4 backdrop-blur-[2px]">
+      <section className="w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[#00796b]">
+              Información legal
+            </p>
+            <h2 className="mt-2 text-2xl font-extrabold text-[#16201d]">
+              {content.title}
+            </h2>
+          </div>
+          <button
+            className="grid size-9 place-items-center rounded-full bg-[#eef6f3] text-[#006b5f] transition hover:bg-[#d9eee8]"
+            onClick={onClose}
+            type="button"
+          >
+            <X size={18} />
+          </button>
+        </div>
+        <p className="mt-4 text-sm leading-6 text-[#3c4a46]">
+          {content.description}
+        </p>
+        <ul className="mt-4 space-y-3 text-sm leading-6 text-[#3c4a46]">
+          {content.items.map((item) => (
+            <li className="flex gap-3" key={item}>
+              <CheckCircle className="mt-1 shrink-0 text-[#006b5f]" size={16} />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+        <button
+          className="mt-6 h-11 w-full rounded-lg bg-[#006b5f] font-semibold text-white transition hover:bg-[#005047]"
+          onClick={onClose}
+          type="button"
+        >
+          Entendido
+        </button>
+      </section>
     </div>
   );
 }
