@@ -27,6 +27,7 @@ export const es = {
     missing: 'La cuenta no existe.',
     duplicate: 'Ya existe una cuenta activa con ese nombre y moneda.',
     openingBalanceDescription: 'Saldo inicial',
+    balanceAdjustmentDescription: 'Ajuste de saldo',
   },
   categories: {
     duplicate: 'Ya existe una categoría activa con ese nombre y tipo.',
@@ -70,6 +71,20 @@ export const es = {
     invalidPayer: 'La persona que pagó debe ser miembro activo del grupo.',
     invalidParticipants:
       'Todos los participantes deben ser miembros activos del grupo.',
+    payerMustBeCurrentUser:
+      'Solo puedes descontar de tus cuentas cuando tú registras el pago del grupo.',
+    invalidPaymentAccount:
+      'La cuenta de pago debe estar activa, pertenecer a tu usuario y usar la misma moneda del gasto.',
+    invalidCustomSplits:
+      'La suma de los montos personalizados debe coincidir con el gasto total.',
+    invalidPercentageSplits:
+      'La suma de porcentajes debe ser exactamente 100%.',
+    invalidSettlementMembers:
+      'Las personas de la liquidación deben ser miembros activos distintos.',
+    settlementPermission:
+      'Solo una persona involucrada puede registrar esta liquidación.',
+    invalidSettlementAccount:
+      'La cuenta de liquidación debe estar activa, pertenecer a tu usuario y usar la misma moneda.',
   },
   profile: {
     incompleteOnboarding:
@@ -113,6 +128,9 @@ export const es = {
     groupExpenseAmountNumber: 'El gasto debe ser un número válido.',
     groupExpenseAmountMinimum: 'El gasto debe ser mayor que cero.',
     groupExpenseAmountMaximum: 'El gasto es demasiado alto.',
+    groupSettlementAmountNumber: 'La liquidación debe ser un número válido.',
+    groupSettlementAmountMinimum: 'La liquidación debe ser mayor que cero.',
+    groupSettlementAmountMaximum: 'La liquidación es demasiado alta.',
     monthStart: 'El mes debe enviarse como YYYY-MM-01.',
     password:
       'La contraseña debe incluir una mayúscula, un número y un carácter especial.',

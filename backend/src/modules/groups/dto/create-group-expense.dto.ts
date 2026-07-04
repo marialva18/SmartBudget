@@ -11,11 +11,36 @@ import {
   Max,
   MaxLength,
   Min,
+  ValidateNested,
 } from 'class-validator';
 import { es } from '../../../common/i18n/es';
 import { IsSqlServerGuid } from '../../../common/validation/sql-server-guid';
 
 export const GROUP_EXPENSE_CURRENCIES = ['PEN', 'USD'] as const;
+export const GROUP_SPLIT_MODES = [
+  'EQUAL',
+  'CUSTOM_AMOUNTS',
+  'PERCENTAGES',
+] as const;
+
+export class GroupExpenseSplitDto {
+  @IsSqlServerGuid({ message: 'Selecciona un miembro válido.' })
+  memberId!: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 4 })
+  @Min(0.01)
+  @Max(999_999_999_999)
+  amount?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 4 })
+  @Min(0.01)
+  @Max(100)
+  percentage?: number;
+}
 
 export class CreateGroupExpenseDto {
   @IsString()
@@ -42,13 +67,28 @@ export class CreateGroupExpenseDto {
   @IsSqlServerGuid({ message: 'Selecciona un miembro válido.' })
   paidByMemberId!: string;
 
+  @IsSqlServerGuid({ message: 'Selecciona una cuenta válida.' })
+  accountId!: string;
+
+  @IsOptional()
+  @IsIn(GROUP_SPLIT_MODES)
+  splitMode?: (typeof GROUP_SPLIT_MODES)[number];
+
+  @IsOptional()
   @IsArray()
   @ArrayMinSize(1)
   @IsSqlServerGuid({
     each: true,
     message: 'Selecciona participantes válidos.',
   })
-  participantMemberIds!: string[];
+  participantMemberIds?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => GroupExpenseSplitDto)
+  splits?: GroupExpenseSplitDto[];
 
   @IsOptional()
   @IsISO8601()

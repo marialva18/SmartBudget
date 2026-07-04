@@ -11,6 +11,8 @@ describe('AccountsService', () => {
     name: 'Cuenta sueldo',
     type: 'BANK',
     currency: 'PEN',
+    openingBalance: new Prisma.Decimal(1500),
+    balanceStartedAt: new Date('2026-01-01T00:00:00.000Z'),
     status: 'ACTIVE',
     archivedAt: null,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
@@ -44,6 +46,9 @@ describe('AccountsService', () => {
     goalReservation: {
       groupBy: jest.fn(),
     },
+    profile: {
+      findUnique: jest.fn(),
+    },
     accountChannelDefault: {
       deleteMany: jest.fn(),
     },
@@ -64,6 +69,7 @@ describe('AccountsService', () => {
     transactionClient.account.create.mockResolvedValue(accountRecord);
     transactionClient.transaction.create.mockResolvedValue({});
     transactionClient.auditLog.create.mockResolvedValue({});
+    prisma.profile.findUnique.mockResolvedValue({ timezone: 'America/Lima' });
     prisma.$transaction.mockImplementation(
       (callback: (client: typeof transactionClient) => unknown) =>
         callback(transactionClient),
@@ -74,6 +80,7 @@ describe('AccountsService', () => {
       type: 'BANK',
       currency: 'PEN',
       openingBalance: 1500,
+      balanceStartedAt: '2026-06-01',
     });
 
     expect(transactionClient.account.create).toHaveBeenCalledWith({
@@ -82,6 +89,8 @@ describe('AccountsService', () => {
         name: 'Cuenta sueldo',
         type: 'BANK',
         currency: 'PEN',
+        openingBalance: new Prisma.Decimal(1500),
+        balanceStartedAt: new Date('2026-06-01T05:00:00.000Z'),
       },
     });
     expect(transactionClient.transaction.create).toHaveBeenCalledWith({
@@ -90,6 +99,8 @@ describe('AccountsService', () => {
         accountId: 'account-id',
         type: 'OPENING_BALANCE',
         amount: new Prisma.Decimal(1500),
+        occurredAt: new Date('2026-06-01T05:00:00.000Z'),
+        balanceImpactStatus: 'AFFECTS_BALANCE',
         source: 'SYSTEM_OPENING',
       }),
     });
@@ -142,6 +153,13 @@ describe('AccountsService', () => {
     expect(prisma.account.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { userId: 'user-id' } }),
     );
+    expect(prisma.transaction.groupBy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          balanceImpactStatus: 'AFFECTS_BALANCE',
+        }),
+      }),
+    );
   });
 
   it('does not return an account owned by another user', async () => {
@@ -191,5 +209,58 @@ describe('AccountsService', () => {
       }),
     });
     expect(result.status).toBe('ARCHIVED');
+  });
+
+  it('creates an income adjustment when actual balance is higher', async () => {
+    prisma.account.findFirst.mockResolvedValue(accountRecord);
+    prisma.transaction.groupBy
+      .mockResolvedValueOnce([
+        {
+          accountId: 'account-id',
+          type: 'OPENING_BALANCE',
+          _sum: { amount: new Prisma.Decimal(100) },
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          accountId: 'account-id',
+          type: 'OPENING_BALANCE',
+          _sum: { amount: new Prisma.Decimal(120) },
+        },
+      ]);
+    prisma.goalReservation.groupBy.mockResolvedValue([]);
+    transactionClient.transaction.create.mockResolvedValue({
+      id: 'adjustment-id',
+    });
+    transactionClient.auditLog.create.mockResolvedValue({});
+    prisma.$transaction.mockImplementation(
+      (callback: (client: typeof transactionClient) => unknown) =>
+        callback(transactionClient),
+    );
+
+    const result = await service.adjustBalance('user-id', 'account-id', 'WEB', {
+      actualBalance: 120,
+      note: 'Conteo de efectivo',
+    });
+
+    expect(transactionClient.transaction.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'user-id',
+        accountId: 'account-id',
+        type: 'INCOME',
+        amount: new Prisma.Decimal(20),
+        currency: 'PEN',
+        balanceImpactStatus: 'AFFECTS_BALANCE',
+        source: 'BALANCE_ADJUSTMENT',
+      }),
+    });
+    expect(transactionClient.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: 'ACCOUNT_BALANCE_ADJUSTED',
+        entityId: 'account-id',
+        channel: 'WEB',
+      }),
+    });
+    expect(result.realBalance).toBe('120.0000');
   });
 });

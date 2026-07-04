@@ -356,7 +356,12 @@ export class GoalsService {
     const [transactionTotals, reservationTotals] = await Promise.all([
       this.prisma.transaction.groupBy({
         by: ['type'],
-        where: { userId, accountId, deletedAt: null },
+        where: {
+          userId,
+          accountId,
+          deletedAt: null,
+          balanceImpactStatus: 'AFFECTS_BALANCE',
+        },
         _sum: { amount: true },
       }),
       this.prisma.goalReservation.groupBy({

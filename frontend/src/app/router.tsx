@@ -1,35 +1,45 @@
+import { Suspense, type ReactNode } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { AuthLayout } from '../components/layout/AuthLayout'
 import { AppLayout } from '../components/layout/AppLayout'
-import { LoginPage } from '../pages/auth/LoginPage'
-import { RegisterPage } from '../pages/auth/RegisterPage'
-import { ForgotPasswordPage } from '../pages/auth/ForgotPasswordPage'
-import { EmailSentPage } from '../pages/auth/EmailSentPage'
-import { ResetPasswordPage } from '../pages/auth/ResetPasswordPage'
-import { DashboardPage } from '../pages/app/DashboardPage'
-import { AccountsPage } from '../pages/app/AccountsPage'
-import { TransactionsPage } from '../pages/app/TransactionsPage'
 import { OnboardingLayout } from '../components/layout/OnboardingLayout'
-import { WelcomePage } from '../pages/onboarding/WelcomePage'
-import { PreferencesPage } from '../pages/onboarding/PreferencesPage'
-import { GoalsPage } from '../pages/onboarding/GoalsPage'
-import { AccountPage } from '../pages/onboarding/AccountPage'
-import { CategoriesPage } from '../pages/app/CategoriesPage'
-import { BudgetsPage } from '../pages/app/BudgetsPage'
 import { RequireAuth } from '../features/auth/components/RequireAuth'
-import { SettingsPage } from '../pages/app/SettingsPage'
 import { RouteErrorPage } from '../pages/RouteErrorPage'
-import { GoalsPage as AppGoalsPage } from '../pages/app/GoalsPage'
-import { GroupsPage } from '../pages/app/GroupsPage'
-import { CalendarPage } from '../pages/app/CalendarPage'
-import { RecurringPage } from '../pages/app/RecurringPage'
-import { CoachPage } from '../pages/app/CoachPage'
-import { HomePage } from '../pages/public/HomePage'
-import { VerifyEmailPage } from '../pages/auth/VerifyEmailPage'
+import {
+  AccountPage,
+  AccountsPage,
+  AnalyticsPage,
+  AppGoalsPage,
+  BudgetsPage,
+  CalendarPage,
+  CategoriesPage,
+  CoachPage,
+  DashboardPage,
+  EmailSentPage,
+  ForgotPasswordPage,
+  GroupsPage,
+  HomePage,
+  LoginPage,
+  OnboardingGoalsPage,
+  PageLoader,
+  PreferencesPage,
+  RecurringPage,
+  RegisterPage,
+  ResetPasswordPage,
+  SettingsPage,
+  TransactionsPage,
+  VerifyEmailPage,
+  WelcomePage,
+} from './lazyPages'
+
+function routePage(page: ReactNode) {
+  return <Suspense fallback={<PageLoader />}>{page}</Suspense>
+}
+
 export const router = createBrowserRouter([
   {
     path: '/',
-     element: <HomePage />,
+    element: routePage(<HomePage />),
     errorElement: <RouteErrorPage />,
   },
   {
@@ -46,19 +56,19 @@ export const router = createBrowserRouter([
           },
           {
             path: 'welcome',
-            element: <WelcomePage />,
+            element: routePage(<WelcomePage />),
           },
           {
             path: 'preferences',
-            element: <PreferencesPage />,
+            element: routePage(<PreferencesPage />),
           },
           {
             path: 'goals',
-            element: <GoalsPage />,
+            element: routePage(<OnboardingGoalsPage />),
           },
           {
             path: 'account',
-            element: <AccountPage />,
+            element: routePage(<AccountPage />),
           },
         ],
       },
@@ -70,29 +80,29 @@ export const router = createBrowserRouter([
     children: [
       {
         path: '/login',
-        element: <LoginPage />,
+        element: routePage(<LoginPage />),
       },
       {
         path: '/register',
-        element: <RegisterPage />,
+        element: routePage(<RegisterPage />),
       },
       {
         path: '/forgot-password',
-        element: <ForgotPasswordPage />,
+        element: routePage(<ForgotPasswordPage />),
       },
       {
         path: '/email-sent',
-        element: <EmailSentPage />,
+        element: routePage(<EmailSentPage />),
         errorElement: <RouteErrorPage />,
       },
       {
         path: '/verify-email',
-        element: <VerifyEmailPage />,
+        element: routePage(<VerifyEmailPage />),
         errorElement: <RouteErrorPage />,
       },
       {
         path: '/reset-password',
-        element: <ResetPasswordPage />,
+        element: routePage(<ResetPasswordPage />),
         errorElement: <RouteErrorPage />,
       },
     ],
@@ -111,47 +121,51 @@ export const router = createBrowserRouter([
           },
           {
             path: 'dashboard',
-            element: <DashboardPage />,
+            element: routePage(<DashboardPage />),
           },
           {
             path: 'coach',
-            element: <CoachPage />,
+            element: routePage(<CoachPage />),
           },
           {
             path: 'accounts',
-            element: <AccountsPage />,
+            element: routePage(<AccountsPage />),
           },
           {
             path: 'transactions',
-            element: <TransactionsPage />,
+            element: routePage(<TransactionsPage />),
+          },
+          {
+            path: 'analytics',
+            element: routePage(<AnalyticsPage />),
           },
           {
             path: 'calendar',
-            element: <CalendarPage />,
+            element: routePage(<CalendarPage />),
           },
           {
             path: 'recurring',
-            element: <RecurringPage />,
+            element: routePage(<RecurringPage />),
           },
           {
             path: 'categories',
-            element: <CategoriesPage />,
+            element: routePage(<CategoriesPage />),
           },
           {
             path: 'budgets',
-            element: <BudgetsPage />,
+            element: routePage(<BudgetsPage />),
           },
           {
             path: 'goals',
-            element: <AppGoalsPage />,
+            element: routePage(<AppGoalsPage />),
           },
           {
             path: 'groups',
-            element: <GroupsPage />,
+            element: routePage(<GroupsPage />),
           },
           {
             path: 'settings',
-            element: <SettingsPage />,
+            element: routePage(<SettingsPage />),
           },
         ],
       },

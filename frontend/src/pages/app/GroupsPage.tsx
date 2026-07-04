@@ -1,13 +1,27 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Archive, Check, MailPlus, Plus, ReceiptText, Users, X } from 'lucide-react';
+import {
+  Archive,
+  Check,
+  HandCoins,
+  MailPlus,
+  Plus,
+  ReceiptText,
+  Users,
+  X,
+} from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import {
+  getAccounts,
+  type Account,
+} from '../../features/accounts/services/accountsApi';
 import {
   acceptGroupInvitation,
   archiveGroup,
   createGroupExpense,
+  createGroupSettlement,
   createGroup,
   declineGroupInvitation,
   getGroups,
@@ -17,10 +31,12 @@ import {
 import {
   groupExpenseSchema,
   groupInvitationSchema,
+  groupSettlementSchema,
   groupSchema,
   type GroupExpenseFormValues,
   type GroupFormValues,
   type GroupInvitationFormValues,
+  type GroupSettlementFormValues,
 } from '../../features/groups/groupSchema';
 import { es } from '../../i18n/es';
 import { ApiError } from '../../lib/api';
@@ -30,6 +46,8 @@ export function GroupsPage() {
   const [groupPanelOpen, setGroupPanelOpen] = useState(false);
   const [inviteGroup, setInviteGroup] = useState<FinancialGroup | null>(null);
   const [expenseGroup, setExpenseGroup] = useState<FinancialGroup | null>(null);
+  const [settlementGroup, setSettlementGroup] =
+    useState<FinancialGroup | null>(null);
   const [archiveCandidate, setArchiveCandidate] =
     useState<FinancialGroup | null>(null);
   const [message, setMessage] = useState('');
@@ -38,6 +56,10 @@ export function GroupsPage() {
     queryKey: ['groups'],
     queryFn: getGroups,
     refetchInterval: 30_000,
+  });
+  const accountsQuery = useQuery({
+    queryKey: ['accounts'],
+    queryFn: getAccounts,
   });
 
   const refreshGroups = async () => {
@@ -95,6 +117,25 @@ export function GroupsPage() {
     onError: (reason) =>
       setError(
         reason instanceof ApiError ? reason.message : es.groups.saveError,
+      ),
+  });
+  const settlementMutation = useMutation({
+    mutationFn: ({
+      groupId,
+      values,
+    }: {
+      groupId: string;
+      values: GroupSettlementFormValues;
+    }) => createGroupSettlement(groupId, values),
+    onSuccess: async () => {
+      setSettlementGroup(null);
+      setError('');
+      setMessage(es.groups.settlementCreated);
+      await refreshGroups();
+    },
+    onError: (reason) =>
+      setError(
+        reason instanceof ApiError ? reason.message : es.groups.settlementError,
       ),
   });
   const acceptMutation = useMutation({
@@ -192,6 +233,7 @@ export function GroupsPage() {
             onDecline={() => declineMutation.mutate(group.id)}
             onExpense={() => setExpenseGroup(group)}
             onInvite={() => setInviteGroup(group)}
+            onSettlement={() => setSettlementGroup(group)}
           />
         ))}
       </div>
@@ -232,11 +274,24 @@ export function GroupsPage() {
 
       {expenseGroup ? (
         <ExpensePanel
+          accounts={accountsQuery.data ?? []}
           group={expenseGroup}
           isSaving={expenseMutation.isPending}
           onClose={() => setExpenseGroup(null)}
           onSubmit={(values) =>
             expenseMutation.mutate({ groupId: expenseGroup.id, values })
+          }
+        />
+      ) : null}
+
+      {settlementGroup ? (
+        <SettlementPanel
+          accounts={accountsQuery.data ?? []}
+          group={settlementGroup}
+          isSaving={settlementMutation.isPending}
+          onClose={() => setSettlementGroup(null)}
+          onSubmit={(values) =>
+            settlementMutation.mutate({ groupId: settlementGroup.id, values })
           }
         />
       ) : null}
@@ -264,6 +319,7 @@ function GroupCard({
   onDecline,
   onExpense,
   onInvite,
+  onSettlement,
 }: {
   group: FinancialGroup;
   onAccept: () => void;
@@ -271,6 +327,7 @@ function GroupCard({
   onDecline: () => void;
   onExpense: () => void;
   onInvite: () => void;
+  onSettlement: () => void;
 }) {
   const isInvitation = group.currentMemberStatus === 'INVITED';
   return (
@@ -320,6 +377,14 @@ function GroupCard({
           >
             <ReceiptText size={16} />
             {es.groups.newExpense}
+          </button>
+          <button
+            className="inline-flex items-center gap-2 rounded-full border border-emerald-800 px-4 py-2 text-sm font-semibold text-emerald-900"
+            onClick={onSettlement}
+            type="button"
+          >
+            <HandCoins size={16} />
+            {es.groups.newSettlement}
           </button>
           {group.canInvite ? (
             <button
@@ -402,6 +467,38 @@ function GroupCard({
           </div>
         ) : (
           <p className="mt-3 text-sm text-slate-500">{es.groups.noExpenses}</p>
+        )}
+      </div>
+
+      <div className="mt-5 border-t border-slate-100 pt-4">
+        <h3 className="font-bold">{es.groups.recentSettlements}</h3>
+        {group.recentSettlements.length > 0 ? (
+          <div className="mt-3 space-y-2">
+            {group.recentSettlements.map((settlement) => (
+              <div
+                className="rounded-md bg-slate-50 px-3 py-2 text-sm"
+                key={settlement.id}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-semibold">
+                    {settlement.fromMember.displayName}
+                    {' -> '}
+                    {settlement.toMember.displayName}
+                  </span>
+                  <span className="font-bold">
+                    {formatMoney(Number(settlement.amount), settlement.currency)}
+                  </span>
+                </div>
+                {settlement.note ? (
+                  <p className="mt-1 text-slate-500">{settlement.note}</p>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-3 text-sm text-slate-500">
+            {es.groups.noSettlements}
+          </p>
         )}
       </div>
 
@@ -519,11 +616,13 @@ function InvitePanel({
 }
 
 function ExpensePanel({
+  accounts,
   group,
   isSaving,
   onClose,
   onSubmit,
 }: {
+  accounts: Account[];
   group: FinancialGroup;
   isSaving: boolean;
   onClose: () => void;
@@ -538,18 +637,41 @@ function ExpensePanel({
     [activeMembers],
   );
   const {
+    control,
     formState: { errors },
     handleSubmit,
     register,
     reset,
+    setValue,
   } = useForm<GroupExpenseFormValues>({
     resolver: zodResolver(groupExpenseSchema),
     defaultValues,
   });
+  const splitMode = useWatch({ control, name: 'splitMode' });
+  const currency = useWatch({ control, name: 'currency' });
+  const paymentAccounts = useMemo(
+    () =>
+      accounts.filter(
+        (account) =>
+          account.status === 'ACTIVE' && account.currency === currency,
+      ),
+    [accounts, currency],
+  );
 
   useEffect(() => {
-    reset(defaultValues);
-  }, [defaultValues, group.id, reset]);
+    reset({
+      ...defaultValues,
+      accountId:
+        accounts.find(
+          (account) =>
+            account.status === 'ACTIVE' && account.currency === defaultValues.currency,
+      )?.id ?? '',
+    });
+  }, [accounts, defaultValues, group.id, reset]);
+
+  useEffect(() => {
+    setValue('accountId', paymentAccounts[0]?.id ?? '');
+  }, [paymentAccounts, setValue]);
 
   return (
     <Panel title={es.groups.form.expenseTitle(group.name)} onClose={onClose}>
@@ -581,24 +703,86 @@ function ExpensePanel({
               ))}
             </select>
           </Field>
-          <Field label={es.groups.form.participants} error={errors.participantMemberIds?.message}>
-            <div className="space-y-2">
-              {activeMembers.map((member) => (
-                <label
-                  className="flex items-center gap-3 rounded-md bg-slate-100 px-4 py-3"
-                  key={member.id}
-                >
-                  <input
-                    className="size-4 accent-emerald-800"
-                    type="checkbox"
-                    value={member.id}
-                    {...register('participantMemberIds')}
-                  />
-                  <span className="font-semibold">{member.displayName}</span>
-                </label>
+          <Field label={es.groups.form.paymentAccount} error={errors.accountId?.message}>
+            <select className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700" {...register('accountId')}>
+              <option value="">{es.groups.form.selectPaymentAccount}</option>
+              {paymentAccounts.map((account) => (
+                <option key={account.id} value={account.id}>
+                  {account.name}
+                </option>
               ))}
-            </div>
+            </select>
           </Field>
+          <Field label={es.groups.form.splitMode}>
+            <select className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700" {...register('splitMode')}>
+              <option value="EQUAL">{es.groups.splitModes.EQUAL}</option>
+              <option value="CUSTOM_AMOUNTS">
+                {es.groups.splitModes.CUSTOM_AMOUNTS}
+              </option>
+              <option value="PERCENTAGES">
+                {es.groups.splitModes.PERCENTAGES}
+              </option>
+            </select>
+          </Field>
+          {splitMode === 'EQUAL' ? (
+            <Field label={es.groups.form.participants} error={errors.participantMemberIds?.message}>
+              <div className="space-y-2">
+                {activeMembers.map((member) => (
+                  <label
+                    className="flex items-center gap-3 rounded-md bg-slate-100 px-4 py-3"
+                    key={member.id}
+                  >
+                    <input
+                      className="size-4 accent-emerald-800"
+                      type="checkbox"
+                      value={member.id}
+                      {...register('participantMemberIds')}
+                    />
+                    <span className="font-semibold">{member.displayName}</span>
+                  </label>
+                ))}
+              </div>
+            </Field>
+          ) : (
+            <Field
+              label={
+                splitMode === 'CUSTOM_AMOUNTS'
+                  ? es.groups.form.customAmounts
+                  : es.groups.form.percentages
+              }
+              error={errors.splits?.message}
+            >
+              <div className="space-y-2">
+                {activeMembers.map((member, index) => (
+                  <div
+                    className="grid grid-cols-[1fr_120px] items-center gap-3 rounded-md bg-slate-100 px-4 py-3"
+                    key={member.id}
+                  >
+                    <span className="min-w-0 truncate font-semibold">
+                      {member.displayName}
+                    </span>
+                    <input
+                      className="w-full rounded-md bg-white px-3 py-2 text-right outline-none focus:ring-2 focus:ring-emerald-700"
+                      min="0"
+                      step="0.01"
+                      type="number"
+                      {...register(
+                        splitMode === 'CUSTOM_AMOUNTS'
+                          ? `splits.${index}.amount`
+                          : `splits.${index}.percentage`,
+                        { valueAsNumber: true },
+                      )}
+                    />
+                    <input
+                      type="hidden"
+                      value={member.id}
+                      {...register(`splits.${index}.memberId`)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </Field>
+          )}
           <Field label={es.groups.form.occurredAt} error={errors.occurredAt?.message}>
             <input className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700" type="datetime-local" {...register('occurredAt')} />
           </Field>
@@ -607,6 +791,163 @@ function ExpensePanel({
           isSaving={isSaving}
           onClose={onClose}
           submitLabel={es.groups.form.submitExpense}
+        />
+      </form>
+    </Panel>
+  );
+}
+
+function SettlementPanel({
+  accounts,
+  group,
+  isSaving,
+  onClose,
+  onSubmit,
+}: {
+  accounts: Account[];
+  group: FinancialGroup;
+  isSaving: boolean;
+  onClose: () => void;
+  onSubmit: (values: GroupSettlementFormValues) => void;
+}) {
+  const activeMembers = useMemo(
+    () => group.members.filter((member) => member.status === 'ACTIVE'),
+    [group.members],
+  );
+  const defaultValues = useMemo(
+    () => getSettlementDefaults(group, activeMembers),
+    [activeMembers, group],
+  );
+  const {
+    control,
+    formState: { errors },
+    handleSubmit,
+    register,
+    reset,
+    setValue,
+  } = useForm<GroupSettlementFormValues>({
+    resolver: zodResolver(groupSettlementSchema),
+    defaultValues,
+  });
+  const currency = useWatch({ control, name: 'currency' });
+  const settlementAccounts = useMemo(
+    () =>
+      accounts.filter(
+        (account) =>
+          account.status === 'ACTIVE' && account.currency === currency,
+      ),
+    [accounts, currency],
+  );
+
+  useEffect(() => {
+    reset({
+      ...defaultValues,
+      accountId:
+        accounts.find(
+          (account) =>
+            account.status === 'ACTIVE' && account.currency === defaultValues.currency,
+        )?.id ?? '',
+    });
+  }, [accounts, defaultValues, group.id, reset]);
+
+  useEffect(() => {
+    setValue('accountId', settlementAccounts[0]?.id ?? '');
+  }, [settlementAccounts, setValue]);
+
+  return (
+    <Panel title={es.groups.form.settlementTitle(group.name)} onClose={onClose}>
+      <form
+        className="flex min-h-0 flex-1 flex-col"
+        onSubmit={handleSubmit(onSubmit)}
+      >
+        <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
+          <Field
+            label={es.groups.form.settlementFrom}
+            error={errors.fromMemberId?.message}
+          >
+            <select
+              className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700"
+              {...register('fromMemberId')}
+            >
+              {activeMembers.map((member) => (
+                <option key={member.id} value={member.id}>
+                  {member.displayName}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field
+            label={es.groups.form.settlementTo}
+            error={errors.toMemberId?.message}
+          >
+            <select
+              className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700"
+              {...register('toMemberId')}
+            >
+              {activeMembers.map((member) => (
+                <option key={member.id} value={member.id}>
+                  {member.displayName}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label={es.groups.form.amount} error={errors.amount?.message}>
+              <input
+                className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700"
+                min="0.01"
+                step="0.01"
+                type="number"
+                {...register('amount', { valueAsNumber: true })}
+              />
+            </Field>
+            <Field label={es.groups.form.currency}>
+              <select
+                className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700"
+                {...register('currency')}
+              >
+                <option value="PEN">PEN</option>
+                <option value="USD">USD</option>
+              </select>
+            </Field>
+          </div>
+          <Field
+            label={es.groups.form.settlementAccount}
+            error={errors.accountId?.message}
+          >
+            <select
+              className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700"
+              {...register('accountId')}
+            >
+              <option value="">{es.groups.form.selectSettlementAccount}</option>
+              {settlementAccounts.map((account) => (
+                <option key={account.id} value={account.id}>
+                  {account.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label={es.groups.form.note} error={errors.note?.message}>
+            <input
+              className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700"
+              {...register('note')}
+            />
+          </Field>
+          <Field
+            label={es.groups.form.settledAt}
+            error={errors.settledAt?.message}
+          >
+            <input
+              className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700"
+              type="datetime-local"
+              {...register('settledAt')}
+            />
+          </Field>
+        </div>
+        <PanelFooter
+          isSaving={isSaving}
+          onClose={onClose}
+          submitLabel={es.groups.form.submitSettlement}
         />
       </form>
     </Panel>
@@ -649,8 +990,36 @@ function getExpenseDefaults(
     amount: 0,
     currency: 'PEN',
     paidByMemberId: members[0]?.id ?? '',
+    accountId: '',
+    splitMode: 'EQUAL',
     participantMemberIds: members.map((member) => member.id),
+    splits: members.map((member) => ({
+      memberId: member.id,
+      amount: 0,
+      percentage: 0,
+    })),
     occurredAt: getCurrentDateTimeInputValue(),
+  };
+}
+
+function getSettlementDefaults(
+  group: FinancialGroup,
+  members: Array<{ id: string }>,
+): GroupSettlementFormValues {
+  const debtor = group.balances.find((balance) => Number(balance.netAmount) < 0);
+  const creditor = group.balances.find(
+    (balance) =>
+      Number(balance.netAmount) > 0 && balance.currency === debtor?.currency,
+  );
+
+  return {
+    fromMemberId: debtor?.member.id ?? members[0]?.id ?? '',
+    toMemberId: creditor?.member.id ?? members[1]?.id ?? members[0]?.id ?? '',
+    accountId: '',
+    amount: debtor ? Math.abs(Number(debtor.netAmount)) : 0,
+    currency: debtor?.currency ?? 'PEN',
+    note: '',
+    settledAt: getCurrentDateTimeInputValue(),
   };
 }
 

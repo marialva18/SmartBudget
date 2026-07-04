@@ -5,8 +5,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { randomUUID } from 'crypto';
+import {
+  DEFAULT_TIMEZONE,
+  localDateKeyToUtcDate,
+} from '../../common/dates/local-date';
 import { es } from '../../common/i18n/es';
 import { PrismaService } from '../../database/prisma/prisma.service';
+import { AdjustBalanceDto } from './dto/adjust-balance.dto';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateOpeningBalanceDto } from './dto/update-opening-balance.dto';
 type AccountRecord = {
@@ -14,6 +20,8 @@ type AccountRecord = {
   name: string;
   type: string;
   currency: string;
+  openingBalance: Prisma.Decimal;
+  balanceStartedAt: Date;
   status: string;
   archivedAt: Date | null;
   createdAt: Date;
@@ -36,6 +44,12 @@ export class AccountsService {
   ) {
     const name = dto.name.trim();
     const openingBalance = new Prisma.Decimal(dto.openingBalance);
+    const balanceStartedAt = dto.balanceStartedAt
+      ? localDateKeyToUtcDate(
+          dto.balanceStartedAt,
+          await this.getUserTimezone(userId),
+        )
+      : new Date();
 
     try {
       const account = await this.prisma.$transaction(async (transaction) => {
@@ -45,6 +59,8 @@ export class AccountsService {
             name,
             type: dto.type,
             currency: dto.currency,
+            openingBalance,
+            balanceStartedAt,
           },
         });
 
@@ -57,7 +73,8 @@ export class AccountsService {
               amount: openingBalance,
               currency: dto.currency,
               description: es.accounts.openingBalanceDescription,
-              occurredAt: new Date(),
+              occurredAt: balanceStartedAt,
+              balanceImpactStatus: 'AFFECTS_BALANCE',
               source: 'SYSTEM_OPENING',
               idempotencyKey: `account-opening:${createdAccount.id}`,
             },
@@ -76,6 +93,7 @@ export class AccountsService {
               type: dto.type,
               currency: dto.currency,
               openingBalance: openingBalance.toFixed(4),
+              balanceStartedAt: balanceStartedAt.toISOString(),
             }),
           },
         });
@@ -144,6 +162,11 @@ export class AccountsService {
     const newOpeningBalance = new Prisma.Decimal(dto.openingBalance);
 
     await this.prisma.$transaction(async (transaction) => {
+      await transaction.account.update({
+        where: { id: account.id },
+        data: { openingBalance: newOpeningBalance },
+      });
+
       const existingOpening = await transaction.transaction.findFirst({
         where: {
           userId,
@@ -162,6 +185,7 @@ export class AccountsService {
             amount: newOpeningBalance,
             currency: account.currency,
             description: es.accounts.openingBalanceDescription,
+            balanceImpactStatus: 'AFFECTS_BALANCE',
           },
         });
 
@@ -193,7 +217,8 @@ export class AccountsService {
             amount: newOpeningBalance,
             currency: account.currency,
             description: es.accounts.openingBalanceDescription,
-            occurredAt: account.createdAt,
+            occurredAt: account.balanceStartedAt,
+            balanceImpactStatus: 'AFFECTS_BALANCE',
             source: 'SYSTEM_OPENING',
             idempotencyKey: `account-opening:${account.id}`,
           },
@@ -269,6 +294,80 @@ export class AccountsService {
     return this.toResponse(updated, balances.get(updated.id));
   }
 
+  async adjustBalance(
+    userId: string,
+    accountId: string,
+    channel: 'WEB' | 'MOBILE',
+    dto: AdjustBalanceDto,
+  ) {
+    const account = await this.prisma.account.findFirst({
+      where: { id: accountId, userId },
+    });
+
+    if (!account) {
+      throw new NotFoundException(es.accounts.missing);
+    }
+
+    if (account.status === 'ARCHIVED') {
+      throw new BadRequestException('No puedes ajustar una cuenta archivada.');
+    }
+
+    const balances = await this.getBalanceMap(userId, account.id);
+    const currentBalance =
+      balances.get(account.id)?.realBalance ?? new Prisma.Decimal(0);
+    const actualBalance = new Prisma.Decimal(dto.actualBalance);
+    const difference = actualBalance.minus(currentBalance);
+
+    if (difference.equals(0)) {
+      return this.toResponse(account, balances.get(account.id));
+    }
+
+    const adjustedAt = new Date();
+    const adjustmentType = difference.greaterThan(0) ? 'INCOME' : 'EXPENSE';
+    const amount = difference.abs();
+    const note = dto.note?.trim();
+
+    await this.prisma.$transaction(async (transaction) => {
+      const adjustment = await transaction.transaction.create({
+        data: {
+          userId,
+          accountId: account.id,
+          type: adjustmentType,
+          amount,
+          currency: account.currency,
+          description: note
+            ? `${es.accounts.balanceAdjustmentDescription}: ${note}`
+            : es.accounts.balanceAdjustmentDescription,
+          occurredAt: adjustedAt,
+          balanceImpactStatus: 'AFFECTS_BALANCE',
+          source: 'BALANCE_ADJUSTMENT',
+          idempotencyKey: `balance-adjustment:${account.id}:${randomUUID()}`,
+        },
+      });
+
+      await transaction.auditLog.create({
+        data: {
+          userId,
+          action: 'ACCOUNT_BALANCE_ADJUSTED',
+          entity: 'ACCOUNT',
+          entityId: account.id,
+          channel,
+          oldValuesJson: JSON.stringify({
+            realBalance: currentBalance.toFixed(4),
+          }),
+          newValuesJson: JSON.stringify({
+            actualBalance: actualBalance.toFixed(4),
+            adjustmentType,
+            adjustmentAmount: amount.toFixed(4),
+            transactionId: adjustment.id,
+          }),
+        },
+      });
+    });
+
+    return this.findOne(userId, account.id);
+  }
+
   private async getBalanceMap(
     userId: string,
     accountId?: string,
@@ -280,6 +379,7 @@ export class AccountsService {
         where: {
           userId,
           deletedAt: null,
+          balanceImpactStatus: 'AFFECTS_BALANCE',
           ...accountFilter,
         },
         _sum: { amount: true },
@@ -340,6 +440,8 @@ export class AccountsService {
       currency: account.currency,
       status: account.status,
       archivedAt: account.archivedAt,
+      openingBalance: account.openingBalance.toFixed(4),
+      balanceStartedAt: account.balanceStartedAt,
       createdAt: account.createdAt,
       updatedAt: account.updatedAt,
       realBalance: summary.realBalance.toFixed(4),
@@ -348,5 +450,14 @@ export class AccountsService {
         .minus(summary.reservedAmount)
         .toFixed(4),
     };
+  }
+
+  private async getUserTimezone(userId: string) {
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+      select: { timezone: true },
+    });
+
+    return profile?.timezone ?? DEFAULT_TIMEZONE;
   }
 }

@@ -2,8 +2,17 @@
 
 ## Principios
 
-- El saldo no se guarda: se calcula desde movimientos confirmados.
-- El saldo inicial es un movimiento `OPENING_BALANCE`.
+- El saldo real se calcula desde movimientos confirmados que afectan saldo.
+- El saldo inicial se guarda en la cuenta y se refleja como un movimiento
+  `OPENING_BALANCE` para conservar historial.
+- Cada cuenta define `balance_started_at`, la fecha desde la que Qori controla
+  el saldo real.
+- Los movimientos anteriores a `balance_started_at` quedan para analisis y no
+  modifican el saldo real.
+- Los movimientos futuros quedan pendientes y no modifican el saldo real hasta
+  que se confirmen como movimientos que afectan saldo.
+- Ajustar saldo crea un movimiento auditado con `source = BALANCE_ADJUSTMENT`;
+  no sobrescribe movimientos historicos.
 - Las monedas se consultan y muestran por separado.
 - El dinero reservado para metas reduce el disponible, no el saldo real.
 - Las recurrencias generan ocurrencias pendientes.
@@ -24,10 +33,13 @@
 
 ## Finanzas personales
 
-- `accounts`: efectivo, banco o billetera digital por moneda.
+- `accounts`: efectivo, banco o billetera digital por moneda. Incluye
+  `opening_balance` y `balance_started_at`.
 - `account_channel_defaults`: cuenta habitual por moneda y canal.
 - `categories`: categorias del sistema o del usuario.
-- `transactions`: apertura, ingreso o gasto confirmado.
+- `transactions`: apertura, ingreso o gasto confirmado. Incluye
+  `balance_impact_status` con valores `AFFECTS_BALANCE`, `ANALYSIS_ONLY` o
+  `PENDING_FUTURE`.
 - `budgets`: presupuesto general o por categoria para un mes.
 
 Los presupuestos no reservan dinero ni cambian saldos. El gasto utilizado se
@@ -38,6 +50,7 @@ Formula conceptual:
 
 ```text
 real balance = opening balances + income - expenses
+where transaction.balance_impact_status = AFFECTS_BALANCE
 available balance = real balance - active goal reservations
 ```
 
@@ -65,8 +78,14 @@ La operacion debe ejecutarse en una transaccion de Prisma.
 - `group_expense_splits`: parte correspondiente a cada miembro.
 - `group_settlements`: liquidaciones entre miembros.
 
-Las cuentas personales no se comparten. Un gasto puede vincularse al movimiento
-personal de quien pago para evitar duplicarlo.
+Cada gasto grupal guarda splits finales por miembro, calculados por partes
+iguales, montos personalizados o porcentajes. Las cuentas personales no se
+comparten. Al crear un gasto de grupo, el usuario que paga elige una cuenta
+personal propia de la misma moneda; Qori crea un movimiento `GROUP_EXPENSE` y lo
+vincula mediante `personal_transaction_id`. Las liquidaciones reducen el neto
+pendiente entre miembros del grupo y tambien se vinculan a un movimiento
+`GROUP_SETTLEMENT` del usuario que registra el pago: gasto si paga, ingreso si
+recibe.
 
 ## IA y canales
 
@@ -102,3 +121,15 @@ transaccion que modifica el recurso cuando sea posible.
 7. Las divisiones de un gasto grupal suman el monto total.
 8. Una ocurrencia recurrente solo se confirma una vez.
 9. Las eliminaciones financieras son logicas y auditadas.
+
+## Indices de rendimiento
+
+- `IX_transactions_balance_account`: calculo de saldo real por cuenta usando
+  solo movimientos que afectan saldo.
+- `IX_transactions_user_currency_type_date`: reportes, presupuestos y resumen
+  mensual por usuario, moneda, tipo y fecha.
+- `IX_goal_reservations_user_status_account`: disponible por cuenta y reservas
+  activas o insuficientes.
+- `IX_group_members_group_status`: carga de miembros activos de un grupo.
+- `IX_coach_messages_conversation_deleted`: borrado logico de mensajes durante
+  cierre de cuenta.

@@ -3,8 +3,8 @@ import { AlertTriangle, X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { es } from '../../../i18n/es';
 import {
-  openingBalanceSchema,
-  type OpeningBalanceFormValues,
+  balanceAdjustmentSchema,
+  type BalanceAdjustmentFormValues,
 } from '../schemas/accountSchemas';
 import type { Account } from '../services/accountsApi';
 
@@ -12,7 +12,7 @@ type OpeningBalancePanelProps = {
   account: Account;
   isSaving: boolean;
   onClose: () => void;
-  onSubmit: (values: OpeningBalanceFormValues) => void;
+  onSubmit: (values: BalanceAdjustmentFormValues) => void;
 };
 
 export function OpeningBalancePanel({
@@ -25,10 +25,11 @@ export function OpeningBalancePanel({
     formState: { errors },
     handleSubmit,
     register,
-  } = useForm<OpeningBalanceFormValues>({
-    resolver: zodResolver(openingBalanceSchema),
+  } = useForm<BalanceAdjustmentFormValues>({
+    resolver: zodResolver(balanceAdjustmentSchema),
     defaultValues: {
-      openingBalance: Math.max(Number(account.realBalance), 0),
+      actualBalance: Math.max(Number(account.realBalance), 0),
+      note: '',
     },
   });
 
@@ -112,15 +113,27 @@ export function OpeningBalancePanel({
                   onKeyDown={preventInvalidNumberKeys}
                   step="0.01"
                   type="number"
-                  {...register('openingBalance', { valueAsNumber: true })}
+                  {...register('actualBalance', { valueAsNumber: true })}
                 />
               </div>
 
-              {errors.openingBalance ? (
+              {errors.actualBalance ? (
                 <span className="mt-1 block text-sm text-red-700">
-                  {errors.openingBalance.message}
+                  {errors.actualBalance.message}
                 </span>
               ) : null}
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block text-xs font-semibold uppercase text-slate-600">
+                {es.accounts.openingBalanceEdit.note}
+              </span>
+              <textarea
+                className="min-h-24 w-full resize-none rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700"
+                maxLength={250}
+                placeholder={es.accounts.openingBalanceEdit.notePlaceholder}
+                {...register('note')}
+              />
             </label>
           </div>
 

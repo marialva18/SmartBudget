@@ -28,6 +28,7 @@ export class DashboardService {
           userId,
           deletedAt: null,
           currency: currencyFilter,
+          balanceImpactStatus: 'AFFECTS_BALANCE',
         },
         _sum: { amount: true },
       }),

@@ -10,22 +10,52 @@ jest.mock('argon2', () => ({
 describe('ProfileService', () => {
   const prisma = {
     profile: {
+      deleteMany: jest.fn(),
       findUniqueOrThrow: jest.fn(),
       update: jest.fn(),
     },
     user: {
       findFirst: jest.fn(),
+      update: jest.fn(),
     },
     userOnboardingObjective: {
+      deleteMany: jest.fn(),
       findMany: jest.fn(),
       count: jest.fn(),
     },
     account: {
       count: jest.fn(),
+      updateMany: jest.fn(),
     },
+    accountChannelDefault: { deleteMany: jest.fn() },
     auditLog: {
       create: jest.fn(),
     },
+    budget: { deleteMany: jest.fn() },
+    category: { updateMany: jest.fn() },
+    coachConversation: {
+      findMany: jest.fn(),
+      updateMany: jest.fn(),
+    },
+    coachMessage: { updateMany: jest.fn() },
+    emailVerificationToken: { deleteMany: jest.fn() },
+    externalChannelLink: { updateMany: jest.fn() },
+    fileObject: { updateMany: jest.fn() },
+    financialGroup: { updateMany: jest.fn() },
+    goal: { updateMany: jest.fn() },
+    goalReservation: { updateMany: jest.fn() },
+    groupExpense: { updateMany: jest.fn() },
+    groupMember: { updateMany: jest.fn() },
+    groupSettlement: { updateMany: jest.fn() },
+    passwordResetToken: { deleteMany: jest.fn() },
+    recurringOccurrence: { updateMany: jest.fn() },
+    recurringSchedule: { updateMany: jest.fn() },
+    refreshToken: { deleteMany: jest.fn() },
+    transaction: { updateMany: jest.fn() },
+    transactionAttachment: { deleteMany: jest.fn() },
+    transactionDraft: { updateMany: jest.fn() },
+    userSession: { deleteMany: jest.fn() },
+    voiceTranscription: { updateMany: jest.fn() },
     $transaction: jest.fn(),
   };
   const transactionClient = {
@@ -74,8 +104,17 @@ describe('ProfileService', () => {
     jest.clearAllMocks();
     service = new ProfileService(prisma as unknown as PrismaService);
     prisma.$transaction.mockImplementation(
-      (callback: (client: typeof transactionClient) => unknown) =>
-        callback(transactionClient),
+      (
+        operation:
+          | Array<Promise<unknown>>
+          | ((client: typeof transactionClient) => unknown),
+      ) => {
+        if (Array.isArray(operation)) {
+          return Promise.all(operation);
+        }
+
+        return operation(transactionClient);
+      },
     );
   });
 
@@ -189,19 +228,19 @@ describe('ProfileService', () => {
       passwordHash: 'hash',
     });
     (argon2.verify as jest.Mock).mockResolvedValue(true);
-    transactionClient.coachConversation.findMany.mockResolvedValue([
+    prisma.coachConversation.findMany.mockResolvedValue([
       { id: 'conversation-id' },
     ]);
-    transactionClient.refreshToken.deleteMany.mockResolvedValue({ count: 2 });
-    transactionClient.userSession.deleteMany.mockResolvedValue({ count: 1 });
-    transactionClient.passwordResetToken.deleteMany.mockResolvedValue({
+    prisma.refreshToken.deleteMany.mockResolvedValue({ count: 2 });
+    prisma.userSession.deleteMany.mockResolvedValue({ count: 1 });
+    prisma.passwordResetToken.deleteMany.mockResolvedValue({
       count: 0,
     });
-    transactionClient.emailVerificationToken.deleteMany.mockResolvedValue({
+    prisma.emailVerificationToken.deleteMany.mockResolvedValue({
       count: 0,
     });
-    transactionClient.user.update.mockResolvedValue({});
-    transactionClient.auditLog.create.mockResolvedValue({});
+    prisma.user.update.mockResolvedValue({});
+    prisma.auditLog.create.mockResolvedValue({});
 
     const result = await service.deleteAccount('user-id', 'WEB', {
       password: 'Password1!',
@@ -231,6 +270,11 @@ describe('ProfileService', () => {
         deletedAt: expect.any(Date),
       }),
     });
+    expect(prisma.$transaction).toHaveBeenCalledWith(expect.any(Function), {
+      maxWait: 5_000,
+      timeout: 10_000,
+    });
+    expect(prisma.$transaction).toHaveBeenCalledTimes(6);
   });
 
   it('does not delete account data when the password is invalid', async () => {

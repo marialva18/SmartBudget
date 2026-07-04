@@ -12,14 +12,16 @@ import { useMemo, useState } from 'react';
 import { AccountFormPanel } from '../../features/accounts/components/AccountFormPanel';
 import { OpeningBalancePanel } from '../../features/accounts/components/OpeningBalancePanel';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
-import type { AccountFormValues } from '../../features/accounts/schemas/accountSchemas';
-import type { OpeningBalanceFormValues } from '../../features/accounts/schemas/accountSchemas';
+import type {
+  AccountFormValues,
+  BalanceAdjustmentFormValues,
+} from '../../features/accounts/schemas/accountSchemas';
 
 import {
+  adjustAccountBalance,
   archiveAccount,
   createAccount,
   getAccounts,
-  updateOpeningBalance,
   type Account,
 } from '../../features/accounts/services/accountsApi';
 import { ApiError } from '../../lib/api';
@@ -81,8 +83,8 @@ export function AccountsPage() {
     values,
   }: {
     accountId: string;
-    values: OpeningBalanceFormValues;
-  }) => updateOpeningBalance(accountId, values),
+    values: BalanceAdjustmentFormValues;
+  }) => adjustAccountBalance(accountId, values),
   onSuccess: async () => {
     setFormError('');
     setOpeningBalanceCandidate(null);
@@ -120,7 +122,7 @@ export function AccountsPage() {
     createMutation.mutate(values);
   };
 
-  const handleUpdateOpeningBalance = (values: OpeningBalanceFormValues) => {
+  const handleUpdateOpeningBalance = (values: BalanceAdjustmentFormValues) => {
   if (!openingBalanceCandidate) {
     return;
   }

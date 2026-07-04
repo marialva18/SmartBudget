@@ -377,11 +377,16 @@ function TransactionRow({
         }).format(new Date(transaction.occurredAt))}
       </td>
       <td className="px-4 py-4">
-        {transaction.type === 'INCOME'
-          ? es.transactions.income
-          : transaction.type === 'EXPENSE'
-            ? es.transactions.expense
-            : es.accounts.form.openingBalance}
+        <span>
+          {transaction.type === 'INCOME'
+            ? es.transactions.income
+            : transaction.type === 'EXPENSE'
+              ? es.transactions.expense
+              : es.accounts.form.openingBalance}
+        </span>
+        <span className="mt-1 block text-xs font-semibold text-slate-500">
+          {es.transactions.balanceImpactStatus[transaction.balanceImpactStatus]}
+        </span>
       </td>
       <td
         className={`px-4 py-4 font-bold ${

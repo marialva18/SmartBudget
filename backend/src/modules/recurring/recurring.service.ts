@@ -188,6 +188,10 @@ export class RecurringService {
             schedule.category?.name ??
             'Movimiento recurrente',
           occurredAt: scheduledFor,
+          balanceImpactStatus: getBalanceImpactStatus(
+            scheduledFor,
+            schedule.account.balanceStartedAt,
+          ),
           source: 'RECURRING',
           idempotencyKey: `recurring:${schedule.id}:${toDateKey(scheduledFor)}`,
         },
@@ -533,6 +537,7 @@ export class RecurringService {
             id: true,
             name: true,
             currency: true,
+            balanceStartedAt: true,
           },
         },
         category: {
@@ -687,4 +692,18 @@ function addMonthsClamped(value: Date, monthsToAdd: number) {
   targetMonthStart.setUTCDate(Math.min(originalDay, lastDayOfTargetMonth));
 
   return targetMonthStart;
+}
+
+function getBalanceImpactStatus(occurredAt: Date, balanceStartedAt: Date) {
+  const now = new Date();
+
+  if (occurredAt.getTime() > now.getTime()) {
+    return 'PENDING_FUTURE';
+  }
+
+  if (occurredAt.getTime() < balanceStartedAt.getTime()) {
+    return 'ANALYSIS_ONLY';
+  }
+
+  return 'AFFECTS_BALANCE';
 }

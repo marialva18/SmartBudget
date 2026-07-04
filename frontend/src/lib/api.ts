@@ -40,17 +40,38 @@ export async function apiRequest<TResponse>(
   path: string,
   options: ApiOptions = {},
 ): Promise<TResponse> {
-const hadAccessToken = Boolean(getAuthSession()?.accessToken);
-let response = await performRequest(path, options);
+  const hadAccessToken = Boolean(getAuthSession()?.accessToken);
+  let response = await performRequest(path, options);
 
-if (response.status === 401 && hadAccessToken && shouldAttemptRefresh(path)) {
-  const refreshed = await refreshAccessToken();
-  if (refreshed) {
-    response = await performRequest(path, options);
+  if (response.status === 401 && hadAccessToken && shouldAttemptRefresh(path)) {
+    const refreshed = await refreshAccessToken();
+    if (refreshed) {
+      response = await performRequest(path, options);
+    }
   }
-}
 
   return parseResponse<TResponse>(response);
+}
+
+export async function apiBlobRequest(path: string, options: ApiOptions = {}) {
+  const hadAccessToken = Boolean(getAuthSession()?.accessToken);
+  let response = await performRequest(path, options);
+
+  if (response.status === 401 && hadAccessToken && shouldAttemptRefresh(path)) {
+    const refreshed = await refreshAccessToken();
+    if (refreshed) {
+      response = await performRequest(path, options);
+    }
+  }
+
+  if (!response.ok) {
+    await parseResponse<never>(response);
+  }
+
+  return {
+    blob: await response.blob(),
+    filename: getFilename(response.headers.get('Content-Disposition')),
+  };
 }
 
 async function performRequest(path: string, options: ApiOptions) {
@@ -69,6 +90,15 @@ async function performRequest(path: string, options: ApiOptions) {
     },
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
+}
+
+function getFilename(contentDisposition: string | null) {
+  if (!contentDisposition) {
+    return null;
+  }
+
+  const match = /filename="?(?<filename>[^";]+)"?/u.exec(contentDisposition);
+  return match?.groups?.filename ?? null;
 }
 
 async function parseResponse<TResponse>(

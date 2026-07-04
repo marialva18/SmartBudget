@@ -4,6 +4,7 @@ import type { AuthenticatedUser } from '../../common/auth/authenticated-user';
 import { WriteThrottle } from '../../common/rate-limit/rate-limit.decorators';
 import { CreateGroupExpenseDto } from './dto/create-group-expense.dto';
 import { CreateGroupDto } from './dto/create-group.dto';
+import { CreateGroupSettlementDto } from './dto/create-group-settlement.dto';
 import { InviteGroupMemberDto } from './dto/invite-group-member.dto';
 import { GroupsService } from './groups.service';
 import { ParseSqlServerGuidPipe } from '../../common/validation/sql-server-guid';
@@ -49,6 +50,21 @@ export class GroupsController {
     @Body() dto: CreateGroupExpenseDto,
   ) {
     return this.groupsService.createExpense(
+      user.userId,
+      user.platform,
+      groupId,
+      dto,
+    );
+  }
+
+  @WriteThrottle()
+  @Post(':groupId/settlements')
+  createSettlement(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('groupId', ParseSqlServerGuidPipe) groupId: string,
+    @Body() dto: CreateGroupSettlementDto,
+  ) {
+    return this.groupsService.createSettlement(
       user.userId,
       user.platform,
       groupId,

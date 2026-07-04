@@ -3,6 +3,7 @@ import { CurrentUser } from '../../common/auth/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/auth/authenticated-user';
 import { WriteThrottle } from '../../common/rate-limit/rate-limit.decorators';
 import { AccountsService } from './accounts.service';
+import { AdjustBalanceDto } from './dto/adjust-balance.dto';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { ParseSqlServerGuidPipe } from '../../common/validation/sql-server-guid';
 import { UpdateOpeningBalanceDto } from './dto/update-opening-balance.dto';
@@ -40,6 +41,21 @@ export class AccountsController {
     @Body() dto: UpdateOpeningBalanceDto,
   ) {
     return this.accountsService.updateOpeningBalance(
+      user.userId,
+      accountId,
+      user.platform,
+      dto,
+    );
+  }
+
+  @WriteThrottle()
+  @Patch(':accountId/balance-adjustment')
+  adjustBalance(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('accountId', ParseSqlServerGuidPipe) accountId: string,
+    @Body() dto: AdjustBalanceDto,
+  ) {
+    return this.accountsService.adjustBalance(
       user.userId,
       accountId,
       user.platform,

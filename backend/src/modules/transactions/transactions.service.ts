@@ -108,6 +108,10 @@ export class TransactionsService {
             currency: context.account.currency,
             description: dto.description?.trim() || null,
             occurredAt: dto.occurredAt,
+            balanceImpactStatus: getBalanceImpactStatus(
+              dto.occurredAt,
+              context.account.balanceStartedAt,
+            ),
             source: channel === 'WEB' ? 'MANUAL_WEB' : 'MANUAL_MOBILE',
             idempotencyKey,
           },
@@ -181,6 +185,10 @@ export class TransactionsService {
               ? undefined
               : new Prisma.Decimal(dto.amount),
           occurredAt: dto.occurredAt,
+          balanceImpactStatus: getBalanceImpactStatus(
+            dto.occurredAt ?? current.occurredAt,
+            context.account.balanceStartedAt,
+          ),
           description:
             dto.description === undefined
               ? undefined
@@ -246,7 +254,7 @@ export class TransactionsService {
     const [account, category] = await Promise.all([
       this.prisma.account.findFirst({
         where: { id: accountId, userId, status: 'ACTIVE' },
-        select: { id: true, currency: true },
+        select: { id: true, currency: true, balanceStartedAt: true },
       }),
       this.prisma.category.findFirst({
         where: {
@@ -279,6 +287,7 @@ export class TransactionsService {
       currency: transaction.currency,
       description: transaction.description,
       occurredAt: transaction.occurredAt,
+      balanceImpactStatus: transaction.balanceImpactStatus,
       source: transaction.source,
       account: transaction.account,
       category: transaction.category,
@@ -300,6 +309,21 @@ export class TransactionsService {
       categoryId: transaction.categoryId,
       description: transaction.description,
       occurredAt: transaction.occurredAt.toISOString(),
+      balanceImpactStatus: transaction.balanceImpactStatus,
     };
   }
+}
+
+function getBalanceImpactStatus(occurredAt: Date, balanceStartedAt: Date) {
+  const now = new Date();
+
+  if (occurredAt.getTime() > now.getTime()) {
+    return 'PENDING_FUTURE';
+  }
+
+  if (occurredAt.getTime() < balanceStartedAt.getTime()) {
+    return 'ANALYSIS_ONLY';
+  }
+
+  return 'AFFECTS_BALANCE';
 }

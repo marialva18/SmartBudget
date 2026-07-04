@@ -34,6 +34,7 @@ describe('TransactionsService', () => {
     prisma.account.findFirst.mockResolvedValue({
       id: 'account-id',
       currency: 'PEN',
+      balanceStartedAt: new Date('2026-06-01T00:00:00.000Z'),
     });
     prisma.category.findFirst.mockResolvedValue({ id: 'category-id' });
     const movement = {
@@ -48,6 +49,7 @@ describe('TransactionsService', () => {
       occurredAt: new Date(),
       source: 'MANUAL_WEB',
       idempotencyKey: 'key',
+      balanceImpactStatus: 'AFFECTS_BALANCE',
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: null,
@@ -76,12 +78,13 @@ describe('TransactionsService', () => {
         userId: 'user-id',
         status: 'ACTIVE',
       },
-      select: { id: true, currency: true },
+      select: { id: true, currency: true, balanceStartedAt: true },
     });
     expect(transactionClient.transaction.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         userId: 'user-id',
         currency: 'PEN',
+        balanceImpactStatus: 'AFFECTS_BALANCE',
         source: 'MANUAL_WEB',
       }),
       include: expect.any(Object),
@@ -108,6 +111,7 @@ describe('TransactionsService', () => {
     prisma.account.findFirst.mockResolvedValue({
       id: 'account-id',
       currency: 'PEN',
+      balanceStartedAt: new Date('2026-06-01T00:00:00.000Z'),
     });
     prisma.category.findFirst.mockResolvedValue(null);
 
@@ -120,6 +124,56 @@ describe('TransactionsService', () => {
         occurredAt: new Date(),
       }),
     ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('keeps movements before balance control as analysis only', async () => {
+    prisma.account.findFirst.mockResolvedValue({
+      id: 'account-id',
+      currency: 'PEN',
+      balanceStartedAt: new Date('2026-06-10T00:00:00.000Z'),
+    });
+    prisma.category.findFirst.mockResolvedValue({ id: 'category-id' });
+    const movement = {
+      id: 'transaction-id',
+      userId: 'user-id',
+      accountId: 'account-id',
+      categoryId: 'category-id',
+      type: 'EXPENSE',
+      amount: new Prisma.Decimal(25),
+      currency: 'PEN',
+      description: 'Pasaje',
+      occurredAt: new Date('2026-06-09T12:00:00.000Z'),
+      source: 'MANUAL_WEB',
+      idempotencyKey: 'key',
+      balanceImpactStatus: 'ANALYSIS_ONLY',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      deletedAt: null,
+      account: { id: 'account-id', name: 'Efectivo' },
+      category: { id: 'category-id', name: 'Transporte', icon: null },
+    };
+    transactionClient.transaction.create.mockResolvedValue(movement);
+    transactionClient.auditLog.create.mockResolvedValue({});
+    prisma.$transaction.mockImplementation(
+      (callback: (client: typeof transactionClient) => unknown) =>
+        callback(transactionClient),
+    );
+
+    await service.create('user-id', 'WEB', 'key', {
+      type: 'EXPENSE',
+      amount: 25,
+      accountId: 'account-id',
+      categoryId: 'category-id',
+      occurredAt: new Date('2026-06-09T12:00:00.000Z'),
+      description: 'Pasaje',
+    });
+
+    expect(transactionClient.transaction.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        balanceImpactStatus: 'ANALYSIS_ONLY',
+      }),
+      include: expect.any(Object),
+    });
   });
 
   it('does not delete an opening balance movement', async () => {

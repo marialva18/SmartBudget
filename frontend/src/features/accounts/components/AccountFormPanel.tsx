@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Banknote, Landmark, WalletCards, X } from 'lucide-react';
+import { useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { es } from '../../../i18n/es';
 import {
@@ -41,6 +42,7 @@ export function AccountFormPanel({
     formState: { errors },
     handleSubmit,
     register,
+    setValue,
   } = useForm<AccountFormValues>({
     resolver: zodResolver(accountSchema),
     defaultValues: {
@@ -48,12 +50,34 @@ export function AccountFormPanel({
       type: 'BANK',
       currency: 'PEN',
       openingBalance: 0,
+      balanceStartOption: 'TODAY',
+      balanceStartedAt: getTodayDateKey(),
     },
   });
   const selectedCurrency = useWatch({
     control,
     name: 'currency',
   });
+  const balanceStartOption = useWatch({
+    control,
+    name: 'balanceStartOption',
+  });
+
+  useEffect(() => {
+    if (balanceStartOption === 'TODAY') {
+      setValue('balanceStartedAt', getTodayDateKey(), {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+
+    if (balanceStartOption === 'MONTH_START') {
+      setValue('balanceStartedAt', getCurrentMonthStartKey(), {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+  }, [balanceStartOption, setValue]);
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/20 backdrop-blur-[2px]">
@@ -194,6 +218,54 @@ export function AccountFormPanel({
                 </span>
               ) : null}
             </label>
+
+            <fieldset>
+              <legend className="mb-2 text-xs font-semibold uppercase text-slate-600">
+                {es.accounts.form.balanceStartedAt}
+              </legend>
+              <div className="grid gap-2">
+                {([
+                  ['TODAY', es.accounts.form.balanceStartToday],
+                  ['MONTH_START', es.accounts.form.balanceStartMonth],
+                  ['CUSTOM', es.accounts.form.balanceStartCustom],
+                ] as const).map(([value, label]) => (
+                  <label
+                    className="has-checked:border-emerald-700 has-checked:bg-emerald-50 cursor-pointer rounded-md border border-slate-200 px-4 py-3 font-semibold text-slate-700"
+                    key={value}
+                  >
+                    {label}
+                    <input
+                      className="sr-only"
+                      type="radio"
+                      value={value}
+                      {...register('balanceStartOption')}
+                    />
+                  </label>
+                ))}
+              </div>
+
+              {balanceStartOption === 'CUSTOM' ? (
+                <label className="mt-3 block">
+                  <span className="mb-2 block text-xs font-semibold uppercase text-slate-600">
+                    {es.accounts.form.balanceStartDate}
+                  </span>
+                  <input
+                    className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700"
+                    type="date"
+                    {...register('balanceStartedAt')}
+                  />
+                </label>
+              ) : null}
+
+              <span className="mt-2 block text-sm text-slate-500">
+                {es.accounts.form.balanceStartedAtHelp}
+              </span>
+              {errors.balanceStartedAt ? (
+                <span className="mt-1 block text-sm text-red-700">
+                  {errors.balanceStartedAt.message}
+                </span>
+              ) : null}
+            </fieldset>
           </div>
 
           <footer className="grid gap-3 border-t border-slate-200 px-5 py-5 sm:px-7">
@@ -237,4 +309,20 @@ function preventNegativeNumberInput(event: React.FormEvent<HTMLInputElement>) {
   if (event.currentTarget.value.startsWith('-')) {
     event.currentTarget.value = '';
   }
+}
+
+function getTodayDateKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(
+    now.getDate(),
+  )}`;
+}
+
+function getCurrentMonthStartKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-01`;
+}
+
+function pad(value: number) {
+  return String(value).padStart(2, '0');
 }

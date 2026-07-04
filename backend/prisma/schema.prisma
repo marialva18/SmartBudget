@@ -144,6 +144,8 @@ model Account {
   name               String                  @db.NVarChar(120)
   type               String                  @db.NVarChar(30)
   currency           String                  @db.Char(3)
+  openingBalance     Decimal                 @default(0) @map("opening_balance") @db.Decimal(19, 4)
+  balanceStartedAt   DateTime                @default(now()) @map("balance_started_at")
   status             String                  @default("ACTIVE") @db.NVarChar(20)
   archivedAt         DateTime?               @map("archived_at")
   createdAt          DateTime                @default(now()) @map("created_at")
@@ -204,6 +206,7 @@ model Transaction {
   currency             String                  @db.Char(3)
   description          String?                 @db.NVarChar(250)
   occurredAt           DateTime                @map("occurred_at")
+  balanceImpactStatus  String                  @default("AFFECTS_BALANCE") @map("balance_impact_status") @db.NVarChar(30)
   source               String                  @db.NVarChar(30)
   idempotencyKey       String?                 @map("idempotency_key") @db.NVarChar(120)
   createdAt            DateTime                @default(now()) @map("created_at")
@@ -220,6 +223,8 @@ model Transaction {
 
   @@index([userId, occurredAt, type], map: "IX_transactions_calendar")
   @@index([userId, accountId, occurredAt(sort: Desc)], map: "IX_transactions_user_account_date")
+  @@index([userId, balanceImpactStatus, accountId, type], map: "IX_transactions_balance_account")
+  @@index([userId, currency, type, occurredAt(sort: Desc)], map: "IX_transactions_user_currency_type_date")
   @@index([userId, categoryId, occurredAt(sort: Desc)], map: "IX_transactions_user_category_date")
   @@index([userId, occurredAt(sort: Desc)], map: "IX_transactions_user_occurred_active")
   @@map("transactions")
@@ -282,6 +287,7 @@ model GoalReservation {
 
   @@index([accountId, status, reservedAt(sort: Desc)], map: "IX_goal_reservations_account_status")
   @@index([goalId, status, reservedAt(sort: Desc)], map: "IX_goal_reservations_goal_status")
+  @@index([userId, status, accountId], map: "IX_goal_reservations_user_status_account")
   @@map("goal_reservations")
 }
 
@@ -369,6 +375,7 @@ model GroupMember {
   incomingSettlements GroupSettlement[]   @relation("SettlementToMember")
 
   @@unique([groupId, userId], map: "UQ_group_members_group_user")
+  @@index([groupId, status], map: "IX_group_members_group_status")
   @@index([userId, status, groupId], map: "IX_group_members_user")
   @@map("group_members")
 }
@@ -460,6 +467,7 @@ model CoachMessage {
   conversation   CoachConversation @relation(fields: [conversationId], references: [id], onUpdate: NoAction, map: "FK_coach_messages_conversations")
 
   @@index([conversationId, createdAt], map: "IX_coach_messages_conversation_created")
+  @@index([conversationId, deletedAt], map: "IX_coach_messages_conversation_deleted")
   @@map("coach_messages")
 }
 

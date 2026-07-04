@@ -2,6 +2,7 @@ import { Transform, Type } from 'class-transformer';
 import {
   IsIn,
   IsNumber,
+  IsOptional,
   IsString,
   Matches,
   Max,
@@ -42,4 +43,9 @@ export class CreateAccountDto {
     message: es.validation.openingBalanceMaximum,
   })
   openingBalance!: number;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  balanceStartedAt?: string;
 }

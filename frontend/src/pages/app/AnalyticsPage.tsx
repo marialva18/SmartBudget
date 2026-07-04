@@ -1,0 +1,366 @@
+import { useQueries, useQuery } from '@tanstack/react-query';
+import { BarChart3, Download, TrendingUp } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import {
+  downloadAnalyticsExport,
+  getAnalyticsByCategory,
+  getAnalyticsSummary,
+  getAnalyticsTimeline,
+  getAnalyticsTopExpenses,
+  type AnalyticsFilters,
+} from '../../features/analytics/analyticsApi';
+import { getAccounts } from '../../features/accounts/services/accountsApi';
+import { getCategories } from '../../features/categories/categoriesApi';
+import { useFinanceScope } from '../../features/finance-scope/financeScope';
+import { getGroups } from '../../features/groups/groupsApi';
+import { es } from '../../i18n/es';
+import { formatMoney } from '../../lib/money';
+
+type RangePreset =
+  | 'TODAY'
+  | 'WEEK'
+  | 'MONTH'
+  | 'PREVIOUS_MONTH'
+  | 'THREE_MONTHS'
+  | 'CUSTOM';
+
+export function AnalyticsPage() {
+  const { scope } = useFinanceScope();
+  const [range, setRange] = useState<RangePreset>('MONTH');
+  const [customFrom, setCustomFrom] = useState(getCurrentMonthStartKey());
+  const [customTo, setCustomTo] = useState(getTodayDateKey());
+  const [accountId, setAccountId] = useState('');
+  const [categoryId, setCategoryId] = useState('');
+  const [groupId, setGroupId] = useState('');
+  const [type, setType] = useState<'' | 'INCOME' | 'EXPENSE'>('');
+  const [impact, setImpact] = useState<
+    '' | 'AFFECTS_BALANCE' | 'ANALYSIS_ONLY' | 'PENDING_FUTURE'
+  >('');
+  const [exportError, setExportError] = useState('');
+  const [isExporting, setIsExporting] = useState(false);
+
+  const filters = useMemo<AnalyticsFilters>(() => {
+    const dateRange =
+      range === 'CUSTOM'
+        ? { from: toStartIso(customFrom), to: toEndIso(customTo) }
+        : getRangeIso(range);
+
+    return {
+      ...dateRange,
+      accountId: accountId || undefined,
+      categoryId: categoryId || undefined,
+      groupId: groupId || undefined,
+      type: type || undefined,
+      currency: scope === 'ALL' ? undefined : scope,
+      balanceImpactStatus: impact || undefined,
+    };
+  }, [
+    accountId,
+    categoryId,
+    customFrom,
+    customTo,
+    groupId,
+    impact,
+    range,
+    scope,
+    type,
+  ]);
+
+  const accountsQuery = useQuery({ queryKey: ['accounts'], queryFn: getAccounts });
+  const groupsQuery = useQuery({ queryKey: ['groups'], queryFn: getGroups });
+  const categoriesQuery = useQuery({
+    queryKey: ['categories', type || 'ALL', 'ACTIVE'],
+    queryFn: () => getCategories(type || undefined),
+  });
+  const [summaryQuery, categoriesAnalyticsQuery, timelineQuery, topExpensesQuery] =
+    useQueries({
+      queries: [
+        {
+          queryKey: ['analytics-summary', filters],
+          queryFn: () => getAnalyticsSummary(filters),
+        },
+        {
+          queryKey: ['analytics-by-category', filters],
+          queryFn: () => getAnalyticsByCategory(filters),
+        },
+        {
+          queryKey: ['analytics-timeline', filters],
+          queryFn: () => getAnalyticsTimeline(filters),
+        },
+        {
+          queryKey: ['analytics-top-expenses', filters],
+          queryFn: () => getAnalyticsTopExpenses(filters),
+        },
+      ],
+    });
+
+  const currency = scope === 'USD' ? 'USD' : 'PEN';
+  const topCategoryAmount = Math.max(
+    ...((categoriesAnalyticsQuery.data ?? []).map((row) => Number(row.amount))),
+    1,
+  );
+
+  async function handleExport() {
+    setExportError('');
+    setIsExporting(true);
+
+    try {
+      const file = await downloadAnalyticsExport(filters);
+      const url = URL.createObjectURL(file.blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = file.filename ?? 'qori-analytics.xlsx';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setExportError(es.analytics.exportError);
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
+  return (
+    <section className="space-y-7">
+      <header className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+        <div>
+          <p className="text-sm font-semibold text-emerald-700">
+            {es.analytics.section}
+          </p>
+          <h1 className="mt-1 text-3xl font-bold text-slate-950">
+            {es.analytics.title}
+          </h1>
+          <p className="mt-2 max-w-2xl text-slate-600">
+            {es.analytics.subtitle}
+          </p>
+        </div>
+        <button
+          className="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-700 px-4 py-3 font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+          disabled={isExporting}
+          onClick={() => void handleExport()}
+          type="button"
+        >
+          <Download size={18} />
+          {isExporting ? es.analytics.exporting : es.analytics.export}
+        </button>
+      </header>
+
+      <section className="grid gap-3 rounded-lg bg-white p-4 shadow-[0_10px_30px_rgba(13,148,136,0.08)] md:grid-cols-3 xl:grid-cols-7">
+        <select className="rounded-md bg-slate-100 px-3 py-3" onChange={(event) => setRange(event.target.value as RangePreset)} value={range}>
+          <option value="TODAY">{es.analytics.filters.today}</option>
+          <option value="WEEK">{es.analytics.filters.week}</option>
+          <option value="MONTH">{es.analytics.filters.month}</option>
+          <option value="PREVIOUS_MONTH">{es.analytics.filters.previousMonth}</option>
+          <option value="THREE_MONTHS">{es.analytics.filters.threeMonths}</option>
+          <option value="CUSTOM">{es.analytics.filters.custom}</option>
+        </select>
+        {range === 'CUSTOM' ? (
+          <>
+            <input className="rounded-md bg-slate-100 px-3 py-3" onChange={(event) => setCustomFrom(event.target.value)} type="date" value={customFrom} />
+            <input className="rounded-md bg-slate-100 px-3 py-3" onChange={(event) => setCustomTo(event.target.value)} type="date" value={customTo} />
+          </>
+        ) : null}
+        <select className="rounded-md bg-slate-100 px-3 py-3" onChange={(event) => setAccountId(event.target.value)} value={accountId}>
+          <option value="">{es.analytics.filters.allAccounts}</option>
+          {(accountsQuery.data ?? []).map((account) => (
+            <option key={account.id} value={account.id}>{account.name}</option>
+          ))}
+        </select>
+        <select className="rounded-md bg-slate-100 px-3 py-3" onChange={(event) => setCategoryId(event.target.value)} value={categoryId}>
+          <option value="">{es.analytics.filters.allCategories}</option>
+          {(categoriesQuery.data ?? []).map((category) => (
+            <option key={category.id} value={category.id}>{category.name}</option>
+          ))}
+        </select>
+        <select className="rounded-md bg-slate-100 px-3 py-3" onChange={(event) => setGroupId(event.target.value)} value={groupId}>
+          <option value="">{es.analytics.filters.allGroups}</option>
+          {(groupsQuery.data ?? []).map((group) => (
+            <option key={group.id} value={group.id}>{group.name}</option>
+          ))}
+        </select>
+        <select className="rounded-md bg-slate-100 px-3 py-3" onChange={(event) => setType(event.target.value as typeof type)} value={type}>
+          <option value="">{es.analytics.filters.allTypes}</option>
+          <option value="INCOME">{es.transactions.income}</option>
+          <option value="EXPENSE">{es.transactions.expense}</option>
+        </select>
+        <select className="rounded-md bg-slate-100 px-3 py-3" onChange={(event) => setImpact(event.target.value as typeof impact)} value={impact}>
+          <option value="">{es.analytics.filters.allImpact}</option>
+          <option value="AFFECTS_BALANCE">{es.transactions.balanceImpactStatus.AFFECTS_BALANCE}</option>
+          <option value="ANALYSIS_ONLY">{es.transactions.balanceImpactStatus.ANALYSIS_ONLY}</option>
+          <option value="PENDING_FUTURE">{es.transactions.balanceImpactStatus.PENDING_FUTURE}</option>
+        </select>
+      </section>
+
+      {summaryQuery.isError ? (
+        <p className="border-y border-red-200 bg-red-50 p-4 text-red-800">
+          {es.analytics.loadError}
+        </p>
+      ) : null}
+
+      {exportError ? (
+        <p className="border-y border-red-200 bg-red-50 p-4 text-red-800">
+          {exportError}
+        </p>
+      ) : null}
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+        <MetricCard icon={TrendingUp} label={es.analytics.totalIncome} value={formatMoney(Number(summaryQuery.data?.totals.income ?? 0), currency)} />
+        <MetricCard icon={BarChart3} label={es.analytics.totalExpense} value={formatMoney(Number(summaryQuery.data?.totals.expense ?? 0), currency)} tone="danger" />
+        <MetricCard icon={TrendingUp} label={es.analytics.balance} value={formatMoney(Number(summaryQuery.data?.balance ?? 0), currency)} />
+        <MetricCard icon={BarChart3} label={es.analytics.averageDailyExpense} value={formatMoney(Number(summaryQuery.data?.averageDailyExpense ?? 0), currency)} />
+        <MetricCard icon={TrendingUp} label={es.analytics.expenseComparison} value={formatPercent(summaryQuery.data?.comparison?.expenseChangePercent)} tone={Number(summaryQuery.data?.comparison?.expenseChangePercent ?? 0) > 0 ? 'danger' : 'normal'} />
+        <MetricCard icon={BarChart3} label={es.analytics.budgetUsage} value={summaryQuery.data?.budgetUsage ? `${summaryQuery.data.budgetUsage.usedPercent}%` : es.analytics.noBudget} />
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+        <section className="rounded-lg bg-white p-5 shadow-[0_10px_30px_rgba(13,148,136,0.08)]">
+          <h2 className="text-lg font-bold">{es.analytics.byCategory}</h2>
+          <div className="mt-5 space-y-3">
+            {(categoriesAnalyticsQuery.data ?? []).slice(0, 8).map((row) => (
+              <div key={`${row.categoryId ?? 'none'}-${row.currency}`}>
+                <div className="mb-1 flex justify-between gap-3 text-sm">
+                  <span className="font-semibold">{row.category?.name ?? es.budgets.uncategorized}</span>
+                  <span>{formatMoney(Number(row.amount), row.currency)}</span>
+                </div>
+                <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+                  <div className="h-full rounded-full bg-emerald-700" style={{ width: `${Math.max(4, (Number(row.amount) / topCategoryAmount) * 100)}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="rounded-lg bg-white p-5 shadow-[0_10px_30px_rgba(13,148,136,0.08)]">
+          <h2 className="text-lg font-bold">{es.analytics.topExpenses}</h2>
+          <div className="mt-4 divide-y divide-slate-100">
+            {(topExpensesQuery.data ?? []).map((transaction) => (
+              <article className="flex items-center justify-between gap-4 py-3" key={transaction.id}>
+                <div>
+                  <p className="font-semibold">{transaction.description ?? transaction.category?.name ?? es.budgets.uncategorized}</p>
+                  <p className="mt-1 text-sm text-slate-500">{transaction.account.name}</p>
+                </div>
+                <p className="font-bold text-red-700">{formatMoney(Number(transaction.amount), transaction.currency)}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      <section className="rounded-lg bg-white p-5 shadow-[0_10px_30px_rgba(13,148,136,0.08)]">
+        <h2 className="text-lg font-bold">{es.analytics.timeline}</h2>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full min-w-[640px] text-left">
+            <thead className="text-xs uppercase text-slate-500">
+              <tr>
+                <th className="py-2">{es.transactions.date}</th>
+                <th className="py-2">{es.transactions.income}</th>
+                <th className="py-2">{es.transactions.expense}</th>
+                <th className="py-2">{es.transactions.balance}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {(timelineQuery.data ?? []).map((row) => (
+                <tr key={row.date}>
+                  <td className="py-3 font-semibold">{row.date}</td>
+                  <td className="py-3 text-emerald-700">{formatMoney(Number(row.income), currency)}</td>
+                  <td className="py-3 text-red-700">{formatMoney(Number(row.expense), currency)}</td>
+                  <td className="py-3 font-bold">{formatMoney(Number(row.balance), currency)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  );
+}
+
+function MetricCard({
+  icon: Icon,
+  label,
+  tone = 'normal',
+  value,
+}: {
+  icon: typeof TrendingUp;
+  label: string;
+  tone?: 'normal' | 'danger';
+  value: string;
+}) {
+  return (
+    <article className="rounded-lg bg-white p-5 shadow-[0_10px_30px_rgba(13,148,136,0.08)]">
+      <div className="flex items-center gap-3">
+        <span className={tone === 'danger' ? 'text-red-700' : 'text-emerald-700'}>
+          <Icon size={21} />
+        </span>
+        <p className="text-sm font-semibold text-slate-500">{label}</p>
+      </div>
+      <p className="mt-3 text-2xl font-bold text-slate-950">{value}</p>
+    </article>
+  );
+}
+
+function getRangeIso(range: Exclude<RangePreset, 'CUSTOM'>) {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  if (range === 'TODAY') {
+    return { from: toStartIso(toDateKey(today)), to: toEndIso(toDateKey(today)) };
+  }
+
+  if (range === 'WEEK') {
+    const start = new Date(today);
+    start.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+    return { from: toStartIso(toDateKey(start)), to: toEndIso(toDateKey(today)) };
+  }
+
+  if (range === 'PREVIOUS_MONTH') {
+    const start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const end = new Date(today.getFullYear(), today.getMonth(), 0);
+    return { from: toStartIso(toDateKey(start)), to: toEndIso(toDateKey(end)) };
+  }
+
+  if (range === 'THREE_MONTHS') {
+    const start = new Date(today.getFullYear(), today.getMonth() - 2, 1);
+    return { from: toStartIso(toDateKey(start)), to: toEndIso(toDateKey(today)) };
+  }
+
+  return {
+    from: toStartIso(getCurrentMonthStartKey()),
+    to: toEndIso(toDateKey(today)),
+  };
+}
+
+function getCurrentMonthStartKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-01`;
+}
+
+function getTodayDateKey() {
+  return toDateKey(new Date());
+}
+
+function toDateKey(date: Date) {
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+function toStartIso(dateKey: string) {
+  return new Date(`${dateKey}T00:00:00`).toISOString();
+}
+
+function toEndIso(dateKey: string) {
+  return new Date(`${dateKey}T23:59:59.999`).toISOString();
+}
+
+function formatPercent(value?: string) {
+  if (!value) {
+    return '0.00%';
+  }
+
+  const sign = Number(value) > 0 ? '+' : '';
+  return `${sign}${value}%`;
+}
+
+function pad(value: number) {
+  return String(value).padStart(2, '0');
+}

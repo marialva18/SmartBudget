@@ -14,6 +14,8 @@ export const accountSchema = z.object({
     .number({ error: 'Ingresa un saldo inicial válido.' })
     .min(0, es.accounts.validation.negativeOpeningBalance)
     .max(999_999_999_999, es.accounts.validation.highOpeningBalance),
+  balanceStartOption: z.enum(['TODAY', 'MONTH_START', 'CUSTOM']),
+  balanceStartedAt: z.string().min(1, es.accounts.validation.balanceStartedAt),
 });
 
 export const openingBalanceSchema = z.object({
@@ -23,6 +25,17 @@ export const openingBalanceSchema = z.object({
     .max(999_999_999_999, es.accounts.validation.highOpeningBalance),
 });
 
+export const balanceAdjustmentSchema = z.object({
+  actualBalance: z
+    .number({ error: 'Ingresa un saldo real válido.' })
+    .min(0, es.accounts.validation.negativeOpeningBalance)
+    .max(999_999_999_999, es.accounts.validation.highOpeningBalance),
+  note: z.string().trim().max(250).optional(),
+});
+
 export type OpeningBalanceFormValues = z.infer<typeof openingBalanceSchema>;
+export type BalanceAdjustmentFormValues = z.infer<
+  typeof balanceAdjustmentSchema
+>;
 
 export type AccountFormValues = z.infer<typeof accountSchema>;

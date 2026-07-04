@@ -3,6 +3,7 @@ import type {
   GroupFormValues,
   GroupExpenseFormValues,
   GroupInvitationFormValues,
+  GroupSettlementFormValues,
 } from './groupSchema';
 
 export type GroupMemberSummary = {
@@ -40,7 +41,21 @@ export type GroupBalance = {
   currency: 'PEN' | 'USD';
   paidAmount: string;
   owedAmount: string;
+  settledOutAmount: string;
+  settledInAmount: string;
   netAmount: string;
+};
+
+export type GroupSettlement = {
+  id: string;
+  groupId: string;
+  amount: string;
+  currency: 'PEN' | 'USD';
+  note: string | null;
+  settledAt: string;
+  createdAt: string;
+  fromMember: GroupMemberSummary;
+  toMember: GroupMemberSummary;
 };
 
 export type FinancialGroup = {
@@ -58,6 +73,7 @@ export type FinancialGroup = {
   notificationEmailSent?: boolean;
   balances: GroupBalance[];
   recentExpenses: GroupExpense[];
+  recentSettlements: GroupSettlement[];
   members: GroupMember[];
 };
 
@@ -114,6 +130,16 @@ export function createGroupExpense(
   });
 }
 
+export function createGroupSettlement(
+  groupId: string,
+  values: GroupSettlementFormValues,
+) {
+  return apiRequest<GroupSettlement>(`/groups/${groupId}/settlements`, {
+    method: 'POST',
+    body: normalizeSettlement(values),
+  });
+}
+
 function normalizeGroup(values: GroupFormValues) {
   return {
     ...values,
@@ -122,8 +148,31 @@ function normalizeGroup(values: GroupFormValues) {
 }
 
 function normalizeExpense(values: GroupExpenseFormValues) {
+  const splits = values.splits
+    .filter((split) =>
+      values.splitMode === 'CUSTOM_AMOUNTS'
+        ? Number(split.amount ?? 0) > 0
+        : Number(split.percentage ?? 0) > 0,
+    )
+    .map((split) => ({
+      memberId: split.memberId,
+      amount:
+        values.splitMode === 'CUSTOM_AMOUNTS' ? split.amount : undefined,
+      percentage:
+        values.splitMode === 'PERCENTAGES' ? split.percentage : undefined,
+    }));
+
   return {
     ...values,
+    splits: values.splitMode === 'EQUAL' ? undefined : splits,
     occurredAt: values.occurredAt || undefined,
+  };
+}
+
+function normalizeSettlement(values: GroupSettlementFormValues) {
+  return {
+    ...values,
+    note: values.note || undefined,
+    settledAt: values.settledAt || undefined,
   };
 }

@@ -51,6 +51,7 @@ describe('CreateAccountDto', () => {
       type: 'BANK',
       currency: 'PEN',
       openingBalance: 0,
+      balanceStartedAt: '2026-06-01',
     });
 
     await expect(validate(dto)).resolves.toHaveLength(0);

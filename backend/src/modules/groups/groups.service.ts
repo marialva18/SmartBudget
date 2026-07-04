@@ -11,6 +11,7 @@ import { PrismaService } from '../../database/prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 import { CreateGroupExpenseDto } from './dto/create-group-expense.dto';
 import { CreateGroupDto } from './dto/create-group.dto';
+import { CreateGroupSettlementDto } from './dto/create-group-settlement.dto';
 import { InviteGroupMemberDto } from './dto/invite-group-member.dto';
 
 type Channel = 'WEB' | 'MOBILE';
@@ -60,6 +61,34 @@ const groupInclude = {
     },
     orderBy: [{ role: 'asc' }, { joinedAt: 'asc' }],
   },
+  settlements: {
+    where: { deletedAt: null },
+    include: {
+      fromMember: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              profile: { select: { displayName: true } },
+            },
+          },
+        },
+      },
+      toMember: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              profile: { select: { displayName: true } },
+            },
+          },
+        },
+      },
+    },
+    orderBy: { settledAt: 'desc' },
+  },
 } satisfies Prisma.FinancialGroupInclude;
 
 type GroupWithMembers = Prisma.FinancialGroupGetPayload<{
@@ -97,6 +126,35 @@ const expenseInclude = {
 
 type GroupExpenseWithDetails = Prisma.GroupExpenseGetPayload<{
   include: typeof expenseInclude;
+}>;
+
+const settlementInclude = {
+  fromMember: {
+    include: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+          profile: { select: { displayName: true } },
+        },
+      },
+    },
+  },
+  toMember: {
+    include: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+          profile: { select: { displayName: true } },
+        },
+      },
+    },
+  },
+} satisfies Prisma.GroupSettlementInclude;
+
+type GroupSettlementWithDetails = Prisma.GroupSettlementGetPayload<{
+  include: typeof settlementInclude;
 }>;
 
 type MemberSummary = {
@@ -384,33 +442,63 @@ export class GroupsService {
         groupId,
         status: 'ACTIVE',
       },
-      select: { id: true },
+      select: { id: true, userId: true },
     });
     const activeMemberIds = new Set(activeMembers.map((member) => member.id));
     if (!activeMemberIds.has(dto.paidByMemberId)) {
       throw new BadRequestException(es.groups.invalidPayer);
     }
+    const payer = activeMembers.find(
+      (member) => member.id === dto.paidByMemberId,
+    );
+    if (payer?.userId !== userId) {
+      throw new ForbiddenException(es.groups.payerMustBeCurrentUser);
+    }
 
-    const participantIds = Array.from(new Set(dto.participantMemberIds));
-    if (
-      participantIds.length === 0 ||
-      participantIds.some((memberId) => !activeMemberIds.has(memberId))
-    ) {
-      throw new BadRequestException(es.groups.invalidParticipants);
+    const account = await this.prisma.account.findFirst({
+      where: {
+        id: dto.accountId,
+        userId,
+        status: 'ACTIVE',
+      },
+      select: { id: true, currency: true, balanceStartedAt: true },
+    });
+    if (!account || account.currency !== dto.currency) {
+      throw new BadRequestException(es.groups.invalidPaymentAccount);
     }
 
     const amount = new Prisma.Decimal(dto.amount);
-    const splits = this.buildEqualSplits(amount, participantIds);
+    const splits = this.buildSplits(amount, dto, activeMemberIds);
+    const participantIds = splits.map((split) => split.memberId);
     const expense = await this.prisma.$transaction(async (transaction) => {
+      const occurredAt = dto.occurredAt ? new Date(dto.occurredAt) : new Date();
+      const personalMovement = await transaction.transaction.create({
+        data: {
+          userId,
+          accountId: account.id,
+          categoryId: null,
+          type: 'EXPENSE',
+          amount,
+          currency: account.currency,
+          description: dto.description.trim(),
+          occurredAt,
+          balanceImpactStatus: getBalanceImpactStatus(
+            occurredAt,
+            account.balanceStartedAt,
+          ),
+          source: 'GROUP_EXPENSE',
+        },
+      });
       const created = await transaction.groupExpense.create({
         data: {
           groupId,
           paidByMemberId: dto.paidByMemberId,
           createdByUserId: userId,
+          personalTransactionId: personalMovement.id,
           description: dto.description.trim(),
           amount,
           currency: dto.currency,
-          occurredAt: dto.occurredAt ? new Date(dto.occurredAt) : new Date(),
+          occurredAt,
           splits: {
             createMany: {
               data: splits,
@@ -429,9 +517,29 @@ export class GroupsService {
           newValuesJson: JSON.stringify({
             groupId,
             paidByMemberId: dto.paidByMemberId,
+            accountId: account.id,
+            personalTransactionId: personalMovement.id,
             amount: amount.toFixed(4),
             currency: dto.currency,
             participants: participantIds,
+            splitMode: dto.splitMode ?? 'EQUAL',
+          }),
+        },
+      });
+      await transaction.auditLog.create({
+        data: {
+          userId,
+          action: 'TRANSACTION_CREATED',
+          entity: 'TRANSACTION',
+          entityId: personalMovement.id,
+          channel,
+          newValuesJson: JSON.stringify({
+            type: 'EXPENSE',
+            source: 'GROUP_EXPENSE',
+            amount: amount.toFixed(4),
+            currency: account.currency,
+            accountId: account.id,
+            groupId,
           }),
         },
       });
@@ -439,6 +547,123 @@ export class GroupsService {
     });
 
     return this.toExpenseResponse(expense);
+  }
+
+  async createSettlement(
+    userId: string,
+    channel: Channel,
+    groupId: string,
+    dto: CreateGroupSettlementDto,
+  ) {
+    const requester = await this.findActiveMember(userId, groupId);
+    const activeMembers = await this.prisma.groupMember.findMany({
+      where: {
+        groupId,
+        status: 'ACTIVE',
+      },
+      select: { id: true, userId: true },
+    });
+    const activeMemberIds = new Set(activeMembers.map((member) => member.id));
+
+    if (
+      !activeMemberIds.has(dto.fromMemberId) ||
+      !activeMemberIds.has(dto.toMemberId) ||
+      dto.fromMemberId === dto.toMemberId
+    ) {
+      throw new BadRequestException(es.groups.invalidSettlementMembers);
+    }
+
+    if (requester.id !== dto.fromMemberId && requester.id !== dto.toMemberId) {
+      throw new ForbiddenException(es.groups.settlementPermission);
+    }
+
+    const account = await this.prisma.account.findFirst({
+      where: {
+        id: dto.accountId,
+        userId,
+        status: 'ACTIVE',
+      },
+      select: { id: true, currency: true, balanceStartedAt: true },
+    });
+    if (!account || account.currency !== dto.currency) {
+      throw new BadRequestException(es.groups.invalidSettlementAccount);
+    }
+
+    const amount = new Prisma.Decimal(dto.amount);
+    const settlement = await this.prisma.$transaction(async (transaction) => {
+      const settledAt = dto.settledAt ? new Date(dto.settledAt) : new Date();
+      const movementType =
+        requester.id === dto.fromMemberId ? 'EXPENSE' : 'INCOME';
+      const personalMovement = await transaction.transaction.create({
+        data: {
+          userId,
+          accountId: account.id,
+          categoryId: null,
+          type: movementType,
+          amount,
+          currency: account.currency,
+          description: dto.note?.trim() || 'Liquidación de grupo',
+          occurredAt: settledAt,
+          balanceImpactStatus: getBalanceImpactStatus(
+            settledAt,
+            account.balanceStartedAt,
+          ),
+          source: 'GROUP_SETTLEMENT',
+        },
+      });
+      const created = await transaction.groupSettlement.create({
+        data: {
+          groupId,
+          fromMemberId: dto.fromMemberId,
+          toMemberId: dto.toMemberId,
+          createdByUserId: userId,
+          personalTransactionId: personalMovement.id,
+          amount,
+          currency: dto.currency,
+          note: dto.note?.trim() || null,
+          settledAt,
+        },
+        include: settlementInclude,
+      });
+      await transaction.auditLog.create({
+        data: {
+          userId,
+          action: 'GROUP_SETTLEMENT_CREATED',
+          entity: 'GROUP_SETTLEMENT',
+          entityId: created.id,
+          channel,
+          newValuesJson: JSON.stringify({
+            groupId,
+            fromMemberId: dto.fromMemberId,
+            toMemberId: dto.toMemberId,
+            accountId: account.id,
+            personalTransactionId: personalMovement.id,
+            amount: amount.toFixed(4),
+            currency: dto.currency,
+          }),
+        },
+      });
+      await transaction.auditLog.create({
+        data: {
+          userId,
+          action: 'TRANSACTION_CREATED',
+          entity: 'TRANSACTION',
+          entityId: personalMovement.id,
+          channel,
+          newValuesJson: JSON.stringify({
+            type: movementType,
+            source: 'GROUP_SETTLEMENT',
+            amount: amount.toFixed(4),
+            currency: account.currency,
+            accountId: account.id,
+            groupId,
+          }),
+        },
+      });
+      return created;
+    });
+
+    return this.toSettlementResponse(settlement);
   }
 
   private async findActiveMember(userId: string, groupId: string) {
@@ -502,6 +727,9 @@ export class GroupsService {
       recentExpenses: group.expenses
         .slice(0, 5)
         .map((expense) => this.toExpenseResponse(expense)),
+      recentSettlements: group.settlements
+        .slice(0, 5)
+        .map((settlement) => this.toSettlementResponse(settlement)),
       members: group.members.map((member) => ({
         id: member.id,
         userId: member.userId,
@@ -533,6 +761,20 @@ export class GroupsService {
     };
   }
 
+  private toSettlementResponse(settlement: GroupSettlementWithDetails) {
+    return {
+      id: settlement.id,
+      groupId: settlement.groupId,
+      amount: settlement.amount.toFixed(4),
+      currency: settlement.currency,
+      note: settlement.note,
+      settledAt: settlement.settledAt,
+      createdAt: settlement.createdAt,
+      fromMember: this.toMemberSummary(settlement.fromMember),
+      toMember: this.toMemberSummary(settlement.toMember),
+    };
+  }
+
   private toBalanceSummaries(group: GroupWithMembers) {
     const balances = new Map<
       string,
@@ -541,6 +783,8 @@ export class GroupsService {
         currency: string;
         paid: Prisma.Decimal;
         owed: Prisma.Decimal;
+        settledOut: Prisma.Decimal;
+        settledIn: Prisma.Decimal;
       }
     >();
 
@@ -556,6 +800,8 @@ export class GroupsService {
           currency,
           paid: new Prisma.Decimal(0),
           owed: new Prisma.Decimal(0),
+          settledOut: new Prisma.Decimal(0),
+          settledIn: new Prisma.Decimal(0),
         };
         balances.set(key, balance);
       }
@@ -571,12 +817,28 @@ export class GroupsService {
       }
     }
 
+    for (const settlement of group.settlements) {
+      const fromBalance = getBalance(
+        settlement.fromMember,
+        settlement.currency,
+      );
+      const toBalance = getBalance(settlement.toMember, settlement.currency);
+      fromBalance.settledOut = fromBalance.settledOut.plus(settlement.amount);
+      toBalance.settledIn = toBalance.settledIn.plus(settlement.amount);
+    }
+
     return Array.from(balances.values()).map((balance) => ({
       member: balance.member,
       currency: balance.currency,
       paidAmount: balance.paid.toFixed(4),
       owedAmount: balance.owed.toFixed(4),
-      netAmount: balance.paid.minus(balance.owed).toFixed(4),
+      settledOutAmount: balance.settledOut.toFixed(4),
+      settledInAmount: balance.settledIn.toFixed(4),
+      netAmount: balance.paid
+        .minus(balance.owed)
+        .plus(balance.settledOut)
+        .minus(balance.settledIn)
+        .toFixed(4),
     }));
   }
 
@@ -598,6 +860,82 @@ export class GroupsService {
       role: member.role,
       status: member.status,
     };
+  }
+
+  private buildSplits(
+    amount: Prisma.Decimal,
+    dto: CreateGroupExpenseDto,
+    activeMemberIds: Set<string>,
+  ) {
+    const splitMode = dto.splitMode ?? 'EQUAL';
+
+    if (splitMode === 'EQUAL') {
+      const participantIds = Array.from(
+        new Set(dto.participantMemberIds ?? []),
+      );
+      if (
+        participantIds.length === 0 ||
+        participantIds.some((memberId) => !activeMemberIds.has(memberId))
+      ) {
+        throw new BadRequestException(es.groups.invalidParticipants);
+      }
+
+      return this.buildEqualSplits(amount, participantIds);
+    }
+
+    const splitInputs = dto.splits ?? [];
+    const memberIds = splitInputs.map((split) => split.memberId);
+    const uniqueMemberIds = new Set(memberIds);
+    if (
+      splitInputs.length === 0 ||
+      uniqueMemberIds.size !== splitInputs.length ||
+      memberIds.some((memberId) => !activeMemberIds.has(memberId))
+    ) {
+      throw new BadRequestException(es.groups.invalidParticipants);
+    }
+
+    if (splitMode === 'CUSTOM_AMOUNTS') {
+      const splits = splitInputs.map((split) => ({
+        memberId: split.memberId,
+        amount: new Prisma.Decimal(split.amount ?? 0).toDecimalPlaces(4),
+      }));
+      const assignedAmount = splits.reduce(
+        (total, split) => total.plus(split.amount),
+        new Prisma.Decimal(0),
+      );
+
+      if (!assignedAmount.equals(amount.toDecimalPlaces(4))) {
+        throw new BadRequestException(es.groups.invalidCustomSplits);
+      }
+
+      return splits;
+    }
+
+    const percentages = splitInputs.map((split) => ({
+      memberId: split.memberId,
+      percentage: new Prisma.Decimal(split.percentage ?? 0),
+    }));
+    const totalPercentage = percentages.reduce(
+      (total, split) => total.plus(split.percentage),
+      new Prisma.Decimal(0),
+    );
+
+    if (!totalPercentage.equals(new Prisma.Decimal(100))) {
+      throw new BadRequestException(es.groups.invalidPercentageSplits);
+    }
+
+    let assignedAmount = new Prisma.Decimal(0);
+    return percentages.map((split, index) => {
+      const isLast = index === percentages.length - 1;
+      const splitAmount = isLast
+        ? amount.minus(assignedAmount)
+        : amount.mul(split.percentage).dividedBy(100).toDecimalPlaces(4);
+      assignedAmount = assignedAmount.plus(splitAmount);
+      return {
+        memberId: split.memberId,
+        amount: splitAmount,
+      };
+    });
   }
 
   private buildEqualSplits(amount: Prisma.Decimal, participantIds: string[]) {
@@ -625,4 +963,18 @@ export class GroupsService {
       archivedAt: group.archivedAt?.toISOString() ?? null,
     };
   }
+}
+
+function getBalanceImpactStatus(occurredAt: Date, balanceStartedAt: Date) {
+  const now = new Date();
+
+  if (occurredAt.getTime() > now.getTime()) {
+    return 'PENDING_FUTURE';
+  }
+
+  if (occurredAt.getTime() < balanceStartedAt.getTime()) {
+    return 'ANALYSIS_ONLY';
+  }
+
+  return 'AFFECTS_BALANCE';
 }

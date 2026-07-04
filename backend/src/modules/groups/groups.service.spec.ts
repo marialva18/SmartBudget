@@ -16,6 +16,9 @@ describe('GroupsService', () => {
     groupExpense: {
       findMany: jest.fn(),
     },
+    account: {
+      findFirst: jest.fn(),
+    },
     $transaction: jest.fn(),
   };
   const transactionClient = {
@@ -32,6 +35,12 @@ describe('GroupsService', () => {
     groupExpense: {
       create: jest.fn(),
     },
+    transaction: {
+      create: jest.fn(),
+    },
+    groupSettlement: {
+      create: jest.fn(),
+    },
     auditLog: {
       create: jest.fn(),
     },
@@ -44,6 +53,14 @@ describe('GroupsService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mailService.sendGroupInvitationEmail.mockResolvedValue(true);
+    prisma.account.findFirst.mockResolvedValue({
+      id: 'account-id',
+      currency: 'PEN',
+      balanceStartedAt: new Date('2026-01-01T00:00:00.000Z'),
+    });
+    transactionClient.transaction.create.mockResolvedValue({
+      id: 'transaction-id',
+    });
     service = new GroupsService(
       prisma as unknown as PrismaService,
       mailService as never,
@@ -152,8 +169,8 @@ describe('GroupsService', () => {
   it('creates a group expense with equal splits', async () => {
     prisma.groupMember.findFirst.mockResolvedValue(memberRecord());
     prisma.groupMember.findMany.mockResolvedValue([
-      { id: 'member-id' },
-      { id: 'member-2' },
+      { id: 'member-id', userId: 'user-id' },
+      { id: 'member-2', userId: 'user-2' },
     ]);
     transactionClient.groupExpense.create.mockResolvedValue(expenseRecord());
     transactionClient.auditLog.create.mockResolvedValue({});
@@ -163,6 +180,7 @@ describe('GroupsService', () => {
       amount: 100,
       currency: 'PEN',
       paidByMemberId: 'member-id',
+      accountId: 'account-id',
       participantMemberIds: ['member-id', 'member-2'],
       occurredAt: '2026-06-26T20:00:00.000Z',
     });
@@ -171,6 +189,7 @@ describe('GroupsService', () => {
       data: expect.objectContaining({
         groupId: 'group-id',
         paidByMemberId: 'member-id',
+        personalTransactionId: 'transaction-id',
         amount: new Prisma.Decimal(100),
         currency: 'PEN',
         splits: {
@@ -186,6 +205,146 @@ describe('GroupsService', () => {
     });
     expect(result.amount).toBe('100.0000');
     expect(result.splits).toHaveLength(2);
+    expect(transactionClient.transaction.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'user-id',
+        accountId: 'account-id',
+        type: 'EXPENSE',
+        amount: new Prisma.Decimal(100),
+        currency: 'PEN',
+        source: 'GROUP_EXPENSE',
+      }),
+    });
+  });
+
+  it('creates a group expense with custom amount splits', async () => {
+    prisma.groupMember.findFirst.mockResolvedValue(memberRecord());
+    prisma.groupMember.findMany.mockResolvedValue([
+      { id: 'member-id', userId: 'user-id' },
+      { id: 'member-2', userId: 'user-2' },
+    ]);
+    transactionClient.groupExpense.create.mockResolvedValue(expenseRecord());
+    transactionClient.auditLog.create.mockResolvedValue({});
+
+    await service.createExpense('user-id', 'WEB', 'group-id', {
+      description: 'Cena',
+      amount: 100,
+      currency: 'PEN',
+      paidByMemberId: 'member-id',
+      accountId: 'account-id',
+      splitMode: 'CUSTOM_AMOUNTS',
+      splits: [
+        { memberId: 'member-id', amount: 70 },
+        { memberId: 'member-2', amount: 30 },
+      ],
+      occurredAt: '2026-06-26T20:00:00.000Z',
+    });
+
+    expect(transactionClient.groupExpense.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          splits: {
+            createMany: {
+              data: [
+                { memberId: 'member-id', amount: new Prisma.Decimal(70) },
+                { memberId: 'member-2', amount: new Prisma.Decimal(30) },
+              ],
+            },
+          },
+        }),
+      }),
+    );
+  });
+
+  it('creates a group expense with percentage splits', async () => {
+    prisma.groupMember.findFirst.mockResolvedValue(memberRecord());
+    prisma.groupMember.findMany.mockResolvedValue([
+      { id: 'member-id', userId: 'user-id' },
+      { id: 'member-2', userId: 'user-2' },
+    ]);
+    transactionClient.groupExpense.create.mockResolvedValue(expenseRecord());
+    transactionClient.auditLog.create.mockResolvedValue({});
+
+    await service.createExpense('user-id', 'WEB', 'group-id', {
+      description: 'Cena',
+      amount: 100,
+      currency: 'PEN',
+      paidByMemberId: 'member-id',
+      accountId: 'account-id',
+      splitMode: 'PERCENTAGES',
+      splits: [
+        { memberId: 'member-id', percentage: 25 },
+        { memberId: 'member-2', percentage: 75 },
+      ],
+      occurredAt: '2026-06-26T20:00:00.000Z',
+    });
+
+    expect(transactionClient.groupExpense.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          splits: {
+            createMany: {
+              data: [
+                { memberId: 'member-id', amount: new Prisma.Decimal(25) },
+                { memberId: 'member-2', amount: new Prisma.Decimal(75) },
+              ],
+            },
+          },
+        }),
+      }),
+    );
+  });
+
+  it('creates a settlement between active members', async () => {
+    prisma.groupMember.findFirst.mockResolvedValue(memberRecord());
+    prisma.groupMember.findMany.mockResolvedValue([
+      { id: 'member-id', userId: 'user-id' },
+      { id: 'member-2', userId: 'user-2' },
+    ]);
+    transactionClient.groupSettlement.create.mockResolvedValue(
+      settlementRecord(),
+    );
+    transactionClient.auditLog.create.mockResolvedValue({});
+
+    const result = await service.createSettlement(
+      'user-id',
+      'WEB',
+      'group-id',
+      {
+        fromMemberId: 'member-2',
+        toMemberId: 'member-id',
+        accountId: 'account-id',
+        amount: 50,
+        currency: 'PEN',
+        note: 'Yape',
+        settledAt: '2026-06-27T10:00:00.000Z',
+      },
+    );
+
+    expect(transactionClient.groupSettlement.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        groupId: 'group-id',
+        fromMemberId: 'member-2',
+        toMemberId: 'member-id',
+        personalTransactionId: 'transaction-id',
+        amount: new Prisma.Decimal(50),
+        currency: 'PEN',
+        note: 'Yape',
+      }),
+      include: expect.any(Object),
+    });
+    expect(transactionClient.transaction.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 'user-id',
+        accountId: 'account-id',
+        type: 'INCOME',
+        amount: new Prisma.Decimal(50),
+        currency: 'PEN',
+        source: 'GROUP_SETTLEMENT',
+      }),
+    });
+    expect(result.amount).toBe('50.0000');
+    expect(result.fromMember.id).toBe('member-2');
   });
 });
 
@@ -204,6 +363,7 @@ function groupBase() {
     updatedAt: new Date('2026-06-26T12:00:00.000Z'),
     archivedAt: null as Date | null,
     expenses: [],
+    settlements: [],
     members: [memberRecord()],
   };
 }
@@ -249,6 +409,33 @@ function splitRecord(id: string, memberId: string, amount: Prisma.Decimal) {
               profile: { displayName: 'Friend' },
             },
     }),
+  };
+}
+
+function settlementRecord() {
+  return {
+    id: 'settlement-id',
+    groupId: 'group-id',
+    fromMemberId: 'member-2',
+    toMemberId: 'member-id',
+    createdByUserId: 'user-id',
+    personalTransactionId: null as string | null,
+    amount: new Prisma.Decimal(50),
+    currency: 'PEN',
+    settledAt: new Date('2026-06-27T10:00:00.000Z'),
+    note: 'Yape',
+    createdAt: new Date('2026-06-27T10:00:00.000Z'),
+    deletedAt: null as Date | null,
+    fromMember: memberRecord({
+      id: 'member-2',
+      userId: 'user-2',
+      user: {
+        id: 'user-2',
+        email: 'friend@example.com',
+        profile: { displayName: 'Friend' },
+      },
+    }),
+    toMember: memberRecord(),
   };
 }
 

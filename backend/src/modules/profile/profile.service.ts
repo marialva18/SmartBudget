@@ -176,20 +176,46 @@ export class ProfileService {
     const deletedAt = new Date();
     const anonymizedEmail = `deleted-${randomUUID()}@deleted.qori.local`;
 
+    await this.revokeAccountAccess(userId);
+    await this.cleanupCoachData(userId, deletedAt);
+    await this.cleanupFinancialData(userId, deletedAt);
+    await this.cleanupGroupData(userId, deletedAt);
+    await this.cleanupFilesAndExternalLinks(userId, deletedAt);
+    await this.finalizeAccountDeletion(
+      userId,
+      channel,
+      deletedAt,
+      anonymizedEmail,
+    );
+
+    return { message: es.profile.accountDeleted };
+  }
+
+  private transactionOptions() {
+    return {
+      maxWait: 5_000,
+      timeout: 10_000,
+    };
+  }
+
+  private async revokeAccountAccess(userId: string) {
     await this.prisma.$transaction(async (transaction) => {
-      await transaction.refreshToken.deleteMany({ where: { userId } });
-      await transaction.userSession.deleteMany({ where: { userId } });
-      await transaction.passwordResetToken.deleteMany({ where: { userId } });
-      await transaction.emailVerificationToken.deleteMany({
-        where: { userId },
-      });
+      await Promise.all([
+        transaction.refreshToken.deleteMany({ where: { userId } }),
+        transaction.userSession.deleteMany({ where: { userId } }),
+        transaction.passwordResetToken.deleteMany({ where: { userId } }),
+        transaction.emailVerificationToken.deleteMany({ where: { userId } }),
+      ]);
+    }, this.transactionOptions());
+  }
 
-      const coachConversations = await transaction.coachConversation.findMany({
-        where: { userId },
-        select: { id: true },
-      });
-      const coachConversationIds = coachConversations.map(({ id }) => id);
-
+  private async cleanupCoachData(userId: string, deletedAt: Date) {
+    const coachConversations = await this.prisma.coachConversation.findMany({
+      where: { userId },
+      select: { id: true },
+    });
+    const coachConversationIds = coachConversations.map(({ id }) => id);
+    await this.prisma.$transaction(async (transaction) => {
       if (coachConversationIds.length > 0) {
         await transaction.coachMessage.updateMany({
           where: {
@@ -204,104 +230,132 @@ export class ProfileService {
         where: { userId, deletedAt: null },
         data: { deletedAt },
       });
+    }, this.transactionOptions());
+  }
 
-      await transaction.transactionAttachment.deleteMany({
-        where: { transaction: { userId } },
-      });
-      await transaction.transactionDraft.updateMany({
-        where: { userId },
-        data: {
-          status: 'EXPIRED',
-          resolvedAt: deletedAt,
-        },
-      });
-      await transaction.recurringOccurrence.updateMany({
-        where: { userId, status: 'PENDING' },
-        data: {
-          status: 'SKIPPED',
-          reviewedAt: deletedAt,
-        },
-      });
-      await transaction.recurringSchedule.updateMany({
-        where: { userId, status: { not: 'CANCELLED' } },
-        data: { status: 'CANCELLED' },
-      });
-      await transaction.goalReservation.updateMany({
-        where: { userId, status: 'ACTIVE' },
-        data: {
-          status: 'REVERSED',
-          reversedAt: deletedAt,
-        },
-      });
-      await transaction.goal.updateMany({
-        where: { userId, deletedAt: null },
-        data: {
-          status: 'CANCELLED',
-          deletedAt,
-        },
-      });
-      await transaction.budget.deleteMany({ where: { userId } });
-      await transaction.transaction.updateMany({
-        where: { userId, deletedAt: null },
-        data: { deletedAt },
-      });
-      await transaction.accountChannelDefault.deleteMany({
-        where: { userId },
-      });
-      await transaction.account.updateMany({
-        where: { userId, status: { not: 'ARCHIVED' } },
-        data: {
-          status: 'ARCHIVED',
-          archivedAt: deletedAt,
-        },
-      });
-      await transaction.category.updateMany({
-        where: { userId, status: { not: 'ARCHIVED' } },
-        data: {
-          status: 'ARCHIVED',
-          archivedAt: deletedAt,
-        },
-      });
-      await transaction.groupExpense.updateMany({
-        where: { createdByUserId: userId, deletedAt: null },
-        data: { deletedAt },
-      });
-      await transaction.groupSettlement.updateMany({
-        where: { createdByUserId: userId, deletedAt: null },
-        data: { deletedAt },
-      });
-      await transaction.groupMember.updateMany({
-        where: { userId, status: { in: ['ACTIVE', 'INVITED'] } },
-        data: {
-          status: 'LEFT',
-          leftAt: deletedAt,
-        },
-      });
-      await transaction.financialGroup.updateMany({
-        where: { ownerId: userId, status: { not: 'ARCHIVED' } },
-        data: {
-          status: 'ARCHIVED',
-          archivedAt: deletedAt,
-        },
-      });
-      await transaction.voiceTranscription.updateMany({
-        where: { userId, deletedAt: null },
-        data: { deletedAt },
-      });
-      await transaction.fileObject.updateMany({
-        where: { userId, deletedAt: null },
-        data: {
-          status: 'DELETED',
-          deletedAt,
-        },
-      });
-      await transaction.externalChannelLink.updateMany({
-        where: { userId, status: { not: 'REVOKED' } },
-        data: {
-          status: 'REVOKED',
-          revokedAt: deletedAt,
-        },
-      });
+  private async cleanupFinancialData(userId: string, deletedAt: Date) {
+    await this.prisma.$transaction(async (transaction) => {
+      await Promise.all([
+        transaction.transactionAttachment.deleteMany({
+          where: { transaction: { userId } },
+        }),
+        transaction.transactionDraft.updateMany({
+          where: { userId },
+          data: {
+            status: 'EXPIRED',
+            resolvedAt: deletedAt,
+          },
+        }),
+        transaction.recurringOccurrence.updateMany({
+          where: { userId, status: 'PENDING' },
+          data: {
+            status: 'SKIPPED',
+            reviewedAt: deletedAt,
+          },
+        }),
+        transaction.recurringSchedule.updateMany({
+          where: { userId, status: { not: 'CANCELLED' } },
+          data: { status: 'CANCELLED' },
+        }),
+        transaction.goalReservation.updateMany({
+          where: { userId, status: 'ACTIVE' },
+          data: {
+            status: 'REVERSED',
+            reversedAt: deletedAt,
+          },
+        }),
+        transaction.goal.updateMany({
+          where: { userId, deletedAt: null },
+          data: {
+            status: 'CANCELLED',
+            deletedAt,
+          },
+        }),
+        transaction.budget.deleteMany({ where: { userId } }),
+        transaction.transaction.updateMany({
+          where: { userId, deletedAt: null },
+          data: { deletedAt },
+        }),
+        transaction.accountChannelDefault.deleteMany({ where: { userId } }),
+        transaction.account.updateMany({
+          where: { userId, status: { not: 'ARCHIVED' } },
+          data: {
+            status: 'ARCHIVED',
+            archivedAt: deletedAt,
+          },
+        }),
+        transaction.category.updateMany({
+          where: { userId, status: { not: 'ARCHIVED' } },
+          data: {
+            status: 'ARCHIVED',
+            archivedAt: deletedAt,
+          },
+        }),
+      ]);
+    }, this.transactionOptions());
+  }
+
+  private async cleanupGroupData(userId: string, deletedAt: Date) {
+    await this.prisma.$transaction(async (transaction) => {
+      await Promise.all([
+        transaction.groupExpense.updateMany({
+          where: { createdByUserId: userId, deletedAt: null },
+          data: { deletedAt },
+        }),
+        transaction.groupSettlement.updateMany({
+          where: { createdByUserId: userId, deletedAt: null },
+          data: { deletedAt },
+        }),
+        transaction.groupMember.updateMany({
+          where: { userId, status: { in: ['ACTIVE', 'INVITED'] } },
+          data: {
+            status: 'LEFT',
+            leftAt: deletedAt,
+          },
+        }),
+        transaction.financialGroup.updateMany({
+          where: { ownerId: userId, status: { not: 'ARCHIVED' } },
+          data: {
+            status: 'ARCHIVED',
+            archivedAt: deletedAt,
+          },
+        }),
+      ]);
+    }, this.transactionOptions());
+  }
+
+  private async cleanupFilesAndExternalLinks(userId: string, deletedAt: Date) {
+    await this.prisma.$transaction(async (transaction) => {
+      await Promise.all([
+        transaction.voiceTranscription.updateMany({
+          where: { userId, deletedAt: null },
+          data: { deletedAt },
+        }),
+        transaction.fileObject.updateMany({
+          where: { userId, deletedAt: null },
+          data: {
+            status: 'DELETED',
+            deletedAt,
+          },
+        }),
+        transaction.externalChannelLink.updateMany({
+          where: { userId, status: { not: 'REVOKED' } },
+          data: {
+            status: 'REVOKED',
+            revokedAt: deletedAt,
+          },
+        }),
+      ]);
+    }, this.transactionOptions());
+  }
+
+  private async finalizeAccountDeletion(
+    userId: string,
+    channel: Channel,
+    deletedAt: Date,
+    anonymizedEmail: string,
+  ) {
+    await this.prisma.$transaction(async (transaction) => {
       await transaction.userOnboardingObjective.deleteMany({
         where: { userId },
       });
@@ -327,9 +381,7 @@ export class ProfileService {
           deletedAt,
         },
       });
-    });
-
-    return { message: es.profile.accountDeleted };
+    }, this.transactionOptions());
   }
 
   private preferenceValues(profile: {

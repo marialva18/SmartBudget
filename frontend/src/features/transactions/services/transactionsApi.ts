@@ -8,6 +8,7 @@ export type Transaction = {
   currency: 'PEN' | 'USD';
   description: string | null;
   occurredAt: string;
+  balanceImpactStatus: 'AFFECTS_BALANCE' | 'ANALYSIS_ONLY' | 'PENDING_FUTURE';
   source: string;
   account: { id: string; name: string };
   category: { id: string; name: string; icon: string | null } | null;

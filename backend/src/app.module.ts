@@ -9,6 +9,7 @@ import { JwtAuthGuard } from './common/auth/jwt-auth.guard';
 import { validateEnvironment } from './config/environment';
 import { PrismaModule } from './database/prisma/prisma.module';
 import { AccountsModule } from './modules/accounts/accounts.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { BudgetsModule } from './modules/budgets/budgets.module';
 import { CategoriesModule } from './modules/categories/categories.module';
@@ -42,6 +43,7 @@ import { RecurringModule } from './modules/recurring/recurring.module';
     HealthModule,
     AuthModule,
     AccountsModule,
+    AnalyticsModule,
     CategoriesModule,
     BudgetsModule,
     GoalsModule,

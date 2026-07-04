@@ -1,5 +1,12 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import {
+  buildLocalMonthDateKeys,
+  DEFAULT_TIMEZONE,
+  getLocalMonthStartKey,
+  getLocalMonthUtcRange,
+  toLocalDateKey,
+} from '../../common/dates/local-date';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { CalendarMonthDto } from './dto/calendar-month.dto';
 
@@ -35,8 +42,10 @@ export class CalendarService {
   constructor(private readonly prisma: PrismaService) {}
 
   async month(userId: string, query: CalendarMonthDto) {
-    const monthStart = parseMonthStart(query.monthStart);
-    const nextMonthStart = addMonths(monthStart, 1);
+    const timezone = await this.getUserTimezone(userId);
+    const monthStartKey =
+      query.monthStart ?? getLocalMonthStartKey(new Date(), timezone);
+    const monthRange = getLocalMonthUtcRange(monthStartKey, timezone);
 
     if (query.accountId) {
       await this.ensureAccountBelongsToUser(userId, query.accountId);
@@ -50,8 +59,8 @@ export class CalendarService {
         currency: query.currency,
         accountId: query.accountId,
         occurredAt: {
-          gte: monthStart,
-          lt: nextMonthStart,
+          gte: expandUtcDate(monthRange.from, -1),
+          lt: expandUtcDate(monthRange.to, 1),
         },
       },
       include: {
@@ -72,7 +81,7 @@ export class CalendarService {
       orderBy: [{ occurredAt: 'asc' }, { createdAt: 'asc' }],
     });
 
-    const days = buildMonthDays(monthStart);
+    const days = buildLocalMonthDateKeys(monthStartKey);
     const buckets = new Map<string, CalendarDayBucket>();
 
     for (const day of days) {
@@ -86,7 +95,7 @@ export class CalendarService {
     }
 
     for (const transaction of transactions) {
-      const dayKey = toDateKey(transaction.occurredAt);
+      const dayKey = toLocalDateKey(transaction.occurredAt, timezone);
       const bucket = buckets.get(dayKey);
 
       if (!bucket) {
@@ -125,9 +134,18 @@ export class CalendarService {
     }));
 
     return {
-      monthStart: formatMonthStart(monthStart),
+      monthStart: monthStartKey,
       days: responseDays,
     };
+  }
+
+  private async getUserTimezone(userId: string) {
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+      select: { timezone: true },
+    });
+
+    return profile?.timezone ?? DEFAULT_TIMEZONE;
   }
 
   private async ensureAccountBelongsToUser(userId: string, accountId: string) {
@@ -148,46 +166,6 @@ export class CalendarService {
   }
 }
 
-function parseMonthStart(value?: string) {
-  if (!value) {
-    const now = new Date();
-    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-  }
-
-  return new Date(`${value}T00:00:00.000Z`);
-}
-
-function addMonths(date: Date, months: number) {
-  return new Date(
-    Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + months, 1),
-  );
-}
-
-function buildMonthDays(monthStart: Date) {
-  const nextMonthStart = addMonths(monthStart, 1);
-  const days: string[] = [];
-
-  for (
-    let current = new Date(monthStart);
-    current < nextMonthStart;
-    current = new Date(
-      Date.UTC(
-        current.getUTCFullYear(),
-        current.getUTCMonth(),
-        current.getUTCDate() + 1,
-      ),
-    )
-  ) {
-    days.push(toDateKey(current));
-  }
-
-  return days;
-}
-
-function toDateKey(date: Date) {
-  return date.toISOString().slice(0, 10);
-}
-
-function formatMonthStart(date: Date) {
-  return date.toISOString().slice(0, 10);
+function expandUtcDate(date: Date, days: number) {
+  return new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
 }

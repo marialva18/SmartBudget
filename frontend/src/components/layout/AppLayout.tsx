@@ -11,6 +11,7 @@ import {
   Tags,
   Target,
   Bot,
+  BarChart3,
   Users,
   WalletCards,
   X,
@@ -47,6 +48,11 @@ const navItems = [
     label: es.navigation.transactions,
     to: '/app/transactions',
     icon: ReceiptText,
+  },
+  {
+    label: es.navigation.analytics,
+    to: '/app/analytics',
+    icon: BarChart3,
   },
   {
     label: es.navigation.calendar,
