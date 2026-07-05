@@ -1,18 +1,6 @@
 import { useQueries, useQuery } from '@tanstack/react-query';
-import { BarChart3, Download, FileText, TrendingUp } from 'lucide-react';
+import { Download, FileText } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
 import {
   downloadAnalyticsExport,
   downloadAnalyticsPdf,
@@ -24,6 +12,17 @@ import {
   type AnalyticsFilters,
   type AnalyticsSummary,
 } from '../../features/analytics/analyticsApi';
+import {
+  BarChartPanel,
+  ComparisonChart,
+  TimelineChart,
+} from '../../features/analytics/components/AnalyticsCharts';
+import {
+  AnalyticsSkeleton,
+  AnalyticsSummaryPanels,
+  BudgetUsagePanel,
+  EmptyAnalyticsState,
+} from '../../features/analytics/components/AnalyticsSummaryPanels';
 import { getAccounts } from '../../features/accounts/services/accountsApi';
 import { getCategories } from '../../features/categories/categoriesApi';
 import { useFinanceScope } from '../../features/finance-scope/financeScope';
@@ -161,9 +160,6 @@ export function AnalyticsPage() {
   const budgetUsage = summaryQuery.data?.budgetUsage;
   const comparisonRows = summaryQuery.data?.comparison
     ? buildComparisonRows(summaryQuery.data)
-    : [];
-  const insightRows = summaryQuery.data
-    ? buildInsightRows(summaryQuery.data, currency)
     : [];
 
   async function handleExport(format: 'xlsx' | 'pdf') {
@@ -384,39 +380,10 @@ export function AnalyticsPage() {
       {summaryQuery.isLoading ? (
         <AnalyticsSkeleton />
       ) : (
-        <>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-            <MetricCard icon={TrendingUp} label={es.analytics.totalIncome} value={formatMoney(Number(summaryQuery.data?.totals.income ?? 0), currency)} />
-            <MetricCard icon={BarChart3} label={es.analytics.totalExpense} value={formatMoney(Number(summaryQuery.data?.totals.expense ?? 0), currency)} tone="danger" />
-            <MetricCard icon={TrendingUp} label={es.analytics.balance} value={formatMoney(Number(summaryQuery.data?.balance ?? 0), currency)} />
-            <MetricCard icon={BarChart3} label={es.analytics.averageDailyExpense} value={formatMoney(Number(summaryQuery.data?.averageDailyExpense ?? 0), currency)} />
-            <MetricCard icon={TrendingUp} label={es.analytics.expenseComparison} value={formatPercent(summaryQuery.data?.comparison?.expenseChangePercent)} tone={Number(summaryQuery.data?.comparison?.expenseChangePercent ?? 0) > 0 ? 'danger' : 'normal'} />
-            <MetricCard icon={BarChart3} label={es.analytics.budgetUsage} value={summaryQuery.data?.budgetUsage ? `${summaryQuery.data.budgetUsage.usedPercent}%` : es.analytics.noBudget} />
-          </div>
-          {insightRows.length > 0 ? (
-            <section
-              aria-label={es.analytics.insights}
-              className="rounded-lg bg-white p-5 shadow-[0_10px_30px_rgba(13,148,136,0.08)]"
-            >
-              <h2 className="text-lg font-bold">{es.analytics.insights}</h2>
-              <div className="mt-4 grid gap-3 md:grid-cols-3">
-                {insightRows.map((insight) => (
-                  <article
-                    className="rounded-md border border-slate-100 bg-slate-50 p-4"
-                    key={insight.title}
-                  >
-                    <p className="text-sm font-semibold text-slate-500">
-                      {insight.title}
-                    </p>
-                    <p className="mt-2 text-sm font-medium leading-6 text-slate-900">
-                      {insight.description}
-                    </p>
-                  </article>
-                ))}
-              </div>
-            </section>
-          ) : null}
-        </>
+        <AnalyticsSummaryPanels
+          currency={currency}
+          summary={summaryQuery.data}
+        />
       )}
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
@@ -440,37 +407,7 @@ export function AnalyticsPage() {
           </section>
         ) : null}
 
-        {budgetUsage ? (
-          <section
-            aria-label={es.analytics.budgetUsage}
-            className="rounded-lg bg-white p-5 shadow-[0_10px_30px_rgba(13,148,136,0.08)]"
-          >
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-bold">{es.analytics.budgetUsage}</h2>
-              <p className="mt-1 text-sm text-slate-500">
-                {formatMoney(Number(budgetUsage.usedAmount), budgetUsage.currency)} /{' '}
-                {formatMoney(Number(budgetUsage.plannedAmount), budgetUsage.currency)}
-              </p>
-            </div>
-            <span className="rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-800">
-              {Number(budgetUsage.usedPercent).toFixed(0)}%
-            </span>
-          </div>
-          <div className="mt-4 h-3 overflow-hidden rounded-full bg-slate-100">
-            <div
-              className={`h-full rounded-full ${
-                Number(budgetUsage.usedPercent) > 100
-                  ? 'bg-red-600'
-                  : 'bg-emerald-700'
-              }`}
-              style={{
-                width: `${Math.min(Number(budgetUsage.usedPercent), 100)}%`,
-              }}
-            />
-          </div>
-          </section>
-        ) : null}
+        <BudgetUsagePanel budgetUsage={budgetUsage} />
       </div>
 
       <div className="grid gap-5 xl:grid-cols-3">
@@ -599,216 +536,6 @@ export function AnalyticsPage() {
   );
 }
 
-function ComparisonChart({
-  currency,
-  rows,
-}: {
-  currency: 'PEN' | 'USD';
-  rows: Array<{ current: number; metric: string; previous: number }>;
-}) {
-  return (
-    <div
-      aria-label={es.analytics.comparisonChart}
-      className="mt-4 h-72 min-w-0 rounded-lg border border-slate-100 bg-slate-50 p-3"
-      role="img"
-    >
-      <ResponsiveContainer height="100%" width="100%">
-        <BarChart data={rows} margin={{ bottom: 0, left: 0, right: 8, top: 8 }}>
-          <CartesianGrid stroke="#e2e8f0" strokeDasharray="4 4" vertical={false} />
-          <XAxis dataKey="metric" tick={{ fill: '#64748b', fontSize: 12 }} />
-          <YAxis
-            tick={{ fill: '#64748b', fontSize: 12 }}
-            tickFormatter={(value) => compactMoney(Number(value), currency)}
-            width={72}
-          />
-          <Tooltip
-            formatter={(value) => formatMoney(Number(value), currency)}
-            labelClassName="font-semibold"
-          />
-          <Legend />
-          <Bar
-            dataKey="previous"
-            fill="#94a3b8"
-            name={es.analytics.previousPeriod}
-            radius={[6, 6, 0, 0]}
-          />
-          <Bar
-            dataKey="current"
-            fill="#006b5f"
-            name={es.analytics.currentPeriod}
-            radius={[6, 6, 0, 0]}
-          />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
-
-function TimelineChart({
-  currency,
-  rows,
-}: {
-  currency: 'PEN' | 'USD';
-  rows: Array<{ date: string; balance: string; expense: string; income: string }>;
-}) {
-  const chartRows = rows.map((row) => ({
-    date: row.date.slice(5),
-    balance: Number(row.balance),
-    expense: Number(row.expense),
-    income: Number(row.income),
-  }));
-  const last = rows[rows.length - 1];
-
-  return (
-    <div
-      aria-label={es.analytics.timelineChart}
-      className="mt-4 overflow-hidden rounded-lg border border-slate-100 bg-slate-50 p-4"
-      role="img"
-    >
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-slate-600">
-          {es.analytics.timelineChart}
-        </p>
-        <p className="text-sm font-bold text-slate-950">
-          {last ? formatMoney(Number(last.balance), currency) : '-'}
-        </p>
-      </div>
-      <div className="h-72 min-w-0">
-        <ResponsiveContainer height="100%" width="100%">
-          <LineChart data={chartRows} margin={{ bottom: 0, left: 0, right: 8, top: 8 }}>
-            <CartesianGrid stroke="#e2e8f0" strokeDasharray="4 4" />
-            <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 12 }} />
-            <YAxis
-              tick={{ fill: '#64748b', fontSize: 12 }}
-              tickFormatter={(value) => compactMoney(Number(value), currency)}
-              width={72}
-            />
-            <Tooltip
-              formatter={(value) => formatMoney(Number(value), currency)}
-              labelClassName="font-semibold"
-            />
-            <Legend />
-            <Line
-              dataKey="income"
-              dot={false}
-              name={es.transactions.income}
-              stroke="#006b5f"
-              strokeWidth={2}
-              type="monotone"
-            />
-            <Line
-              dataKey="expense"
-              dot={false}
-              name={es.transactions.expense}
-              stroke="#dc2626"
-              strokeWidth={2}
-              type="monotone"
-            />
-            <Line
-              dataKey="balance"
-              dot={{ fill: '#d6a23a', r: 4 }}
-              name={es.transactions.balance}
-              stroke="#006b5f"
-              strokeWidth={3}
-              type="monotone"
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
-  );
-}
-
-function BarChartPanel({
-  ariaLabel,
-  color,
-  currency,
-  rows,
-}: {
-  ariaLabel: string;
-  color: string;
-  currency: 'PEN' | 'USD';
-  rows: Array<{ amount: number; name: string }>;
-}) {
-  return (
-    <div
-      aria-label={ariaLabel}
-      className="mt-4 h-56 min-w-0 rounded-lg border border-slate-100 bg-slate-50 p-3"
-      role="img"
-    >
-      <ResponsiveContainer height="100%" width="100%">
-        <BarChart data={rows} layout="vertical" margin={{ bottom: 0, left: 8, right: 8, top: 0 }}>
-          <CartesianGrid horizontal={false} stroke="#e2e8f0" strokeDasharray="4 4" />
-          <XAxis
-            hide
-            tickFormatter={(value) => compactMoney(Number(value), currency)}
-            type="number"
-          />
-          <YAxis
-            dataKey="name"
-            tick={{ fill: '#64748b', fontSize: 12 }}
-            type="category"
-            width={96}
-          />
-          <Tooltip
-            formatter={(value) => formatMoney(Number(value), currency)}
-            labelClassName="font-semibold"
-          />
-          <Bar dataKey="amount" fill={color} name={es.transactions.amount} radius={[0, 6, 6, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
-  );
-}
-
-function AnalyticsSkeleton() {
-  return (
-    <div aria-label={es.analytics.loading} className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-      {[1, 2, 3, 4, 5, 6].map((item) => (
-        <div
-          className="h-28 animate-pulse rounded-lg bg-slate-200"
-          key={item}
-        />
-      ))}
-    </div>
-  );
-}
-
-function EmptyAnalyticsState() {
-  return (
-    <p className="rounded-md bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
-      {es.analytics.emptyState}
-    </p>
-  );
-}
-
-function MetricCard({
-  icon: Icon,
-  label,
-  tone = 'normal',
-  value,
-}: {
-  icon: typeof TrendingUp;
-  label: string;
-  tone?: 'normal' | 'danger';
-  value: string;
-}) {
-  return (
-    <article
-      aria-label={`${label}: ${value}`}
-      className="rounded-lg bg-white p-5 shadow-[0_10px_30px_rgba(13,148,136,0.08)]"
-    >
-      <div className="flex items-center gap-3">
-        <span className={tone === 'danger' ? 'text-red-700' : 'text-emerald-700'}>
-          <Icon size={21} />
-        </span>
-        <p className="text-sm font-semibold text-slate-500">{label}</p>
-      </div>
-      <p className="mt-3 text-2xl font-bold text-slate-950">{value}</p>
-    </article>
-  );
-}
-
 function buildComparisonRows(summary: AnalyticsSummary) {
   return [
     {
@@ -827,50 +554,6 @@ function buildComparisonRows(summary: AnalyticsSummary) {
       previous: Number(summary.comparison?.previousBalance ?? 0),
     },
   ];
-}
-
-function buildInsightRows(summary: AnalyticsSummary, currency: 'PEN' | 'USD') {
-  const balance = Number(summary.balance);
-  const expenseChange = Number(summary.comparison?.expenseChangePercent ?? 0);
-  const budgetUsage = Number(summary.budgetUsage?.usedPercent ?? 0);
-  const rows: Array<{ description: string; title: string }> = [
-    {
-      title: es.analytics.insightCashflow,
-      description:
-        balance >= 0
-          ? `Cerraste este rango con ${formatMoney(balance, currency)} a favor.`
-          : `Este rango quedó en ${formatMoney(Math.abs(balance), currency)} por debajo de tus ingresos.`,
-    },
-  ];
-
-  if (summary.comparison) {
-    rows.push({
-      title: es.analytics.insightComparison,
-      description:
-        expenseChange > 0
-          ? `Tus gastos subieron ${formatPercent(summary.comparison.expenseChangePercent)} frente a la referencia elegida.`
-          : `Tus gastos bajaron ${formatPercent(summary.comparison.expenseChangePercent)} frente a la referencia elegida.`,
-    });
-  }
-
-  rows.push({
-    title: es.analytics.insightFocus,
-    description: summary.topExpenseCategory
-      ? `La categoría con más gasto fue ${summary.topExpenseCategory.name}.`
-      : 'Aún no hay una categoría dominante con estos filtros.',
-  });
-
-  if (summary.budgetUsage) {
-    rows.push({
-      title: es.analytics.insightBudget,
-      description:
-        budgetUsage > 100
-          ? `El presupuesto ya pasó el límite: ${summary.budgetUsage.usedPercent}% usado.`
-          : `El presupuesto va en ${summary.budgetUsage.usedPercent}% usado.`,
-    });
-  }
-
-  return rows.slice(0, 4);
 }
 
 function getRangeIso(range: Exclude<RangePreset, 'CUSTOM'>) {
@@ -923,24 +606,6 @@ function toStartIso(dateKey: string) {
 
 function toEndIso(dateKey: string) {
   return new Date(`${dateKey}T23:59:59.999`).toISOString();
-}
-
-function formatPercent(value?: string) {
-  if (!value) {
-    return '0.00%';
-  }
-
-  const sign = Number(value) > 0 ? '+' : '';
-  return `${sign}${value}%`;
-}
-
-function compactMoney(value: number, currency: 'PEN' | 'USD') {
-  return new Intl.NumberFormat('es-PE', {
-    currency,
-    maximumFractionDigits: 0,
-    notation: 'compact',
-    style: 'currency',
-  }).format(value);
 }
 
 function pad(value: number) {
