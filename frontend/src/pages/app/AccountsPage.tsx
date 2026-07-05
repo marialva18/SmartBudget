@@ -175,7 +175,7 @@ export function AccountsPage() {
       ) : null}
 
       {accountsQuery.data && accountsQuery.data.length === 0 ? (
-        <div className="border-y border-slate-200 py-14 text-center">
+        <div className="rounded-xl border border-slate-200 bg-white py-14 text-center shadow-[0_10px_30px_rgba(13,148,136,0.08)]">
           <WalletCards className="mx-auto text-emerald-700" size={38} />
           <h2 className="mt-4 text-xl font-bold text-slate-950">
             {es.accounts.createFirstTitle}
@@ -183,6 +183,14 @@ export function AccountsPage() {
           <p className="mx-auto mt-2 max-w-md text-slate-600">
             {es.accounts.createFirstDescription}
           </p>
+          <button
+            className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-emerald-800 px-5 py-3 font-semibold text-white"
+            onClick={() => setIsPanelOpen(true)}
+            type="button"
+          >
+            <Plus size={18} />
+            {es.accounts.newAccount}
+          </button>
         </div>
       ) : null}
 

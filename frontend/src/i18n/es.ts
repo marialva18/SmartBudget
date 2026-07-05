@@ -1,4 +1,4 @@
-﻿export const es = {
+export const es = {
   brand: 'Qori',
   common: {
     cancel: 'Cancelar',
@@ -106,11 +106,12 @@
       PENDING_FUTURE: 'Pendiente',
     },
     balanceImpactHelp: {
-      AFFECTS_BALANCE: 'Incluido en el saldo actual.',
+      AFFECTS_BALANCE:
+        'Este movimiento modifica tu saldo actual.',
       ANALYSIS_ONLY:
-        'Incluido en análisis, no en saldo actual.',
+        'Este movimiento aparece en reportes, pero no modifica tu saldo actual.',
       PENDING_FUTURE:
-        'Se aplicará cuando corresponda.',
+        'Este movimiento está programado para una fecha futura y aún no afecta tu saldo actual.',
     },
     form: {
       createTitle: 'Registrar movimiento',
@@ -125,9 +126,9 @@
       selectAccount: 'Selecciona una cuenta',
       selectCategory: 'Selecciona una categoría',
       analysisOnlyNotice:
-        'Fecha anterior al inicio de control. Se guardará como solo análisis y no afectará el saldo actual.',
+        'Este movimiento aparece en reportes, pero no modifica tu saldo actual porque es anterior al inicio de control.',
       pendingFutureNotice:
-        'Fecha futura. El movimiento quedará pendiente y no afectará el saldo actual por ahora.',
+        'Este movimiento está programado para una fecha futura y aún no afecta tu saldo actual.',
       submitCreate: 'Guardar movimiento',
       submitEdit: 'Guardar cambios',
     },
@@ -160,7 +161,7 @@
     export: 'Exportar Excel',
     exportPdf: 'Exportar PDF',
     exporting: 'Exportando...',
-    exportError: 'No pudimos exportar tu análisis financiero.',
+    exportError: 'No pudimos generar el reporte. Inténtalo nuevamente.',
     totalIncome: 'Total ingresado',
     totalExpense: 'Total gastado',
     balance: 'Balance del periodo',
@@ -186,8 +187,9 @@
     accountChart: 'Gráfico de gastos por cuenta',
     impactNotice:
       'El balance del periodo respeta los filtros seleccionados. El saldo actual solo considera movimientos que afectan saldo.',
+    emptyTitle: 'Aún no hay análisis disponible',
     emptyState:
-      'Aún no hay movimientos suficientes para mostrar este análisis con los filtros actuales.',
+      'Cuando registres ingresos y gastos, Qori mostrará gráficos y conclusiones.',
     byCategory: 'Gastos por categoría',
     byAccount: 'Distribución por cuenta',
     topExpenses: 'Gastos más altos',
@@ -236,7 +238,7 @@
       'Confirma cada pendiente antes de registrarlo como movimiento real.',
     emptyTitle: 'Aún no tienes recurrencias',
     emptyDescription:
-      'Crea reglas para gastos o ingresos repetidos como sueldo, Netflix, pasajes o ahorros frecuentes.',
+      'Puedes programar gastos o ingresos frecuentes para recordarlos y confirmarlos cuando correspondan.',
     loadError: 'No pudimos cargar tus recurrencias.',
     saveError: 'No pudimos guardar la recurrencia.',
     statusError: 'No pudimos actualizar el estado de la recurrencia.',
@@ -339,7 +341,7 @@
     uncategorized: 'Sin categoría',
     emptyTitle: 'Aún no tienes presupuestos',
     emptyDescription:
-      'Crea un límite mensual para comparar tus gastos sin bloquear movimientos.',
+      'Crea un límite mensual para controlar mejor tus gastos.',
     loadError: 'No pudimos cargar tus presupuestos.',
     saveError: 'No se pudo guardar el presupuesto.',
     edit: (name: string) => `Editar ${name}`,
@@ -458,13 +460,13 @@
     section: 'Metas',
     title: 'Reserva dinero para tus objetivos',
     subtitle:
-      'El progreso se calcula desde reservas virtuales y no modifica tu saldo real.',
+      'El progreso se calcula con reservas y no modifica tu dinero real.',
     helpNote:
-      'Reservar reduce tu disponible, pero no mueve dinero fuera de la cuenta.',
+      'Reservar dinero no mueve dinero real; solo separa una parte de tu disponible para una meta.',
     newGoal: 'Nueva meta',
     emptyTitle: 'Aún no tienes metas',
     emptyDescription:
-      'Crea una meta para reservar dinero desde una o varias cuentas compatibles.',
+      'Crea una meta para separar dinero para un objetivo.',
     target: 'Objetivo',
     reserved: 'Reservado',
     remaining: 'Faltante',
@@ -536,14 +538,14 @@
     newGroup: 'Nuevo grupo',
     emptyTitle: 'Aún no tienes grupos',
     emptyDescription:
-      'Crea un grupo para invitar personas y preparar gastos compartidos.',
+      'Crea un grupo para dividir gastos con amigos, familia o compañeros.',
     loadError: 'No pudimos cargar tus grupos.',
     saveError: 'No se pudo guardar el grupo.',
     inviteError: 'No se pudo enviar la invitación.',
     acceptError: 'No se pudo aceptar la invitación.',
     declineError: 'No se pudo rechazar la invitación.',
     archiveError: 'No se pudo archivar el grupo.',
-    settlementError: 'No se pudo registrar el pago.',
+    settlementError: 'No pudimos registrar la liquidación. Revisa los datos e inténtalo otra vez.',
     groupCreated: 'Grupo creado correctamente.',
     inviteSentWithEmail:
       'Invitación creada y correo enviado. También aparecerá en Qori.',
@@ -561,19 +563,19 @@
     decline: 'Rechazar',
     archive: 'Archivar grupo',
     newExpense: 'Nuevo gasto',
-    newSettlement: 'Registrar pago',
+    newSettlement: 'Registrar liquidación',
     invitationBadge: 'Invitación pendiente',
     activeBadge: 'Activo',
     balances: 'Balances',
     recentExpenses: 'Gastos recientes',
-    recentSettlements: 'Pagos recientes',
+    recentSettlements: 'Liquidaciones recientes',
     paidBy: 'Pagó',
     splitBetween: 'Dividido entre',
     netPositive: 'Por cobrar',
     netNegative: 'Por pagar',
     netZero: 'En paz',
     noExpenses: 'Aún no hay gastos registrados en este grupo.',
-    noSettlements: 'Aún no hay pagos registrados en este grupo.',
+    noSettlements: 'Aún no hay liquidaciones registradas en este grupo.',
     splitModes: {
       EQUAL: 'Partes iguales',
       CUSTOM_AMOUNTS: 'Montos personalizados',
@@ -602,7 +604,9 @@
       description: 'Descripción',
       email: 'Correo del usuario',
       expenseTitle: (name: string) => `Nuevo gasto en ${name}`,
-      settlementTitle: (name: string) => `Registrar pago en ${name}`,
+      settlementTitle: (name: string) => `Registrar liquidación en ${name}`,
+      settlementHelp:
+        'Registra un pago entre integrantes. La cuenta elegida es la cuenta real donde entró o salió ese dinero.',
       expenseDescription: 'Descripción',
       amount: 'Monto',
       currency: 'Moneda',
@@ -658,10 +662,13 @@
     subtitle: (month: string) => `Este es tu resumen de ${month}.`,
     manageAccounts: 'Administrar cuentas',
     addMovement: 'Nuevo movimiento',
-    emptyTitle: 'Aún no tienes cuentas',
-    emptyDescription: 'Crea una para comenzar a calcular tus saldos.',
+    emptyTitle: 'Aún no hay suficiente información para mostrar tu resumen',
+    emptyDescription:
+      'Registra una cuenta y tu primer movimiento para empezar.',
     loadError: 'No pudimos cargar tu resumen.',
     realBalance: 'Saldo actual',
+    realBalanceHelp:
+      'Dinero real calculado desde tu saldo inicial y movimientos que afectan saldo.',
     reserved: 'Reservado',
     available: 'Disponible',
     monthActivity: 'Actividad del mes',
@@ -686,7 +693,7 @@
     newAccount: 'Nueva cuenta',
     createFirstTitle: 'Crea tu primera cuenta',
     createFirstDescription:
-      'Puede representar efectivo, una cuenta bancaria o una billetera digital.',
+      'Crea una cuenta para indicar dónde administras tu dinero.',
     loadError: 'No pudimos cargar tus cuentas.',
     saveError: 'No se pudo guardar la cuenta.',
     archivedTitle: 'Cuentas archivadas',
@@ -727,14 +734,14 @@
       currency: 'Moneda',
       openingBalance: '¿Cuánto tienes ahora?',
       openingBalanceHelp:
-        'Este monto será el saldo real inicial de esta cuenta.',
+        'Indica cuánto dinero tienes actualmente en esta cuenta.',
       balanceStartedAt: '¿Desde cuándo controlará Qori este saldo?',
       balanceStartToday: 'Desde hoy',
       balanceStartMonth: 'Desde el inicio de este mes',
       balanceStartCustom: 'Elegir otra fecha',
       balanceStartDate: 'Fecha de inicio',
       balanceStartedAtHelp:
-        'Los movimientos anteriores se guardarán para análisis, pero no cambiarán tu saldo actual.',
+        'Elige desde cuándo quieres que Qori empiece a controlar el saldo de esta cuenta. Los movimientos anteriores se guardarán para análisis, pero no cambiarán tu saldo actual.',
       submit: 'Guardar cuenta',
     },
     validation: {

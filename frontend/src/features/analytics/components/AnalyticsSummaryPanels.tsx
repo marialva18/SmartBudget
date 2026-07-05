@@ -143,9 +143,15 @@ export function AnalyticsSkeleton() {
 
 export function EmptyAnalyticsState() {
   return (
-    <p className="rounded-md bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
-      {es.analytics.emptyState}
-    </p>
+    <div className="rounded-md border border-slate-100 bg-slate-50 px-4 py-6 text-center">
+      <BarChart3 className="mx-auto text-emerald-700" size={26} />
+      <p className="mt-3 font-semibold text-slate-900">
+        {es.analytics.emptyTitle}
+      </p>
+      <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate-500">
+        {es.analytics.emptyState}
+      </p>
+    </div>
   );
 }
 

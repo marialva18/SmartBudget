@@ -1,4 +1,4 @@
-import { z } from 'zod';
+﻿import { z } from 'zod';
 import { es } from '../../../i18n/es';
 
 export const accountSchema = z.object({
@@ -39,3 +39,4 @@ export type BalanceAdjustmentFormValues = z.infer<
 >;
 
 export type AccountFormValues = z.infer<typeof accountSchema>;
+

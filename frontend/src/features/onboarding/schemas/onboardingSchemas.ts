@@ -22,6 +22,8 @@ export const onboardingAccountSchema = z.object({
     .number({ error: 'Ingresa un saldo inicial válido.' })
     .min(0, 'El saldo inicial no puede ser negativo.')
     .max(999_999_999_999, 'El saldo inicial es demasiado alto.'),
+  balanceStartOption: z.enum(['TODAY', 'MONTH_START', 'CUSTOM']),
+  balanceStartedAt: z.string().min(1, 'Selecciona una fecha de inicio válida.'),
 });
 
 export type PreferencesFormValues = z.infer<typeof preferencesSchema>;
@@ -34,3 +36,4 @@ export type OnboardingObjective =
   | 'CONTROL_EXPENSES'
   | 'ORGANIZE_INCOME'
   | 'CREATE_BUDGET';
+

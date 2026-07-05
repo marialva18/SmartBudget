@@ -166,10 +166,21 @@ export function GoalsPage() {
       ) : null}
 
       {goals.length === 0 && !goalsQuery.isLoading ? (
-        <div className="border-y border-slate-200 py-12 text-center">
+        <div className="rounded-xl border border-slate-200 bg-white py-12 text-center shadow-[0_10px_30px_rgba(13,148,136,0.08)]">
           <Flag className="mx-auto text-emerald-800" size={34} />
           <h2 className="mt-3 text-xl font-bold">{es.goals.emptyTitle}</h2>
           <p className="mt-2 text-slate-600">{es.goals.emptyDescription}</p>
+          <button
+            className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-emerald-800 px-5 py-3 font-semibold text-white"
+            onClick={() => {
+              setSelected(null);
+              setGoalPanelOpen(true);
+            }}
+            type="button"
+          >
+            <Plus size={18} />
+            {es.goals.newGoal}
+          </button>
         </div>
       ) : null}
 

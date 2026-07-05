@@ -298,13 +298,22 @@ export function RecurringPage() {
       ) : null}
 
       {!recurringQuery.isLoading && schedules.length === 0 ? (
-        <div className="rounded-lg border border-slate-200 bg-white p-10 text-center">
+        <div className="rounded-xl border border-slate-200 bg-white p-10 text-center shadow-[0_10px_30px_rgba(13,148,136,0.08)]">
+          <CalendarClock className="mx-auto text-emerald-800" size={34} />
           <h2 className="text-xl font-bold text-slate-950">
             {es.recurring.emptyTitle}
           </h2>
           <p className="mt-2 text-slate-600">
             {es.recurring.emptyDescription}
           </p>
+          <button
+            className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-emerald-800 px-5 py-3 font-semibold text-white"
+            onClick={() => setPanelOpen(true)}
+            type="button"
+          >
+            <Plus size={18} />
+            {es.recurring.newSchedule}
+          </button>
         </div>
       ) : null}
 

@@ -221,11 +221,22 @@ const highExpenseWarningRatio = highExpenseWarningPercent / 100;
       ) : null}
 
       {query.data?.items.length === 0 ? (
-        <div className="border-y border-slate-200 py-12 text-center">
+        <div className="rounded-xl border border-slate-200 bg-white py-12 text-center shadow-[0_10px_30px_rgba(13,148,136,0.08)]">
           <h2 className="text-xl font-bold">{es.transactions.emptyTitle}</h2>
           <p className="mt-2 text-slate-600">
             {es.transactions.emptyDescription}
           </p>
+          <button
+            className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-emerald-800 px-5 py-3 font-semibold text-white"
+            onClick={() => {
+              setSelected(null);
+              setPanelOpen(true);
+            }}
+            type="button"
+          >
+            <Plus size={18} />
+            {es.transactions.newTransaction}
+          </button>
         </div>
       ) : null}
 

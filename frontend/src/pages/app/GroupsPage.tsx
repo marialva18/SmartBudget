@@ -218,10 +218,18 @@ export function GroupsPage() {
       ) : null}
 
       {groups.length === 0 && !groupsQuery.isLoading ? (
-        <div className="border-y border-slate-200 py-12 text-center">
+        <div className="rounded-xl border border-slate-200 bg-white py-12 text-center shadow-[0_10px_30px_rgba(13,148,136,0.08)]">
           <Users className="mx-auto text-emerald-800" size={36} />
           <h2 className="mt-3 text-xl font-bold">{es.groups.emptyTitle}</h2>
           <p className="mt-2 text-slate-600">{es.groups.emptyDescription}</p>
+          <button
+            className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-emerald-800 px-5 py-3 font-semibold text-white"
+            onClick={() => setGroupPanelOpen(true)}
+            type="button"
+          >
+            <Plus size={18} />
+            {es.groups.newGroup}
+          </button>
         </div>
       ) : null}
 
@@ -864,6 +872,9 @@ function SettlementPanel({
         onSubmit={handleSubmit(onSubmit)}
       >
         <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
+          <p className="rounded-md bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-900">
+            {es.groups.form.settlementHelp}
+          </p>
           <Field
             label={es.groups.form.settlementFrom}
             error={errors.fromMemberId?.message}

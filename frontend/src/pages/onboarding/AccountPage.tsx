@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { Banknote, Landmark, WalletCards } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { createAccount } from '../../features/accounts/services/accountsApi';
@@ -33,6 +33,7 @@ export function AccountPage() {
     formState: { errors, isSubmitting },
     handleSubmit,
     register,
+    setValue,
   } = useForm<OnboardingAccountFormValues>({
     resolver: zodResolver(onboardingAccountSchema),
     defaultValues: {
@@ -40,9 +41,31 @@ export function AccountPage() {
       type: 'BANK',
       currency: 'PEN',
       openingBalance: 0,
+      balanceStartOption: 'TODAY',
+      balanceStartedAt: getTodayDateKey(),
     },
   });
   const currency = useWatch({ control, name: 'currency' });
+  const balanceStartOption = useWatch({
+    control,
+    name: 'balanceStartOption',
+  });
+
+  useEffect(() => {
+    if (balanceStartOption === 'TODAY') {
+      setValue('balanceStartedAt', getTodayDateKey(), {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+
+    if (balanceStartOption === 'MONTH_START') {
+      setValue('balanceStartedAt', getCurrentMonthStartKey(), {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+  }, [balanceStartOption, setValue]);
 
   async function onSubmit(values: OnboardingAccountFormValues) {
     setServerError('');
@@ -150,7 +173,7 @@ export function AccountPage() {
             {...register('openingBalance', { valueAsNumber: true })}
           />
           <span className="mt-1 block text-sm text-slate-500">
-            Lo usaremos como punto de partida para calcular tus saldos.
+            Indica cuánto dinero tienes actualmente en esta cuenta.
           </span>
           {errors.openingBalance ? (
             <span className="mt-1 block text-sm text-red-700">
@@ -158,6 +181,54 @@ export function AccountPage() {
             </span>
           ) : null}
         </label>
+        <fieldset>
+          <legend className="mb-2 text-xs font-semibold uppercase text-slate-600">
+            Fecha de inicio de control
+          </legend>
+          <div className="grid gap-2">
+            {([
+              ['TODAY', 'Desde hoy'],
+              ['MONTH_START', 'Desde el inicio de este mes'],
+              ['CUSTOM', 'Elegir otra fecha'],
+            ] as const).map(([value, label]) => (
+              <label
+                className="has-checked:border-emerald-700 has-checked:bg-emerald-50 cursor-pointer rounded-md border border-slate-200 px-4 py-3 font-semibold"
+                key={value}
+              >
+                {label}
+                <input
+                  className="sr-only"
+                  type="radio"
+                  value={value}
+                  {...register('balanceStartOption')}
+                />
+              </label>
+            ))}
+          </div>
+          {balanceStartOption === 'CUSTOM' ? (
+            <label className="mt-3 block">
+              <span className="mb-2 block text-xs font-semibold uppercase text-slate-600">
+                Elige la fecha
+              </span>
+              <input
+                className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700"
+                type="date"
+                {...register('balanceStartedAt')}
+              />
+            </label>
+          ) : null}
+          <span className="mt-2 block text-sm text-slate-500">
+            Elige desde cuándo quieres que Qori empiece a controlar el saldo de esta cuenta. Los movimientos anteriores a esta fecha se guardarán para análisis, pero no modificarán tu saldo actual.
+          </span>
+          {errors.balanceStartedAt ? (
+            <span className="mt-1 block text-sm text-red-700">
+              {errors.balanceStartedAt.message}
+            </span>
+          ) : null}
+        </fieldset>
+        <p className="rounded-md border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          Registra tu primer ingreso o gasto después de crear la cuenta para empezar a ver tu resumen financiero.
+        </p>
         {serverError ? <p className="text-center text-red-700">{serverError}</p> : null}
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-center">
           <button
@@ -200,3 +271,20 @@ function preventNegativeNumberInput(event: React.FormEvent<HTMLInputElement>) {
     event.currentTarget.value = '';
   }
 }
+
+function getTodayDateKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(
+    now.getDate(),
+  )}`;
+}
+
+function getCurrentMonthStartKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-01`;
+}
+
+function pad(value: number) {
+  return String(value).padStart(2, '0');
+}
+

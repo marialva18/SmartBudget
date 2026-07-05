@@ -121,6 +121,27 @@ export function DashboardPage() {
           </div>
         </section>
       ) : null}
+
+      {summary &&
+      summary.currencies.length > 0 &&
+      summary.recentTransactions.length === 0 ? (
+        <section className="rounded-xl border border-[#e0e3e5] bg-white p-8 text-center shadow-[0_10px_30px_rgba(13,148,136,0.08)]">
+          <ReceiptText className="mx-auto text-emerald-800" size={34} />
+          <h2 className="mt-3 text-xl font-bold text-[#191c1e]">
+            {es.transactions.emptyTitle}
+          </h2>
+          <p className="mx-auto mt-2 max-w-md text-[#3c4a46]">
+            {es.transactions.emptyDescription}
+          </p>
+          <Link
+            className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#006b5f] px-5 py-3 font-semibold text-white"
+            to="/app/transactions"
+          >
+            {es.dashboard.addMovement}
+            <ArrowRight size={18} />
+          </Link>
+        </section>
+      ) : null}
     </section>
   );
 }
@@ -263,6 +284,11 @@ function MetricCard({
       >
         {formatMoney(value, currency)}
       </p>
+      {label === es.dashboard.realBalance ? (
+        <p className="mt-2 text-xs leading-5 text-slate-500">
+          {es.dashboard.realBalanceHelp}
+        </p>
+      ) : null}
     </article>
   );
 }
