@@ -208,13 +208,14 @@ export class AnalyticsService {
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'Qori';
     workbook.created = new Date();
+    const filterRows = await this.getFilterRows(userId, query);
 
     const filtersSheet = workbook.addWorksheet('Filtros');
     filtersSheet.columns = [
       { header: 'Filtro', key: 'filter', width: 28 },
       { header: 'Valor', key: 'value', width: 34 },
     ];
-    filtersSheet.addRows(getFilterRows(query));
+    filtersSheet.addRows(filterRows);
 
     const summarySheet = workbook.addWorksheet('Resumen');
     summarySheet.columns = [
@@ -402,10 +403,11 @@ export class AnalyticsService {
       ]);
     const timezone = await this.getTimezone(userId);
     const today = toLocalDateKey(new Date(), timezone);
+    const filterRows = await this.getFilterRows(userId, query);
     const sections = [
       {
         title: 'Filtros aplicados',
-        rows: getFilterRows(query).map((row) => `${row.filter}: ${row.value}`),
+        rows: filterRows.map((row) => `${row.filter}: ${row.value}`),
       },
       {
         title: 'Resumen',
@@ -794,6 +796,41 @@ export class AnalyticsService {
     return profile?.timezone ?? DEFAULT_TIMEZONE;
   }
 
+  private async getFilterRows(userId: string, query: AnalyticsQueryDto) {
+    const [account, category, group] = await Promise.all([
+      query.accountId
+        ? this.prisma.account.findFirst({
+            where: { id: query.accountId, userId },
+            select: { name: true },
+          })
+        : null,
+      query.categoryId
+        ? this.prisma.category.findFirst({
+            where: {
+              id: query.categoryId,
+              OR: [{ userId }, { isSystem: true }],
+            },
+            select: { name: true },
+          })
+        : null,
+      query.groupId
+        ? this.prisma.financialGroup.findFirst({
+            where: {
+              id: query.groupId,
+              members: { some: { userId, status: 'ACTIVE' } },
+            },
+            select: { name: true },
+          })
+        : null,
+    ]);
+
+    return getFilterRows(query, {
+      accountName: account?.name,
+      categoryName: category?.name,
+      groupName: group?.name,
+    });
+  }
+
   private toTransactionResponse(
     transaction: Prisma.TransactionGetPayload<{
       include: typeof transactionInclude;
@@ -845,13 +882,31 @@ function percentChange(previous: Prisma.Decimal, current: Prisma.Decimal) {
   return current.minus(previous).dividedBy(previous).times(100).toFixed(2);
 }
 
-function getFilterRows(query: AnalyticsQueryDto) {
+function getFilterRows(
+  query: AnalyticsQueryDto,
+  labels: {
+    accountName?: string;
+    categoryName?: string;
+    groupName?: string;
+  },
+) {
   return [
     { filter: 'Desde', value: query.from?.toISOString() ?? 'Sin filtro' },
     { filter: 'Hasta', value: query.to?.toISOString() ?? 'Sin filtro' },
-    { filter: 'Cuenta', value: query.accountId ?? 'Todas' },
-    { filter: 'Categoría', value: query.categoryId ?? 'Todas' },
-    { filter: 'Grupo', value: query.groupId ?? 'Todos' },
+    {
+      filter: 'Cuenta',
+      value:
+        labels.accountName ?? (query.accountId ? 'No disponible' : 'Todas'),
+    },
+    {
+      filter: 'Categoría',
+      value:
+        labels.categoryName ?? (query.categoryId ? 'No disponible' : 'Todas'),
+    },
+    {
+      filter: 'Grupo',
+      value: labels.groupName ?? (query.groupId ? 'No disponible' : 'Todos'),
+    },
     { filter: 'Tipo', value: formatTransactionType(query.type) },
     { filter: 'Moneda', value: query.currency ?? 'Todas' },
     { filter: 'Comparación', value: formatComparisonMode(query.compareWith) },

@@ -13,6 +13,7 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { HelpDisclosure } from '../../components/ui/HelpDisclosure';
 import {
   getAccounts,
   type Account,
@@ -188,7 +189,13 @@ export function GroupsPage() {
           </p>
           <h1 className="mt-1 text-3xl font-bold">{es.groups.title}</h1>
           <p className="mt-2 text-slate-600">{es.groups.subtitle}</p>
-          <p className="mt-1 text-sm text-slate-500">{es.groups.helpNote}</p>
+          <div className="mt-3">
+            <HelpDisclosure label="Cómo funcionan" title={es.groups.title}>
+              <p className="text-sm leading-6 text-slate-600">
+                {es.groups.helpNote}
+              </p>
+            </HelpDisclosure>
+          </div>
         </div>
         <button
           className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-emerald-800 px-5 py-3 font-semibold text-white"
@@ -872,9 +879,11 @@ function SettlementPanel({
         onSubmit={handleSubmit(onSubmit)}
       >
         <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
-          <p className="rounded-md bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-900">
-            {es.groups.form.settlementHelp}
-          </p>
+          <HelpDisclosure label="Qué es una liquidación">
+            <p className="text-sm leading-6 text-slate-600">
+              {es.groups.form.settlementHelp}
+            </p>
+          </HelpDisclosure>
           <Field
             label={es.groups.form.settlementFrom}
             error={errors.fromMemberId?.message}

@@ -187,6 +187,20 @@ export const es = {
     accountChart: 'Gráfico de gastos por cuenta',
     impactNotice:
       'El balance del periodo respeta los filtros seleccionados. El saldo actual solo considera movimientos que afectan saldo.',
+    activeFilters: 'Estás viendo',
+    activeFiltersExportNote:
+      'El Excel y el PDF se generarán con estos mismos filtros.',
+    guideTitle: 'Cómo leer este análisis',
+    guideItems: {
+      periodBalance:
+        'Balance del periodo: ingresos menos gastos dentro del rango elegido.',
+      comparison:
+        'Comparación: contrasta el rango actual con la referencia seleccionada.',
+      impact:
+        'Impacto en saldo: permite separar movimientos reales, históricos o futuros.',
+      export:
+        'Exportación: descarga el reporte con los filtros que ves en pantalla.',
+    },
     emptyTitle: 'Aún no hay análisis disponible',
     emptyState:
       'Cuando registres ingresos y gastos, Qori mostrará gráficos y conclusiones.',

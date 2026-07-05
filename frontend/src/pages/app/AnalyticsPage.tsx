@@ -23,6 +23,7 @@ import {
   BudgetUsagePanel,
   EmptyAnalyticsState,
 } from '../../features/analytics/components/AnalyticsSummaryPanels';
+import { HelpDisclosure } from '../../components/ui/HelpDisclosure';
 import { getAccounts } from '../../features/accounts/services/accountsApi';
 import { getCategories } from '../../features/categories/categoriesApi';
 import { useFinanceScope } from '../../features/finance-scope/financeScope';
@@ -161,6 +162,25 @@ export function AnalyticsPage() {
   const comparisonRows = summaryQuery.data?.comparison
     ? buildComparisonRows(summaryQuery.data)
     : [];
+  const activeFilterLabels = buildActiveFilterLabels({
+    accountName:
+      (accountsQuery.data ?? []).find((account) => account.id === accountId)
+        ?.name ?? '',
+    categoryName:
+      (categoriesQuery.data ?? []).find(
+        (category) => category.id === categoryId,
+      )?.name ?? '',
+    compareWith,
+    customFrom,
+    customTo,
+    groupName:
+      (groupsQuery.data ?? []).find((group) => group.id === groupId)?.name ??
+      '',
+    impact,
+    range,
+    scope,
+    type,
+  });
 
   async function handleExport(format: 'xlsx' | 'pdf') {
     setExportError('');
@@ -361,9 +381,42 @@ export function AnalyticsPage() {
         </select>
       </section>
 
-      <p className="rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-        {es.analytics.impactNotice}
-      </p>
+      <section className="rounded-lg border border-emerald-100 bg-white p-4 shadow-[0_10px_30px_rgba(13,148,136,0.08)]">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <h2 className="font-semibold text-slate-950">
+              {es.analytics.activeFilters}
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              {es.analytics.activeFiltersExportNote}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {activeFilterLabels.map((label) => (
+              <span
+                className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm font-semibold text-slate-700"
+                key={label}
+              >
+                {label}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div>
+        <HelpDisclosure
+          label="Cómo leer el análisis"
+          title={es.analytics.guideTitle}
+        >
+          <div className="space-y-3 text-sm leading-6 text-slate-600">
+            <p>{es.analytics.impactNotice}</p>
+            {Object.values(es.analytics.guideItems).map((item) => (
+              <p key={item}>{item}</p>
+            ))}
+          </div>
+        </HelpDisclosure>
+      </div>
 
       {summaryQuery.isError ? (
         <p className="border-y border-red-200 bg-red-50 p-4 text-red-800">
@@ -554,6 +607,84 @@ function buildComparisonRows(summary: AnalyticsSummary) {
       previous: Number(summary.comparison?.previousBalance ?? 0),
     },
   ];
+}
+
+function buildActiveFilterLabels({
+  accountName,
+  categoryName,
+  compareWith,
+  customFrom,
+  customTo,
+  groupName,
+  impact,
+  range,
+  scope,
+  type,
+}: {
+  accountName: string;
+  categoryName: string;
+  compareWith: CompareWith;
+  customFrom: string;
+  customTo: string;
+  groupName: string;
+  impact: '' | 'AFFECTS_BALANCE' | 'ANALYSIS_ONLY' | 'PENDING_FUTURE';
+  range: RangePreset;
+  scope: 'ALL' | 'PEN' | 'USD';
+  type: '' | 'INCOME' | 'EXPENSE';
+}) {
+  return [
+    getRangeLabel(range, customFrom, customTo),
+    scope === 'ALL' ? 'Todas las monedas' : `Moneda ${scope}`,
+    accountName ? `Cuenta: ${accountName}` : es.analytics.filters.allAccounts,
+    categoryName
+      ? `Categoría: ${categoryName}`
+      : es.analytics.filters.allCategories,
+    groupName ? `Grupo: ${groupName}` : es.analytics.filters.allGroups,
+    type ? (type === 'INCOME' ? es.transactions.income : es.transactions.expense) : es.analytics.filters.allTypes,
+    impact
+      ? es.transactions.balanceImpactStatus[impact]
+      : es.analytics.filters.allImpact,
+    getCompareLabel(compareWith),
+  ];
+}
+
+function getRangeLabel(
+  range: RangePreset,
+  customFrom: string,
+  customTo: string,
+) {
+  if (range === 'CUSTOM') {
+    return `${formatDateLabel(customFrom)} - ${formatDateLabel(customTo)}`;
+  }
+
+  const labels: Record<Exclude<RangePreset, 'CUSTOM'>, string> = {
+    MONTH: es.analytics.filters.month,
+    PREVIOUS_MONTH: es.analytics.filters.previousMonth,
+    THREE_MONTHS: es.analytics.filters.threeMonths,
+    TODAY: es.analytics.filters.today,
+    WEEK: es.analytics.filters.week,
+  };
+
+  return labels[range];
+}
+
+function getCompareLabel(compareWith: CompareWith) {
+  const labels: Record<CompareWith, string> = {
+    NONE: es.analytics.filters.noComparison,
+    PREVIOUS_MONTH: es.analytics.filters.comparePreviousMonth,
+    PREVIOUS_PERIOD: es.analytics.filters.previousPeriod,
+    PREVIOUS_YEAR: es.analytics.filters.comparePreviousYear,
+  };
+
+  return labels[compareWith];
+}
+
+function formatDateLabel(dateKey: string) {
+  return new Intl.DateTimeFormat('es-PE', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(`${dateKey}T00:00:00`));
 }
 
 function getRangeIso(range: Exclude<RangePreset, 'CUSTOM'>) {

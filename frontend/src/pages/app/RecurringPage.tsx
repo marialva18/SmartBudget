@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { HelpDisclosure } from '../../components/ui/HelpDisclosure';
 import { getAccounts } from '../../features/accounts/services/accountsApi';
 import { getCategories } from '../../features/categories/categoriesApi';
 import { RecurringScheduleFormPanel } from '../../features/recurring/components/RecurringScheduleFormPanel';
@@ -148,9 +149,13 @@ export function RecurringPage() {
           <p className="mt-2 max-w-3xl text-slate-600">
             {es.recurring.subtitle}
           </p>
-          <p className="mt-1 text-sm text-slate-500">
-            {es.recurring.helpNote}
-          </p>
+          <div className="mt-3">
+            <HelpDisclosure label="Cómo funcionan" title={es.recurring.title}>
+              <p className="text-sm leading-6 text-slate-600">
+                {es.recurring.helpNote}
+              </p>
+            </HelpDisclosure>
+          </div>
         </div>
 
         <button
