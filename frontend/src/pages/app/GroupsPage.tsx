@@ -188,6 +188,7 @@ export function GroupsPage() {
           </p>
           <h1 className="mt-1 text-3xl font-bold">{es.groups.title}</h1>
           <p className="mt-2 text-slate-600">{es.groups.subtitle}</p>
+          <p className="mt-1 text-sm text-slate-500">{es.groups.helpNote}</p>
         </div>
         <button
           className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-emerald-800 px-5 py-3 font-semibold text-white"

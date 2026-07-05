@@ -4,6 +4,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { DEFAULT_TIMEZONE } from '../../common/dates/local-date';
+import { getBalanceImpactStatus } from '../../common/finance/balance-impact';
 import { es } from '../../common/i18n/es';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { CreateRecurringScheduleDto } from './dto/create-recurring-schedule.dto';
@@ -151,6 +153,7 @@ export class RecurringService {
   ) {
     const schedule = await this.findDueSchedule(userId, scheduleId);
     const scheduledFor = toDateOnly(schedule.nextDueOn);
+    const timezone = await this.getUserTimezone(userId);
 
     const result = await this.prisma.$transaction(async (transaction) => {
       const occurrence = await transaction.recurringOccurrence.upsert({
@@ -188,10 +191,11 @@ export class RecurringService {
             schedule.category?.name ??
             'Movimiento recurrente',
           occurredAt: scheduledFor,
-          balanceImpactStatus: getBalanceImpactStatus(
-            scheduledFor,
-            schedule.account.balanceStartedAt,
-          ),
+          balanceImpactStatus: getBalanceImpactStatus({
+            occurredAt: scheduledFor,
+            balanceStartedAt: schedule.account.balanceStartedAt,
+            timezone,
+          }),
           source: 'RECURRING',
           idempotencyKey: `recurring:${schedule.id}:${toDateKey(scheduledFor)}`,
         },
@@ -580,6 +584,15 @@ export class RecurringService {
     };
   }
 
+  private async getUserTimezone(userId: string) {
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+      select: { timezone: true },
+    });
+
+    return profile?.timezone ?? DEFAULT_TIMEZONE;
+  }
+
   private toResponse(schedule: {
     id: string;
     operationType: string;
@@ -694,16 +707,3 @@ function addMonthsClamped(value: Date, monthsToAdd: number) {
   return targetMonthStart;
 }
 
-function getBalanceImpactStatus(occurredAt: Date, balanceStartedAt: Date) {
-  const now = new Date();
-
-  if (occurredAt.getTime() > now.getTime()) {
-    return 'PENDING_FUTURE';
-  }
-
-  if (occurredAt.getTime() < balanceStartedAt.getTime()) {
-    return 'ANALYSIS_ONLY';
-  }
-
-  return 'AFFECTS_BALANCE';
-}

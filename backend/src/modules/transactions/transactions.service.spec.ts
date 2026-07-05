@@ -8,6 +8,7 @@ describe('TransactionsService', () => {
   const prisma = {
     account: { findFirst: jest.fn() },
     category: { findFirst: jest.fn() },
+    profile: { findUnique: jest.fn() },
     transaction: {
       findFirst: jest.fn(),
       update: jest.fn(),
@@ -27,6 +28,7 @@ describe('TransactionsService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    prisma.profile.findUnique.mockResolvedValue({ timezone: 'America/Lima' });
     service = new TransactionsService(prisma as unknown as PrismaService);
   });
 
@@ -130,7 +132,7 @@ describe('TransactionsService', () => {
     prisma.account.findFirst.mockResolvedValue({
       id: 'account-id',
       currency: 'PEN',
-      balanceStartedAt: new Date('2026-06-10T00:00:00.000Z'),
+      balanceStartedAt: new Date('2026-06-10T05:00:00.000Z'),
     });
     prisma.category.findFirst.mockResolvedValue({ id: 'category-id' });
     const movement = {
@@ -142,7 +144,7 @@ describe('TransactionsService', () => {
       amount: new Prisma.Decimal(25),
       currency: 'PEN',
       description: 'Pasaje',
-      occurredAt: new Date('2026-06-09T12:00:00.000Z'),
+      occurredAt: new Date('2026-06-09T04:59:00.000Z'),
       source: 'MANUAL_WEB',
       idempotencyKey: 'key',
       balanceImpactStatus: 'ANALYSIS_ONLY',
@@ -164,7 +166,7 @@ describe('TransactionsService', () => {
       amount: 25,
       accountId: 'account-id',
       categoryId: 'category-id',
-      occurredAt: new Date('2026-06-09T12:00:00.000Z'),
+      occurredAt: new Date('2026-06-09T04:59:00.000Z'),
       description: 'Pasaje',
     });
 

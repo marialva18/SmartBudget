@@ -40,6 +40,7 @@ export function TransactionFormPanel({
   });
   const type = useWatch({ control, name: 'type' });
   const accountId = useWatch({ control, name: 'accountId' });
+  const occurredAt = useWatch({ control, name: 'occurredAt' });
   const accountsQuery = useQuery({
     queryKey: ['accounts'],
     queryFn: getAccounts,
@@ -51,6 +52,7 @@ export function TransactionFormPanel({
   const selectedAccount = accountsQuery.data?.find(
     (account) => account.id === accountId,
   );
+  const impactPreview = getImpactPreview(selectedAccount, occurredAt);
 
   useEffect(() => {
     reset(getDefaults(transaction));
@@ -110,7 +112,7 @@ export function TransactionFormPanel({
                 <span className="font-bold text-emerald-800">
                   {selectedAccount
                     ? es.accounts.currencies[selectedAccount.currency].symbol
-                    : '—'}
+                    : '-'}
                 </span>
                 <input
                   className="min-w-0 flex-1 bg-transparent px-3 py-4 text-2xl font-bold outline-none"
@@ -137,7 +139,7 @@ export function TransactionFormPanel({
                   )
                   .map((account) => (
                     <option key={account.id} value={account.id}>
-                      {account.name} · {account.currency}
+                      {account.name} - {account.currency}
                     </option>
                   ))}
               </select>
@@ -163,6 +165,13 @@ export function TransactionFormPanel({
                 type="datetime-local"
                 {...register('occurredAt')}
               />
+              {impactPreview ? (
+                <p className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                  {impactPreview === 'ANALYSIS_ONLY'
+                    ? es.transactions.form.analysisOnlyNotice
+                    : es.transactions.form.pendingFutureNotice}
+                </p>
+              ) : null}
             </Field>
 
             <Field label={es.transactions.form.description}>
@@ -244,4 +253,34 @@ function toLocalInput(value: string) {
   const date = new Date(value);
   const offset = date.getTimezoneOffset() * 60_000;
   return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+}
+
+function getImpactPreview(
+  account: { balanceStartedAt: string } | undefined,
+  occurredAt: string,
+) {
+  if (!account || !occurredAt) {
+    return null;
+  }
+
+  const occurredDateKey = occurredAt.slice(0, 10);
+  const balanceStartedDateKey = account.balanceStartedAt.slice(0, 10);
+  const todayDateKey = toDateKey(new Date());
+
+  if (occurredDateKey > todayDateKey) {
+    return 'PENDING_FUTURE';
+  }
+
+  if (occurredDateKey < balanceStartedDateKey) {
+    return 'ANALYSIS_ONLY';
+  }
+
+  return null;
+}
+
+function toDateKey(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+    2,
+    '0',
+  )}-${String(date.getDate()).padStart(2, '0')}`;
 }

@@ -44,7 +44,7 @@ export class AnalyticsService {
     const dayTotals = await this.sumExpensesByDay(userId, transactions);
     const [comparison, budgetUsage] = await Promise.all([
       this.getPeriodComparison(userId, query, totals),
-      this.getBudgetUsage(userId, query, totals.expense),
+      this.getBudgetUsage(userId, query),
     ]);
 
     return {
@@ -208,6 +208,13 @@ export class AnalyticsService {
     workbook.creator = 'Qori';
     workbook.created = new Date();
 
+    const filtersSheet = workbook.addWorksheet('Filtros');
+    filtersSheet.columns = [
+      { header: 'Filtro', key: 'filter', width: 28 },
+      { header: 'Valor', key: 'value', width: 34 },
+    ];
+    filtersSheet.addRows(getFilterRows(query));
+
     const summarySheet = workbook.addWorksheet('Resumen');
     summarySheet.columns = [
       { header: 'Indicador', key: 'metric', width: 28 },
@@ -272,7 +279,7 @@ export class AnalyticsService {
     accountSheet.addRows(
       accounts.map((row) => ({
         account: row.account?.name ?? 'Cuenta no disponible',
-        type: row.type,
+        type: formatTransactionType(row.type),
         currency: row.currency,
         amount: row.amount,
         count: row.count,
@@ -312,7 +319,9 @@ export class AnalyticsService {
         category: row.category?.name ?? 'Sin categoría',
         currency: row.currency,
         amount: row.amount,
-        balanceImpactStatus: row.balanceImpactStatus,
+        balanceImpactStatus: formatBalanceImpactStatus(
+          row.balanceImpactStatus,
+        ),
       })),
     );
 
@@ -330,13 +339,15 @@ export class AnalyticsService {
     transactionSheet.addRows(
       transactions.map((row) => ({
         occurredAt: row.occurredAt.toISOString(),
-        type: row.type,
+        type: formatTransactionType(row.type),
         description: row.description,
         account: row.account.name,
         category: row.category?.name ?? 'Sin categoría',
         currency: row.currency,
         amount: row.amount,
-        balanceImpactStatus: row.balanceImpactStatus,
+        balanceImpactStatus: formatBalanceImpactStatus(
+          row.balanceImpactStatus,
+        ),
       })),
     );
 
@@ -432,11 +443,25 @@ export class AnalyticsService {
   }
 
   private async getGroupExpenses(userId: string, query: AnalyticsQueryDto) {
+    if (query.type === 'INCOME' || query.categoryId) {
+      return [];
+    }
+
     return this.prisma.groupExpense.findMany({
       where: {
         deletedAt: null,
         groupId: query.groupId,
         currency: query.currency,
+        personalTransaction:
+          query.accountId || query.balanceImpactStatus
+            ? {
+                is: {
+                  accountId: query.accountId,
+                  balanceImpactStatus: query.balanceImpactStatus,
+                  deletedAt: null,
+                },
+              }
+            : undefined,
         occurredAt:
           query.from || query.to
             ? {
@@ -530,7 +555,6 @@ export class AnalyticsService {
   private async getBudgetUsage(
     userId: string,
     query: AnalyticsQueryDto,
-    expense: Prisma.Decimal,
   ) {
     if (!query.currency || !query.from) {
       return null;
@@ -548,10 +572,30 @@ export class AnalyticsService {
       },
       select: { amount: true },
     });
+    const expenseResult = await this.prisma.transaction.aggregate({
+      where: {
+        userId,
+        deletedAt: null,
+        type: 'EXPENSE',
+        currency: query.currency,
+        categoryId: query.categoryId,
+        accountId: query.accountId,
+        balanceImpactStatus: 'AFFECTS_BALANCE',
+        occurredAt:
+          query.from || query.to
+            ? {
+                gte: query.from,
+                lte: query.to,
+              }
+            : undefined,
+      },
+      _sum: { amount: true },
+    });
     const plannedAmount = budgets.reduce(
       (total, budget) => total.plus(budget.amount),
       new Prisma.Decimal(0),
     );
+    const usedAmount = expenseResult._sum.amount ?? new Prisma.Decimal(0);
 
     if (plannedAmount.equals(0)) {
       return null;
@@ -559,8 +603,8 @@ export class AnalyticsService {
 
     return {
       plannedAmount: plannedAmount.toFixed(4),
-      usedAmount: expense.toFixed(4),
-      usedPercent: expense.dividedBy(plannedAmount).times(100).toFixed(2),
+      usedAmount: usedAmount.toFixed(4),
+      usedPercent: usedAmount.dividedBy(plannedAmount).times(100).toFixed(2),
       currency: query.currency,
     };
   }
@@ -715,4 +759,48 @@ function percentChange(previous: Prisma.Decimal, current: Prisma.Decimal) {
   }
 
   return current.minus(previous).dividedBy(previous).times(100).toFixed(2);
+}
+
+function getFilterRows(query: AnalyticsQueryDto) {
+  return [
+    { filter: 'Desde', value: query.from?.toISOString() ?? 'Sin filtro' },
+    { filter: 'Hasta', value: query.to?.toISOString() ?? 'Sin filtro' },
+    { filter: 'Cuenta', value: query.accountId ?? 'Todas' },
+    { filter: 'Categoría', value: query.categoryId ?? 'Todas' },
+    { filter: 'Grupo', value: query.groupId ?? 'Todos' },
+    { filter: 'Tipo', value: formatTransactionType(query.type) },
+    { filter: 'Moneda', value: query.currency ?? 'Todas' },
+    {
+      filter: 'Impacto en saldo',
+      value: formatBalanceImpactStatus(query.balanceImpactStatus),
+    },
+  ];
+}
+
+function formatTransactionType(type?: string) {
+  if (type === 'INCOME') {
+    return 'Ingreso';
+  }
+
+  if (type === 'EXPENSE') {
+    return 'Gasto';
+  }
+
+  return 'Ingresos y gastos';
+}
+
+function formatBalanceImpactStatus(status?: string) {
+  if (status === 'AFFECTS_BALANCE') {
+    return 'Afecta saldo';
+  }
+
+  if (status === 'ANALYSIS_ONLY') {
+    return 'Solo análisis';
+  }
+
+  if (status === 'PENDING_FUTURE') {
+    return 'Pendiente';
+  }
+
+  return 'Todos';
 }

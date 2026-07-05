@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import {
+  DEFAULT_TIMEZONE,
+  getLocalMonthStartKey,
+  getLocalMonthUtcRange,
+} from '../../common/dates/local-date';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { DashboardSummaryDto } from './dto/dashboard-summary.dto';
 
@@ -10,8 +15,11 @@ export class DashboardService {
   constructor(private readonly prisma: PrismaService) {}
 
   async summary(userId: string, query: DashboardSummaryDto) {
-    const monthStart = parseMonthStart(query.monthStart);
-    const nextMonthStart = addMonths(monthStart, 1);
+    const timezone = await this.getUserTimezone(userId);
+    const monthStartKey =
+      query.monthStart ?? getLocalMonthStartKey(new Date(), timezone);
+    const monthRange = getLocalMonthUtcRange(monthStartKey, timezone);
+    const budgetMonthStart = new Date(`${monthStartKey}T00:00:00.000Z`);
     const currencyFilter = query.currency;
 
     const [
@@ -51,7 +59,7 @@ export class DashboardService {
           userId,
           deletedAt: null,
           currency: currencyFilter,
-          occurredAt: { gte: monthStart, lt: nextMonthStart },
+          occurredAt: { gte: monthRange.from, lt: monthRange.to },
         },
         _sum: { amount: true },
       }),
@@ -59,7 +67,7 @@ export class DashboardService {
         where: {
           userId,
           currency: currencyFilter,
-          monthStart,
+          monthStart: budgetMonthStart,
         },
         select: {
           categoryId: true,
@@ -106,7 +114,7 @@ export class DashboardService {
     ]);
 
     return {
-      monthStart: formatMonthStart(monthStart),
+      monthStart: monthStartKey,
       currencies: currencies.map((currency) => {
         const realBalance = getRealBalance(accountRows, currency);
         const monthlyIncome = getMonthlyAmount(
@@ -162,10 +170,20 @@ export class DashboardService {
         currency: transaction.currency,
         description: transaction.description,
         occurredAt: transaction.occurredAt,
+        balanceImpactStatus: transaction.balanceImpactStatus,
         account: transaction.account,
         category: transaction.category,
       })),
     };
+  }
+
+  private async getUserTimezone(userId: string) {
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+      select: { timezone: true },
+    });
+
+    return profile?.timezone ?? DEFAULT_TIMEZONE;
   }
 }
 
@@ -244,22 +262,4 @@ function getReservedAmount(
   return rows
     .filter((row) => row.account.currency === currency)
     .reduce((total, row) => total.plus(row.amount), new Prisma.Decimal(0));
-}
-
-function parseMonthStart(value?: string) {
-  if (!value) {
-    const now = new Date();
-    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-  }
-  return new Date(`${value}T00:00:00.000Z`);
-}
-
-function addMonths(date: Date, months: number) {
-  return new Date(
-    Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + months, 1),
-  );
-}
-
-function formatMonthStart(date: Date) {
-  return date.toISOString().slice(0, 10);
 }

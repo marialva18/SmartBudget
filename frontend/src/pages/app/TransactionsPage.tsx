@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { BalanceImpactBadge } from '../../components/finance/BalanceImpactBadge';
 import {
   getAccounts,
   type Account,
@@ -384,8 +385,8 @@ function TransactionRow({
               ? es.transactions.expense
               : es.accounts.form.openingBalance}
         </span>
-        <span className="mt-1 block text-xs font-semibold text-slate-500">
-          {es.transactions.balanceImpactStatus[transaction.balanceImpactStatus]}
+        <span className="mt-2 block">
+          <BalanceImpactBadge status={transaction.balanceImpactStatus} />
         </span>
       </td>
       <td

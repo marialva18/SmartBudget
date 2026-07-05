@@ -43,6 +43,14 @@ export type AnalyticsCategoryRow = {
   count: number;
 };
 
+export type AnalyticsAccountRow = {
+  account: { id: string; name: string; currency: 'PEN' | 'USD' } | null;
+  currency: 'PEN' | 'USD';
+  type: 'INCOME' | 'EXPENSE';
+  amount: string;
+  count: number;
+};
+
 export type AnalyticsTimelineRow = {
   date: string;
   income: string;
@@ -70,6 +78,12 @@ export function getAnalyticsSummary(filters: AnalyticsFilters) {
 export function getAnalyticsByCategory(filters: AnalyticsFilters) {
   return apiRequest<AnalyticsCategoryRow[]>(
     `/analytics/by-category?${params(filters)}`,
+  );
+}
+
+export function getAnalyticsByAccount(filters: AnalyticsFilters) {
+  return apiRequest<AnalyticsAccountRow[]>(
+    `/analytics/by-account?${params(filters)}`,
   );
 }
 

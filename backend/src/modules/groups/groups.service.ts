@@ -6,6 +6,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { DEFAULT_TIMEZONE } from '../../common/dates/local-date';
+import { getBalanceImpactStatus } from '../../common/finance/balance-impact';
 import { es } from '../../common/i18n/es';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
@@ -468,6 +470,7 @@ export class GroupsService {
     }
 
     const amount = new Prisma.Decimal(dto.amount);
+    const timezone = await this.getUserTimezone(userId);
     const splits = this.buildSplits(amount, dto, activeMemberIds);
     const participantIds = splits.map((split) => split.memberId);
     const expense = await this.prisma.$transaction(async (transaction) => {
@@ -482,10 +485,11 @@ export class GroupsService {
           currency: account.currency,
           description: dto.description.trim(),
           occurredAt,
-          balanceImpactStatus: getBalanceImpactStatus(
+          balanceImpactStatus: getBalanceImpactStatus({
             occurredAt,
-            account.balanceStartedAt,
-          ),
+            balanceStartedAt: account.balanceStartedAt,
+            timezone,
+          }),
           source: 'GROUP_EXPENSE',
         },
       });
@@ -590,6 +594,7 @@ export class GroupsService {
     }
 
     const amount = new Prisma.Decimal(dto.amount);
+    const timezone = await this.getUserTimezone(userId);
     const settlement = await this.prisma.$transaction(async (transaction) => {
       const settledAt = dto.settledAt ? new Date(dto.settledAt) : new Date();
       const movementType =
@@ -604,10 +609,11 @@ export class GroupsService {
           currency: account.currency,
           description: dto.note?.trim() || 'Liquidación de grupo',
           occurredAt: settledAt,
-          balanceImpactStatus: getBalanceImpactStatus(
-            settledAt,
-            account.balanceStartedAt,
-          ),
+          balanceImpactStatus: getBalanceImpactStatus({
+            occurredAt: settledAt,
+            balanceStartedAt: account.balanceStartedAt,
+            timezone,
+          }),
           source: 'GROUP_SETTLEMENT',
         },
       });
@@ -963,18 +969,13 @@ export class GroupsService {
       archivedAt: group.archivedAt?.toISOString() ?? null,
     };
   }
-}
 
-function getBalanceImpactStatus(occurredAt: Date, balanceStartedAt: Date) {
-  const now = new Date();
+  private async getUserTimezone(userId: string) {
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+      select: { timezone: true },
+    });
 
-  if (occurredAt.getTime() > now.getTime()) {
-    return 'PENDING_FUTURE';
+    return profile?.timezone ?? DEFAULT_TIMEZONE;
   }
-
-  if (occurredAt.getTime() < balanceStartedAt.getTime()) {
-    return 'ANALYSIS_ONLY';
-  }
-
-  return 'AFFECTS_BALANCE';
 }

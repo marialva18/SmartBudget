@@ -11,6 +11,7 @@ import {
   WalletCards,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { BalanceImpactBadge } from '../../components/finance/BalanceImpactBadge';
 import {
   getDashboardSummary,
   type DashboardCurrencySummary,
@@ -349,6 +350,9 @@ function TransactionRow({
         <p className="mt-1 text-sm text-slate-500">
           {transaction.account.name}
           {transaction.category ? ` - ${transaction.category.name}` : ''}
+        </p>
+        <p className="mt-2">
+          <BalanceImpactBadge status={transaction.balanceImpactStatus} />
         </p>
       </div>
       <div className="sm:text-right">

@@ -17,6 +17,7 @@ type CalendarTransaction = {
   currency: string;
   description: string | null;
   occurredAt: Date;
+  balanceImpactStatus: string;
   source: string;
   account: {
     id: string;
@@ -127,6 +128,7 @@ export class CalendarService {
         currency: transaction.currency,
         description: transaction.description,
         occurredAt: transaction.occurredAt,
+        balanceImpactStatus: transaction.balanceImpactStatus,
         source: transaction.source,
         account: transaction.account,
         category: transaction.category,

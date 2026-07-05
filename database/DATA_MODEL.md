@@ -11,6 +11,9 @@
   modifican el saldo real.
 - Los movimientos futuros quedan pendientes y no modifican el saldo real hasta
   que se confirmen como movimientos que afectan saldo.
+- La clasificacion de impacto de saldo se compara por dia local usando la zona
+  horaria del perfil del usuario. Esto evita que un movimiento del mismo dia
+  local se clasifique mal por diferencias UTC.
 - Ajustar saldo crea un movimiento auditado con `source = BALANCE_ADJUSTMENT`;
   no sobrescribe movimientos historicos.
 - Las monedas se consultan y muestran por separado.

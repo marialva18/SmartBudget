@@ -27,6 +27,7 @@ export type DashboardTransaction = {
   currency: 'PEN' | 'USD';
   description: string;
   occurredAt: string;
+  balanceImpactStatus: 'AFFECTS_BALANCE' | 'ANALYSIS_ONLY' | 'PENDING_FUTURE';
   account: {
     id: string;
     name: string;

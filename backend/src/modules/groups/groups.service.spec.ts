@@ -19,6 +19,9 @@ describe('GroupsService', () => {
     account: {
       findFirst: jest.fn(),
     },
+    profile: {
+      findUnique: jest.fn(),
+    },
     $transaction: jest.fn(),
   };
   const transactionClient = {
@@ -58,6 +61,7 @@ describe('GroupsService', () => {
       currency: 'PEN',
       balanceStartedAt: new Date('2026-01-01T00:00:00.000Z'),
     });
+    prisma.profile.findUnique.mockResolvedValue({ timezone: 'America/Lima' });
     transactionClient.transaction.create.mockResolvedValue({
       id: 'transaction-id',
     });

@@ -21,6 +21,9 @@ describe('BudgetsService', () => {
     category: {
       findFirst: jest.fn(),
     },
+    profile: {
+      findUnique: jest.fn(),
+    },
     $transaction: jest.fn(),
   };
   const transactionClient = {
@@ -36,6 +39,7 @@ describe('BudgetsService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    prisma.profile.findUnique.mockResolvedValue({ timezone: 'America/Lima' });
     service = new BudgetsService(prisma as unknown as PrismaService);
     prisma.$transaction.mockImplementation(
       (callback: (client: typeof transactionClient) => unknown) =>
@@ -78,6 +82,17 @@ describe('BudgetsService', () => {
           currency: 'PEN',
           monthStart: new Date('2026-06-01T00:00:00.000Z'),
         },
+      }),
+    );
+    expect(prisma.transaction.groupBy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          balanceImpactStatus: 'AFFECTS_BALANCE',
+          occurredAt: {
+            gte: new Date('2026-06-01T05:00:00.000Z'),
+            lt: new Date('2026-07-01T05:00:00.000Z'),
+          },
+        }),
       }),
     );
     expect(result.items[0]).toEqual(
@@ -189,6 +204,17 @@ describe('BudgetsService', () => {
         channel: 'MOBILE',
       }),
     });
+    expect(prisma.transaction.aggregate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          balanceImpactStatus: 'AFFECTS_BALANCE',
+          occurredAt: {
+            gte: new Date('2026-06-01T05:00:00.000Z'),
+            lt: new Date('2026-07-01T05:00:00.000Z'),
+          },
+        }),
+      }),
+    );
     expect(result.spentAmount).toBe('90.0000');
   });
 });

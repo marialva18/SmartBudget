@@ -5,6 +5,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { DEFAULT_TIMEZONE } from '../../common/dates/local-date';
+import { getBalanceImpactStatus } from '../../common/finance/balance-impact';
 import { es } from '../../common/i18n/es';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
@@ -108,10 +110,11 @@ export class TransactionsService {
             currency: context.account.currency,
             description: dto.description?.trim() || null,
             occurredAt: dto.occurredAt,
-            balanceImpactStatus: getBalanceImpactStatus(
-              dto.occurredAt,
-              context.account.balanceStartedAt,
-            ),
+            balanceImpactStatus: getBalanceImpactStatus({
+              occurredAt: dto.occurredAt,
+              balanceStartedAt: context.account.balanceStartedAt,
+              timezone: context.timezone,
+            }),
             source: channel === 'WEB' ? 'MANUAL_WEB' : 'MANUAL_MOBILE',
             idempotencyKey,
           },
@@ -185,10 +188,11 @@ export class TransactionsService {
               ? undefined
               : new Prisma.Decimal(dto.amount),
           occurredAt: dto.occurredAt,
-          balanceImpactStatus: getBalanceImpactStatus(
-            dto.occurredAt ?? current.occurredAt,
-            context.account.balanceStartedAt,
-          ),
+          balanceImpactStatus: getBalanceImpactStatus({
+            occurredAt: dto.occurredAt ?? current.occurredAt,
+            balanceStartedAt: context.account.balanceStartedAt,
+            timezone: context.timezone,
+          }),
           description:
             dto.description === undefined
               ? undefined
@@ -251,7 +255,7 @@ export class TransactionsService {
     categoryId: string,
     type: 'INCOME' | 'EXPENSE',
   ) {
-    const [account, category] = await Promise.all([
+    const [account, category, profile] = await Promise.all([
       this.prisma.account.findFirst({
         where: { id: accountId, userId, status: 'ACTIVE' },
         select: { id: true, currency: true, balanceStartedAt: true },
@@ -265,6 +269,10 @@ export class TransactionsService {
         },
         select: { id: true },
       }),
+      this.prisma.profile.findUnique({
+        where: { userId },
+        select: { timezone: true },
+      }),
     ]);
     if (!account) {
       throw new BadRequestException(es.transactions.invalidAccount);
@@ -272,7 +280,7 @@ export class TransactionsService {
     if (!category) {
       throw new BadRequestException(es.transactions.invalidCategory);
     }
-    return { account, category };
+    return { account, category, timezone: profile?.timezone ?? DEFAULT_TIMEZONE };
   }
 
   private toResponse(
@@ -312,18 +320,4 @@ export class TransactionsService {
       balanceImpactStatus: transaction.balanceImpactStatus,
     };
   }
-}
-
-function getBalanceImpactStatus(occurredAt: Date, balanceStartedAt: Date) {
-  const now = new Date();
-
-  if (occurredAt.getTime() > now.getTime()) {
-    return 'PENDING_FUTURE';
-  }
-
-  if (occurredAt.getTime() < balanceStartedAt.getTime()) {
-    return 'ANALYSIS_ONLY';
-  }
-
-  return 'AFFECTS_BALANCE';
 }

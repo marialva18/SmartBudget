@@ -6,6 +6,7 @@ import {
   ReceiptText,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { BalanceImpactBadge } from '../../components/finance/BalanceImpactBadge';
 import { getAccounts } from '../../features/accounts/services/accountsApi';
 import {
   getCalendarMonth,
@@ -415,11 +416,14 @@ function TransactionItem({
             {transaction.description || es.calendar.unnamedMovement}
           </h3>
           <p className="mt-1 text-sm text-slate-500">
-            {transaction.category?.name ?? es.budgets.uncategorized} ·{' '}
+            {transaction.category?.name ?? es.budgets.uncategorized} -{' '}
             {transaction.account.name}
           </p>
           <p className="mt-1 text-xs text-slate-400">
             {formatTime(transaction.occurredAt)}
+          </p>
+          <p className="mt-2">
+            <BalanceImpactBadge status={transaction.balanceImpactStatus} />
           </p>
         </div>
       </div>

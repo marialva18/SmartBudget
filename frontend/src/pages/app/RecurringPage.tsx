@@ -148,6 +148,9 @@ export function RecurringPage() {
           <p className="mt-2 max-w-3xl text-slate-600">
             {es.recurring.subtitle}
           </p>
+          <p className="mt-1 text-sm text-slate-500">
+            {es.recurring.helpNote}
+          </p>
         </div>
 
         <button

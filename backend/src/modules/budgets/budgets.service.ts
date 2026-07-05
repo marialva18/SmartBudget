@@ -5,6 +5,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import {
+  DEFAULT_TIMEZONE,
+  getLocalMonthStartKey,
+  getLocalMonthUtcRange,
+} from '../../common/dates/local-date';
 import { es } from '../../common/i18n/es';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { CreateBudgetDto } from './dto/create-budget.dto';
@@ -22,8 +27,11 @@ export class BudgetsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(userId: string, query: ListBudgetsDto) {
-    const monthStart = parseMonthStart(query.monthStart);
-    const nextMonthStart = addMonths(monthStart, 1);
+    const timezone = await this.getUserTimezone(userId);
+    const monthStartKey =
+      query.monthStart ?? getLocalMonthStartKey(new Date(), timezone);
+    const monthStart = parseMonthStart(monthStartKey);
+    const monthRange = getLocalMonthUtcRange(monthStartKey, timezone);
 
     const [budgets, expenseRows] = await Promise.all([
       this.prisma.budget.findMany({
@@ -42,9 +50,10 @@ export class BudgetsService {
           deletedAt: null,
           type: 'EXPENSE',
           currency: query.currency,
+          balanceImpactStatus: 'AFFECTS_BALANCE',
           occurredAt: {
-            gte: monthStart,
-            lt: nextMonthStart,
+            gte: monthRange.from,
+            lt: monthRange.to,
           },
         },
         _sum: { amount: true },
@@ -72,7 +81,7 @@ export class BudgetsService {
     });
 
     return {
-      monthStart: formatMonthStart(monthStart),
+      monthStart: monthStartKey,
       items,
     };
   }
@@ -180,7 +189,9 @@ export class BudgetsService {
     monthStart: Date,
     categoryId: string | null,
   ) {
-    const nextMonthStart = addMonths(monthStart, 1);
+    const timezone = await this.getUserTimezone(userId);
+    const monthStartKey = formatMonthStart(monthStart);
+    const monthRange = getLocalMonthUtcRange(monthStartKey, timezone);
     const result = await this.prisma.transaction.aggregate({
       where: {
         userId,
@@ -188,14 +199,24 @@ export class BudgetsService {
         type: 'EXPENSE',
         currency,
         categoryId: categoryId ?? undefined,
+        balanceImpactStatus: 'AFFECTS_BALANCE',
         occurredAt: {
-          gte: monthStart,
-          lt: nextMonthStart,
+          gte: monthRange.from,
+          lt: monthRange.to,
         },
       },
       _sum: { amount: true },
     });
     return result._sum.amount ?? new Prisma.Decimal(0);
+  }
+
+  private async getUserTimezone(userId: string) {
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+      select: { timezone: true },
+    });
+
+    return profile?.timezone ?? DEFAULT_TIMEZONE;
   }
 
   private toResponse(
@@ -250,12 +271,6 @@ function parseMonthStart(value?: string) {
     return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
   }
   return new Date(`${value}T00:00:00.000Z`);
-}
-
-function addMonths(date: Date, months: number) {
-  return new Date(
-    Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + months, 1),
-  );
 }
 
 function formatMonthStart(date: Date) {

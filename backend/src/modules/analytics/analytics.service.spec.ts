@@ -6,6 +6,7 @@ import { AnalyticsService } from './analytics.service';
 describe('AnalyticsService', () => {
   const prisma = {
     transaction: {
+      aggregate: jest.fn(),
       groupBy: jest.fn(),
       findFirst: jest.fn(),
       findMany: jest.fn(),
@@ -31,6 +32,9 @@ describe('AnalyticsService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    prisma.transaction.aggregate.mockResolvedValue({
+      _sum: { amount: new Prisma.Decimal(0) },
+    });
     service = new AnalyticsService(prisma as unknown as PrismaService);
   });
 
@@ -163,5 +167,36 @@ describe('AnalyticsService', () => {
     expect(result.filename).toMatch(/^qori-analytics-\d{4}-\d{2}-\d{2}\.xlsx$/);
     expect(Buffer.isBuffer(result.buffer)).toBe(true);
     expect(result.buffer.subarray(0, 2).toString()).toBe('PK');
+  });
+
+  it('applies account and impact filters to the grouped expenses export sheet', async () => {
+    prisma.transaction.groupBy.mockResolvedValue([]);
+    prisma.transaction.findFirst.mockResolvedValue(null);
+    prisma.transaction.findMany.mockResolvedValue([]);
+    prisma.category.findMany.mockResolvedValue([]);
+    prisma.account.findMany.mockResolvedValue([]);
+    prisma.profile.findUnique.mockResolvedValue({ timezone: 'America/Lima' });
+    prisma.budget.findMany.mockResolvedValue([]);
+    prisma.groupExpense.findMany.mockResolvedValue([]);
+
+    await service.exportWorkbook('user-id', {
+      accountId: '11111111-1111-1111-1111-111111111111',
+      balanceImpactStatus: 'AFFECTS_BALANCE',
+      currency: 'PEN',
+    });
+
+    expect(prisma.groupExpense.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          personalTransaction: {
+            is: {
+              accountId: '11111111-1111-1111-1111-111111111111',
+              balanceImpactStatus: 'AFFECTS_BALANCE',
+              deletedAt: null,
+            },
+          },
+        }),
+      }),
+    );
   });
 });

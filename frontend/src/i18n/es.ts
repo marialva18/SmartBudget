@@ -104,6 +104,13 @@
       ANALYSIS_ONLY: 'Solo análisis',
       PENDING_FUTURE: 'Pendiente',
     },
+    balanceImpactHelp: {
+      AFFECTS_BALANCE: 'Incluido en el saldo actual.',
+      ANALYSIS_ONLY:
+        'Incluido en análisis, no en saldo actual.',
+      PENDING_FUTURE:
+        'Se aplicará cuando corresponda.',
+    },
     form: {
       createTitle: 'Registrar movimiento',
       editTitle: 'Editar movimiento',
@@ -116,6 +123,10 @@
       descriptionPlaceholder: 'Ej. Almuerzo con el equipo',
       selectAccount: 'Selecciona una cuenta',
       selectCategory: 'Selecciona una categoría',
+      analysisOnlyNotice:
+        'Fecha anterior al inicio de control. Se guardará como solo análisis y no afectará el saldo actual.',
+      pendingFutureNotice:
+        'Fecha futura. El movimiento quedará pendiente y no afectará el saldo actual por ahora.',
       submitCreate: 'Guardar movimiento',
       submitEdit: 'Guardar cambios',
     },
@@ -144,6 +155,7 @@
     subtitle:
       'Explora tus ingresos y gastos por periodo, cuenta, categoría y efecto en saldo.',
     loadError: 'No pudimos cargar tu análisis financiero.',
+    loading: 'Preparando análisis...',
     export: 'Exportar Excel',
     exporting: 'Exportando...',
     exportError: 'No pudimos exportar tu análisis financiero.',
@@ -153,10 +165,18 @@
     averageDailyExpense: 'Gasto promedio diario',
     expenseComparison: 'Variación de gastos',
     budgetUsage: 'Uso de presupuesto',
+    budgetPlanned: 'Límite',
+    budgetUsed: 'Usado',
     noBudget: 'Sin presupuesto',
+    impactNotice:
+      'El balance del periodo respeta los filtros seleccionados. El saldo actual solo considera movimientos que afectan saldo.',
+    emptyState:
+      'Aún no hay movimientos suficientes para mostrar este análisis con los filtros actuales.',
     byCategory: 'Gastos por categoría',
+    byAccount: 'Distribución por cuenta',
     topExpenses: 'Gastos más altos',
     timeline: 'Evolución en el tiempo',
+    timelineChart: 'Balance diario',
     filters: {
       today: 'Hoy',
       week: 'Esta semana',
@@ -182,6 +202,8 @@
     pausedRules: 'Pausadas',
     pendingNote:
       'Las recurrencias todavía no modifican tu saldo. Primero aparecerán como pendientes por confirmar.',
+    helpNote:
+      'Confirma cada pendiente antes de registrarlo como movimiento real.',
     emptyTitle: 'Aún no tienes recurrencias',
     emptyDescription:
       'Crea reglas para gastos o ingresos repetidos como sueldo, Netflix, pasajes o ahorros frecuentes.',
@@ -273,6 +295,8 @@
     title: 'Planifica tu mes',
     subtitle:
       'Compara tus gastos confirmados contra límites generales o por categoría.',
+    calculationNote:
+      'El gasto usado considera movimientos que afectan saldo dentro del mes seleccionado.',
     newBudget: 'Nuevo presupuesto',
     monthFilter: 'Mes',
     planned: 'Planificado',
@@ -405,6 +429,8 @@
     title: 'Reserva dinero para tus objetivos',
     subtitle:
       'El progreso se calcula desde reservas virtuales y no modifica tu saldo real.',
+    helpNote:
+      'Reservar reduce tu disponible, pero no mueve dinero fuera de la cuenta.',
     newGoal: 'Nueva meta',
     emptyTitle: 'Aún no tienes metas',
     emptyDescription:
@@ -475,6 +501,8 @@
     title: 'Gastos compartidos',
     subtitle:
       'Organiza gastos con otras personas sin mezclar tus cuentas personales.',
+    helpNote:
+      'Cada pago grupal se registra contra la cuenta personal que eliges.',
     newGroup: 'Nuevo grupo',
     emptyTitle: 'Aún no tienes grupos',
     emptyDescription:
@@ -603,7 +631,7 @@
     emptyTitle: 'Aún no tienes cuentas',
     emptyDescription: 'Crea una para comenzar a calcular tus saldos.',
     loadError: 'No pudimos cargar tu resumen.',
-    realBalance: 'Saldo real',
+    realBalance: 'Saldo actual',
     reserved: 'Reservado',
     available: 'Disponible',
     monthActivity: 'Actividad del mes',
@@ -636,11 +664,11 @@
     archiveAction: 'Archivar',
     archiveConfirmation: (name: string) =>
       `¿Archivar ${name}? Su historial se conservará.`,
-    realBalance: 'Saldo real',
+    realBalance: 'Saldo actual',
     reserved: 'Reservado',
     available: 'Disponible',
     availableSuffix: 'disponible',
-    realBalanceSuffix: 'en saldo real',
+    realBalanceSuffix: 'en saldo actual',
     currencies: {
       PEN: {
         name: 'Sol peruano',
