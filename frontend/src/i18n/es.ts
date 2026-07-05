@@ -45,6 +45,7 @@
     menuOpen: 'Abrir menú',
     menuClose: 'Cerrar menú',
     navigationClose: 'Cerrar navegación',
+    themeToggle: 'Cambiar tema',
     logout: 'Cerrar sesión',
   },
   calendar: {

@@ -5,9 +5,12 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  MonitorCog,
+  Moon,
   PiggyBank,
   ReceiptText,
   Settings,
+  Sun,
   Tags,
   Target,
   Bot,
@@ -17,7 +20,7 @@ import {
   X,
 } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { logout } from '../../features/auth/services/authApi';
 import { FinanceScopeProvider } from '../../features/finance-scope/FinanceScopeContext';
@@ -26,6 +29,9 @@ import { getGroups } from '../../features/groups/groupsApi';
 import { es } from '../../i18n/es';
 import { markLoggedOut } from '../../lib/auth-session';
 import { getRecurringDueOccurrences } from '../../features/recurring/services/recurringApi';
+import { getProfile, updateProfile } from '../../features/profile/profileApi';
+import { useTheme } from '../../features/theme/useTheme';
+import type { ThemePreference } from '../../features/theme/themeContext';
 import { QoriMark } from '../brand/QoriMark';
 
 const navItems = [
@@ -107,6 +113,12 @@ function AppShell() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { availableScopes, canChooseScope, scope, setScope } =
     useFinanceScope();
+  const { effectiveTheme, preference, setPreference } = useTheme();
+  const profileQuery = useQuery({
+    queryKey: ['profile'],
+    queryFn: getProfile,
+    enabled: !isLoggingOut,
+  });
   const groupsQuery = useQuery({
     queryKey: ['groups'],
     queryFn: getGroups,
@@ -124,6 +136,27 @@ function AppShell() {
       (group) => group.currentMemberStatus === 'INVITED',
     ).length ?? 0;
   const pendingRecurringDue = recurringDueQuery.data?.length ?? 0;
+  const themeMutation = useMutation({
+    mutationFn: (theme: ThemePreference) => {
+      if (!profileQuery.data) {
+        return Promise.resolve(null);
+      }
+
+      return updateProfile({
+        aiEnabled: profileQuery.data.aiEnabled,
+        displayName: profileQuery.data.displayName,
+        highExpenseWarningPercent: profileQuery.data.highExpenseWarningPercent,
+        maxExpenseAmountPen: profileQuery.data.maxExpenseAmountPen,
+        maxExpenseAmountUsd: profileQuery.data.maxExpenseAmountUsd,
+        preferredCurrency: profileQuery.data.preferredCurrency,
+        theme,
+        timezone: profileQuery.data.timezone,
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['profile'] });
+    },
+  });
   const logoutMutation = useMutation({
     mutationFn: async () => {
       setIsLoggingOut(true);
@@ -137,6 +170,18 @@ function AppShell() {
     },
   });
 
+  useEffect(() => {
+    if (profileQuery.data?.theme) {
+      setPreference(profileQuery.data.theme);
+    }
+  }, [profileQuery.data?.theme, setPreference]);
+
+  function handleThemeToggle() {
+    const nextTheme = getNextThemePreference(preference);
+    setPreference(nextTheme);
+    themeMutation.mutate(nextTheme);
+  }
+
   return (
     <div className="qori-app-surface min-h-screen text-[#191c1e]">
       <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-white/10 bg-[#073f38]/96 px-4 shadow-[0_10px_30px_rgba(3,32,29,0.18)] backdrop-blur md:hidden">
@@ -145,6 +190,12 @@ function AppShell() {
           <NotificationBell
             pendingInvitations={pendingInvitations}
             pendingRecurringDue={pendingRecurringDue}
+          />
+          <ThemeToggleButton
+            effectiveTheme={effectiveTheme}
+            isPending={themeMutation.isPending}
+            onToggle={handleThemeToggle}
+            preference={preference}
           />
           <button
             aria-label={
@@ -215,6 +266,12 @@ function AppShell() {
             pendingInvitations={pendingInvitations}
             pendingRecurringDue={pendingRecurringDue}
           />
+          <ThemeToggleButton
+            effectiveTheme={effectiveTheme}
+            isPending={themeMutation.isPending}
+            onToggle={handleThemeToggle}
+            preference={preference}
+          />
           {canChooseScope ? (
             <FinanceScopeSelector
               availableScopes={availableScopes}
@@ -237,6 +294,50 @@ function AppShell() {
       </main>
     </div>
   );
+}
+
+function ThemeToggleButton({
+  effectiveTheme,
+  isPending,
+  onToggle,
+  preference,
+}: {
+  effectiveTheme: 'LIGHT' | 'DARK';
+  isPending: boolean;
+  onToggle: () => void;
+  preference: ThemePreference;
+}) {
+  const Icon =
+    preference === 'SYSTEM' ? MonitorCog : effectiveTheme === 'DARK' ? Moon : Sun;
+
+  return (
+    <button
+      aria-label={`${es.navigation.themeToggle}: ${formatThemePreference(preference)}`}
+      className="grid size-10 place-items-center rounded-lg border border-[#e0e3e5] bg-white text-[#3c4a46] shadow-[0_10px_30px_rgba(13,148,136,0.06)] transition hover:border-[#bacac5] hover:text-[#006b5f] disabled:opacity-60"
+      disabled={isPending}
+      onClick={onToggle}
+      title={`${es.navigation.themeToggle}: ${formatThemePreference(preference)}`}
+      type="button"
+    >
+      <Icon size={19} />
+    </button>
+  );
+}
+
+function getNextThemePreference(preference: ThemePreference): ThemePreference {
+  if (preference === 'LIGHT') {
+    return 'DARK';
+  }
+
+  if (preference === 'DARK') {
+    return 'SYSTEM';
+  }
+
+  return 'LIGHT';
+}
+
+function formatThemePreference(preference: ThemePreference) {
+  return es.settings.themes[preference];
 }
 
 function NotificationBell({

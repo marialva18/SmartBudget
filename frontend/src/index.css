@@ -22,6 +22,11 @@ body {
   overflow-x: hidden;
 }
 
+html.dark body {
+  background: #071311;
+  color: #e5f2ee;
+}
+
 #root {
   min-height: 100vh;
 }
@@ -81,6 +86,99 @@ textarea {
     radial-gradient(circle at top left, rgba(214, 168, 79, 0.12), transparent 22rem),
     radial-gradient(circle at bottom right, rgba(0, 121, 107, 0.14), transparent 24rem),
     #f3f8f5;
+}
+
+html.dark .qori-app-surface {
+  background:
+    radial-gradient(circle at top right, rgba(214, 168, 79, 0.12), transparent 30rem),
+    radial-gradient(circle at bottom left, rgba(45, 212, 191, 0.1), transparent 32rem),
+    linear-gradient(180deg, #071311 0%, #0b1f1b 100%);
+  color: #e5f2ee;
+}
+
+html.dark .qori-home-surface {
+  background:
+    radial-gradient(circle at 8% 18%, rgba(45, 212, 191, 0.12), transparent 18rem),
+    radial-gradient(circle at 82% 14%, rgba(214, 168, 79, 0.14), transparent 20rem),
+    #081815;
+}
+
+html.dark .qori-auth-surface {
+  background:
+    radial-gradient(circle at top left, rgba(214, 168, 79, 0.12), transparent 22rem),
+    radial-gradient(circle at bottom right, rgba(45, 212, 191, 0.12), transparent 24rem),
+    #081815;
+}
+
+html.dark .qori-login-surface {
+  background:
+    radial-gradient(circle at 18% 20%, rgba(214, 168, 79, 0.16), transparent 22rem),
+    radial-gradient(circle at 82% 82%, rgba(45, 212, 191, 0.14), transparent 24rem),
+    #04100e;
+}
+
+html.dark :is([class~="bg-white"], [class*="bg-white/"]) {
+  background-color: #10231f !important;
+}
+
+html.dark :is([class~="bg-slate-50"], [class~="bg-slate-100"]) {
+  background-color: #172d28 !important;
+}
+
+html.dark :is([class~="bg-[#eceef0]"], [class~="bg-[#f7faf8]"]) {
+  background-color: #172d28 !important;
+}
+
+html.dark :is([class*="border-slate-"], [class*="border-[#e0e3e5]"]) {
+  border-color: #28443d !important;
+}
+
+html.dark :is([class~="text-slate-950"], [class~="text-[#191c1e]"]) {
+  color: #f4fbf8 !important;
+}
+
+html.dark :is([class~="text-slate-900"], [class~="text-[#3c4a46]"]) {
+  color: #d7e7e2 !important;
+}
+
+html.dark :is([class~="text-slate-700"], [class~="text-slate-600"], [class~="text-slate-500"], [class~="text-[#6b7a76]"]) {
+  color: #9fb8b1 !important;
+}
+
+html.dark :is(input, select, textarea) {
+  background-color: #172d28;
+  border-color: #33564e;
+  color: #f4fbf8;
+}
+
+html.dark :is(input, select, textarea)::placeholder {
+  color: #7f9992;
+}
+
+html.dark table {
+  color: #d7e7e2;
+}
+
+html.dark thead {
+  color: #9fb8b1;
+}
+
+html.dark :is([class*="divide-slate-"], [class*="border-y"]) > :not([hidden]) ~ :not([hidden]) {
+  border-color: #28443d !important;
+}
+
+html.dark .recharts-cartesian-grid line {
+  stroke: #28443d;
+}
+
+html.dark .recharts-text {
+  fill: #9fb8b1;
+}
+
+html.dark .recharts-default-tooltip {
+  background-color: #10231f !important;
+  border-color: #33564e !important;
+  color: #f4fbf8 !important;
 }
 
 .qori-mark {

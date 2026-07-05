@@ -21,6 +21,7 @@ import { es } from '../../i18n/es';
 import { markLoggedOut } from '../../lib/auth-session';
 import { ApiError } from '../../lib/api';
 import { preventNumberWheelChange } from '../../lib/number-input';
+import { useTheme } from '../../features/theme/useTheme';
 
 const timezoneOptions = [
   'America/Lima',
@@ -44,6 +45,7 @@ export function SettingsPage() {
   const [error, setError] = useState('');
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
+  const { setPreference: setThemePreference } = useTheme();
   const [objectiveDraft, setObjectiveDraft] = useState<
     Profile['objectives']
   >();
@@ -78,8 +80,9 @@ export function SettingsPage() {
   useEffect(() => {
     if (query.data) {
       reset(getDefaults(query.data));
+      setThemePreference(query.data.theme);
     }
-  }, [query.data, reset]);
+  }, [query.data, reset, setThemePreference]);
 
   const aiEnabled = useWatch({ control, name: 'aiEnabled' });
   const selectedObjectives = objectiveDraft ?? query.data?.objectives ?? [];
@@ -90,6 +93,7 @@ export function SettingsPage() {
       setError('');
       setMessage(es.settings.saved);
       reset(getDefaults(profile));
+      setThemePreference(profile.theme);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['profile'] }),
         queryClient.invalidateQueries({ queryKey: ['auth', 'me'] }),
