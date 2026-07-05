@@ -6,6 +6,7 @@ import {
   toLocalDateKey,
 } from '../../common/dates/local-date';
 import { PrismaService } from '../../database/prisma/prisma.service';
+import { buildAnalyticsPdfReport } from './analytics-pdf-report';
 import { AnalyticsQueryDto } from './dto/analytics-query.dto';
 
 const transactionInclude = {
@@ -252,7 +253,7 @@ export class AnalyticsService {
       },
     ]);
 
-    const categorySheet = workbook.addWorksheet('Por categoria');
+    const categorySheet = workbook.addWorksheet('Por categoría');
     categorySheet.columns = [
       { header: 'Categoría', key: 'category', width: 28 },
       { header: 'Moneda', key: 'currency', width: 12 },
@@ -286,7 +287,7 @@ export class AnalyticsService {
       })),
     );
 
-    const timelineSheet = workbook.addWorksheet('Linea de tiempo');
+    const timelineSheet = workbook.addWorksheet('Línea de tiempo');
     timelineSheet.columns = [
       { header: 'Fecha', key: 'date', width: 14 },
       { header: 'Ingresos', key: 'income', width: 16 },
@@ -319,9 +320,7 @@ export class AnalyticsService {
         category: row.category?.name ?? 'Sin categoría',
         currency: row.currency,
         amount: row.amount,
-        balanceImpactStatus: formatBalanceImpactStatus(
-          row.balanceImpactStatus,
-        ),
+        balanceImpactStatus: formatBalanceImpactStatus(row.balanceImpactStatus),
       })),
     );
 
@@ -345,9 +344,7 @@ export class AnalyticsService {
         category: row.category?.name ?? 'Sin categoría',
         currency: row.currency,
         amount: row.amount,
-        balanceImpactStatus: formatBalanceImpactStatus(
-          row.balanceImpactStatus,
-        ),
+        balanceImpactStatus: formatBalanceImpactStatus(row.balanceImpactStatus),
       })),
     );
 
@@ -391,6 +388,96 @@ export class AnalyticsService {
     return {
       filename: `qori-analytics-${toLocalDateKey(new Date(), timezone)}.xlsx`,
       buffer: Buffer.from(workbookBuffer),
+    };
+  }
+
+  async exportPdf(userId: string, query: AnalyticsQueryDto) {
+    const [summary, categories, accounts, timeline, topExpenses] =
+      await Promise.all([
+        this.summary(userId, query),
+        this.byCategory(userId, query),
+        this.byAccount(userId, query),
+        this.timeline(userId, query),
+        this.topExpenses(userId, query),
+      ]);
+    const timezone = await this.getTimezone(userId);
+    const today = toLocalDateKey(new Date(), timezone);
+    const sections = [
+      {
+        title: 'Filtros aplicados',
+        rows: getFilterRows(query).map((row) => `${row.filter}: ${row.value}`),
+      },
+      {
+        title: 'Resumen',
+        rows: [
+          `Ingresos: ${summary.totals.income}`,
+          `Gastos: ${summary.totals.expense}`,
+          `Balance: ${summary.balance}`,
+          `Movimientos: ${summary.movementCount}`,
+          `Categoría principal: ${summary.topExpenseCategory?.name ?? 'Sin datos'}`,
+          `Cuenta más usada: ${summary.mostUsedAccount?.name ?? 'Sin datos'}`,
+          `Gasto diario promedio: ${summary.averageDailyExpense}`,
+        ],
+      },
+      {
+        title: 'Comparación',
+        rows: summary.comparison
+          ? [
+              `Referencia: ${formatComparisonMode(query.compareWith)}`,
+              `Ingresos anteriores: ${summary.comparison.previousIncome}`,
+              `Gastos anteriores: ${summary.comparison.previousExpense}`,
+              `Balance anterior: ${summary.comparison.previousBalance}`,
+              `Variación de ingresos: ${summary.comparison.incomeChangePercent}%`,
+              `Variación de gastos: ${summary.comparison.expenseChangePercent}%`,
+            ]
+          : ['Sin comparación para este filtro.'],
+      },
+      {
+        title: 'Presupuesto',
+        rows: summary.budgetUsage
+          ? [
+              `Límite: ${summary.budgetUsage.plannedAmount} ${summary.budgetUsage.currency}`,
+              `Usado: ${summary.budgetUsage.usedAmount} ${summary.budgetUsage.currency}`,
+              `Porcentaje usado: ${summary.budgetUsage.usedPercent}%`,
+            ]
+          : ['Sin presupuesto para este filtro.'],
+      },
+      {
+        title: 'Gastos por categoría',
+        rows: categories.slice(0, 10).map((row) => {
+          return `${row.category?.name ?? 'Sin categoría'}: ${row.amount} ${row.currency}`;
+        }),
+      },
+      {
+        title: 'Gastos por cuenta',
+        rows: accounts
+          .filter((row) => row.type === 'EXPENSE')
+          .slice(0, 10)
+          .map((row) => {
+            return `${row.account?.name ?? 'Cuenta no disponible'}: ${row.amount} ${row.currency}`;
+          }),
+      },
+      {
+        title: 'Evolución reciente',
+        rows: timeline.slice(-10).map((row) => {
+          return `${row.date}: ingresos ${row.income}, gastos ${row.expense}, balance ${row.balance}`;
+        }),
+      },
+      {
+        title: 'Gastos más altos',
+        rows: topExpenses.slice(0, 10).map((row) => {
+          return `${row.occurredAt.toISOString().slice(0, 10)} - ${row.description ?? row.category?.name ?? 'Sin descripción'}: ${row.amount} ${row.currency}`;
+        }),
+      },
+    ];
+
+    return {
+      filename: `qori-analytics-${today}.pdf`,
+      buffer: buildAnalyticsPdfReport(
+        'Reporte financiero Qori',
+        today,
+        sections,
+      ),
     };
   }
 
@@ -511,22 +598,19 @@ export class AnalyticsService {
     query: AnalyticsQueryDto,
     currentTotals: { income: Prisma.Decimal; expense: Prisma.Decimal },
   ) {
-    if (!query.from || !query.to) {
+    if (!query.from || !query.to || query.compareWith === 'NONE') {
       return null;
     }
 
-    const periodLengthMs = query.to.getTime() - query.from.getTime();
-
-    if (periodLengthMs <= 0) {
+    const previousRange = getComparisonRange(query);
+    if (!previousRange) {
       return null;
     }
 
-    const previousTo = new Date(query.from.getTime() - 1);
-    const previousFrom = new Date(previousTo.getTime() - periodLengthMs);
     const previousQuery = {
       ...query,
-      from: previousFrom,
-      to: previousTo,
+      from: previousRange.from,
+      to: previousRange.to,
     };
     const rows = await this.prisma.transaction.groupBy({
       by: ['currency', 'type'],
@@ -541,6 +625,9 @@ export class AnalyticsService {
       previousIncome: previousTotals.income.toFixed(4),
       previousExpense: previousTotals.expense.toFixed(4),
       previousBalance: previousBalance.toFixed(4),
+      compareWith: query.compareWith ?? 'PREVIOUS_PERIOD',
+      previousFrom: previousRange.from.toISOString(),
+      previousTo: previousRange.to.toISOString(),
       incomeChangePercent: percentChange(
         previousTotals.income,
         currentTotals.income,
@@ -552,10 +639,7 @@ export class AnalyticsService {
     };
   }
 
-  private async getBudgetUsage(
-    userId: string,
-    query: AnalyticsQueryDto,
-  ) {
+  private async getBudgetUsage(userId: string, query: AnalyticsQueryDto) {
     if (!query.currency || !query.from) {
       return null;
     }
@@ -770,11 +854,57 @@ function getFilterRows(query: AnalyticsQueryDto) {
     { filter: 'Grupo', value: query.groupId ?? 'Todos' },
     { filter: 'Tipo', value: formatTransactionType(query.type) },
     { filter: 'Moneda', value: query.currency ?? 'Todas' },
+    { filter: 'Comparación', value: formatComparisonMode(query.compareWith) },
     {
       filter: 'Impacto en saldo',
       value: formatBalanceImpactStatus(query.balanceImpactStatus),
     },
   ];
+}
+
+function getComparisonRange(query: AnalyticsQueryDto) {
+  if (!query.from || !query.to) {
+    return null;
+  }
+
+  if (query.compareWith === 'PREVIOUS_MONTH') {
+    return {
+      from: shiftUtcDate(query.from, { months: -1 }),
+      to: shiftUtcDate(query.to, { months: -1 }),
+    };
+  }
+
+  if (query.compareWith === 'PREVIOUS_YEAR') {
+    return {
+      from: shiftUtcDate(query.from, { years: -1 }),
+      to: shiftUtcDate(query.to, { years: -1 }),
+    };
+  }
+
+  const periodLengthMs = query.to.getTime() - query.from.getTime();
+
+  if (periodLengthMs <= 0) {
+    return null;
+  }
+
+  const previousTo = new Date(query.from.getTime() - 1);
+  const previousFrom = new Date(previousTo.getTime() - periodLengthMs);
+
+  return { from: previousFrom, to: previousTo };
+}
+
+function shiftUtcDate(date: Date, offset: { months?: number; years?: number }) {
+  const shifted = new Date(date);
+
+  if (offset.years) {
+    shifted.setUTCFullYear(shifted.getUTCFullYear() + offset.years);
+  }
+
+  if (offset.months) {
+    shifted.setUTCMonth(shifted.getUTCMonth() + offset.months);
+  }
+
+  return shifted;
 }
 
 function formatTransactionType(type?: string) {
@@ -803,4 +933,20 @@ function formatBalanceImpactStatus(status?: string) {
   }
 
   return 'Todos';
+}
+
+function formatComparisonMode(mode?: string) {
+  if (mode === 'PREVIOUS_MONTH') {
+    return 'Mes anterior';
+  }
+
+  if (mode === 'PREVIOUS_YEAR') {
+    return 'Año anterior';
+  }
+
+  if (mode === 'NONE') {
+    return 'Sin comparación';
+  }
+
+  return 'Periodo anterior equivalente';
 }

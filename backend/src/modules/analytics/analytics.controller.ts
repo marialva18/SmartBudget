@@ -67,4 +67,20 @@ export class AnalyticsController {
     );
     response.send(file.buffer);
   }
+
+  @Get('export/pdf')
+  async exportPdf(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query() query: AnalyticsQueryDto,
+    @Res() response: Response,
+  ) {
+    const file = await this.analyticsService.exportPdf(user.userId, query);
+
+    response.setHeader('Content-Type', 'application/pdf');
+    response.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${file.filename}"`,
+    );
+    response.send(file.buffer);
+  }
 }

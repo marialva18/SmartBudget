@@ -9,6 +9,7 @@ export type AnalyticsFilters = {
   type?: 'INCOME' | 'EXPENSE';
   currency?: 'PEN' | 'USD';
   balanceImpactStatus?: 'AFFECTS_BALANCE' | 'ANALYSIS_ONLY' | 'PENDING_FUTURE';
+  compareWith?: 'PREVIOUS_PERIOD' | 'PREVIOUS_MONTH' | 'PREVIOUS_YEAR' | 'NONE';
 };
 
 export type AnalyticsSummary = {
@@ -24,6 +25,9 @@ export type AnalyticsSummary = {
     previousIncome: string;
     previousExpense: string;
     previousBalance: string;
+    compareWith: 'PREVIOUS_PERIOD' | 'PREVIOUS_MONTH' | 'PREVIOUS_YEAR';
+    previousFrom: string;
+    previousTo: string;
     incomeChangePercent: string;
     expenseChangePercent: string;
   } | null;
@@ -101,6 +105,10 @@ export function getAnalyticsTopExpenses(filters: AnalyticsFilters) {
 
 export function downloadAnalyticsExport(filters: AnalyticsFilters) {
   return apiBlobRequest(`/analytics/export?${params(filters)}`);
+}
+
+export function downloadAnalyticsPdf(filters: AnalyticsFilters) {
+  return apiBlobRequest(`/analytics/export/pdf?${params(filters)}`);
 }
 
 function params(filters: AnalyticsFilters) {

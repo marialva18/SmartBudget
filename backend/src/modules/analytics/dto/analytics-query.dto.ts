@@ -36,4 +36,8 @@ export class AnalyticsQueryDto {
   @IsOptional()
   @IsIn(['AFFECTS_BALANCE', 'ANALYSIS_ONLY', 'PENDING_FUTURE'])
   balanceImpactStatus?: 'AFFECTS_BALANCE' | 'ANALYSIS_ONLY' | 'PENDING_FUTURE';
+
+  @IsOptional()
+  @IsIn(['PREVIOUS_PERIOD', 'PREVIOUS_MONTH', 'PREVIOUS_YEAR', 'NONE'])
+  compareWith?: 'PREVIOUS_PERIOD' | 'PREVIOUS_MONTH' | 'PREVIOUS_YEAR' | 'NONE';
 }

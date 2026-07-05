@@ -16,13 +16,16 @@ export function BalanceImpactBadge({ status }: BalanceImpactBadgeProps) {
     ANALYSIS_ONLY: 'border-amber-200 bg-amber-50 text-amber-800',
     PENDING_FUTURE: 'border-slate-200 bg-slate-100 text-slate-700',
   }[status];
+  const label = es.transactions.balanceImpactStatus[status];
+  const help = es.transactions.balanceImpactHelp[status];
 
   return (
     <span
+      aria-label={`${label}. ${help}`}
       className={`inline-flex rounded-full border px-2 py-1 text-xs font-semibold ${tone}`}
-      title={es.transactions.balanceImpactHelp[status]}
+      title={help}
     >
-      {es.transactions.balanceImpactStatus[status]}
+      {label}
     </span>
   );
 }
