@@ -1,4 +1,4 @@
-import { Mail } from 'lucide-react';
+﻿import { Mail } from 'lucide-react';
 
 const currentYear = new Date().getFullYear();
 
@@ -53,7 +53,7 @@ export function HomeFooter() {
           <div>
             <p className="font-black text-slate-800">Qori</p>
             <p className="mt-1 text-xs text-slate-400">
-              Desarrollado por María Alva Ruiz C:
+              Desarrollado por María Alva Ruiz 
             </p>
           </div>
 
