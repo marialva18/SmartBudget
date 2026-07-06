@@ -56,7 +56,7 @@ export class CalendarService {
       where: {
         userId,
         deletedAt: null,
-        type: { in: ['INCOME', 'EXPENSE'] },
+        type: { in: ['INCOME', 'EXPENSE', 'TRANSFER_IN', 'TRANSFER_OUT'] },
         currency: query.currency,
         accountId: query.accountId,
         occurredAt: {
@@ -110,6 +110,14 @@ export class CalendarService {
 
       if (transaction.type === 'EXPENSE') {
         bucket.expenseTotal = bucket.expenseTotal.plus(transaction.amount);
+        bucket.netTotal = bucket.netTotal.minus(transaction.amount);
+      }
+
+      if (transaction.type === 'TRANSFER_IN') {
+        bucket.netTotal = bucket.netTotal.plus(transaction.amount);
+      }
+
+      if (transaction.type === 'TRANSFER_OUT') {
         bucket.netTotal = bucket.netTotal.minus(transaction.amount);
       }
 

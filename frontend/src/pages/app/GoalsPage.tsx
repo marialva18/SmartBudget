@@ -403,6 +403,17 @@ function GoalFormPanel({
     <Panel title={goal ? es.goals.form.editTitle : es.goals.form.createTitle} onClose={onClose}>
       <form className="flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit(onSubmit)}>
         <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
+          <HelpDisclosure
+            label={es.goals.form.helpLabel}
+            title={es.goals.form.helpTitle}
+          >
+            <div className="space-y-2 text-sm leading-6 text-slate-600">
+              {Object.values(es.goals.form.helpItems).map((item) => (
+                <p key={item}>{item}</p>
+              ))}
+            </div>
+          </HelpDisclosure>
+
           <Field label={es.goals.form.name} error={errors.name?.message}>
             <input className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700" {...register('name')} />
           </Field>
@@ -458,6 +469,15 @@ function ReservationPanel({
     <Panel title={es.goals.form.reserveTitle(goal.name)} onClose={onClose}>
       <form className="flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit(onSubmit)}>
         <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
+          <HelpDisclosure
+            label={es.goals.form.helpLabel}
+            title={es.goals.form.reserveHelpTitle}
+          >
+            <p className="text-sm leading-6 text-slate-600">
+              {es.goals.form.reserveHelp}
+            </p>
+          </HelpDisclosure>
+
           <Field label={es.goals.form.account} error={errors.accountId?.message}>
             <select className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700" {...register('accountId')}>
               <option value="">{es.goals.form.selectAccount}</option>

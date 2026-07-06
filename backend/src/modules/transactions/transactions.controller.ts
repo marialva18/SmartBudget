@@ -13,6 +13,7 @@ import { randomUUID } from 'node:crypto';
 import { CurrentUser } from '../../common/auth/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/auth/authenticated-user';
 import { WriteThrottle } from '../../common/rate-limit/rate-limit.decorators';
+import { CreateTransferDto } from './dto/create-transfer.dto';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { ListTransactionsDto } from './dto/list-transactions.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
@@ -37,6 +38,21 @@ export class TransactionsController {
     @Param('transactionId', ParseSqlServerGuidPipe) transactionId: string,
   ) {
     return this.transactionsService.findOne(user.userId, transactionId);
+  }
+
+  @WriteThrottle()
+  @Post('transfers')
+  createTransfer(
+    @CurrentUser() user: AuthenticatedUser,
+    @Headers('idempotency-key') idempotencyKey: string | undefined,
+    @Body() dto: CreateTransferDto,
+  ) {
+    return this.transactionsService.createTransfer(
+      user.userId,
+      user.platform,
+      idempotencyKey?.slice(0, 120) || randomUUID(),
+      dto,
+    );
   }
 
   @WriteThrottle()

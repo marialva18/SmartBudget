@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Banknote, Landmark, WalletCards, X } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { HelpDisclosure } from '../../../components/ui/HelpDisclosure';
 import { es } from '../../../i18n/es';
 import { preventNumberWheelChange } from '../../../lib/number-input';
 import {
@@ -211,9 +212,13 @@ export function AccountFormPanel({
                   {...register('openingBalance', { valueAsNumber: true })}
                 />
               </div>
-              <span className="mt-2 block text-sm text-slate-500">
-                {es.accounts.form.openingBalanceHelp}
-              </span>
+              <div className="mt-2">
+                <HelpDisclosure label="Ayuda sobre saldo inicial">
+                  <p className="text-sm leading-6 text-slate-600">
+                    {es.accounts.form.openingBalanceHelp}
+                  </p>
+                </HelpDisclosure>
+              </div>
               {errors.openingBalance ? (
                 <span className="mt-1 block text-sm text-red-700">
                   {errors.openingBalance.message}
@@ -259,9 +264,13 @@ export function AccountFormPanel({
                 </label>
               ) : null}
 
-              <span className="mt-2 block text-sm text-slate-500">
-                {es.accounts.form.balanceStartedAtHelp}
-              </span>
+              <div className="mt-2">
+                <HelpDisclosure label="Ayuda sobre fecha de inicio">
+                  <p className="text-sm leading-6 text-slate-600">
+                    {es.accounts.form.balanceStartedAtHelp}
+                  </p>
+                </HelpDisclosure>
+              </div>
               {errors.balanceStartedAt ? (
                 <span className="mt-1 block text-sm text-red-700">
                   {errors.balanceStartedAt.message}

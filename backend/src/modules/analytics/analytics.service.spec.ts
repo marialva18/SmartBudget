@@ -12,9 +12,11 @@ describe('AnalyticsService', () => {
       findMany: jest.fn(),
     },
     category: {
+      findFirst: jest.fn(),
       findMany: jest.fn(),
     },
     account: {
+      findFirst: jest.fn(),
       findMany: jest.fn(),
     },
     profile: {
@@ -26,6 +28,9 @@ describe('AnalyticsService', () => {
     groupExpense: {
       findMany: jest.fn(),
     },
+    financialGroup: {
+      findFirst: jest.fn(),
+    },
   };
 
   let service: AnalyticsService;
@@ -35,6 +40,9 @@ describe('AnalyticsService', () => {
     prisma.transaction.aggregate.mockResolvedValue({
       _sum: { amount: new Prisma.Decimal(0) },
     });
+    prisma.account.findFirst.mockResolvedValue(null);
+    prisma.category.findFirst.mockResolvedValue(null);
+    prisma.financialGroup.findFirst.mockResolvedValue(null);
     service = new AnalyticsService(prisma as unknown as PrismaService);
   });
 

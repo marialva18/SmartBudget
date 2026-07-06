@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { X } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { HelpDisclosure } from '../../components/ui/HelpDisclosure';
 import { es } from '../../i18n/es';
 import { preventNumberWheelChange } from '../../lib/number-input';
 import type { Category } from '../categories/categoriesApi';
@@ -74,6 +75,17 @@ export function BudgetFormPanel({
           onSubmit={handleSubmit(onSubmit)}
         >
           <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6">
+            <HelpDisclosure
+              label={es.budgets.form.helpLabel}
+              title={es.budgets.form.helpTitle}
+            >
+              <div className="space-y-2 text-sm leading-6 text-slate-600">
+                {Object.values(es.budgets.form.helpItems).map((item) => (
+                  <p key={item}>{item}</p>
+                ))}
+              </div>
+            </HelpDisclosure>
+
             <label className="block">
               <span className="mb-2 block text-xs font-semibold uppercase text-slate-600">
                 {es.budgets.form.scope}

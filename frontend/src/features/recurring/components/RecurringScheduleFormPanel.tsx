@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { X } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { HelpDisclosure } from '../../../components/ui/HelpDisclosure';
 import type { Account } from '../../accounts/services/accountsApi';
 import type { Category } from '../../categories/categoriesApi';
 import { preventNumberWheelChange } from '../../../lib/number-input';
@@ -85,9 +86,6 @@ const accountId = useWatch({
             <h2 className="mt-1 text-2xl font-bold text-slate-950">
               Nueva recurrencia
             </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Se guardará como regla pendiente. No afectará tu saldo automáticamente.
-            </p>
           </div>
 
           <button
@@ -105,6 +103,15 @@ const accountId = useWatch({
           onSubmit={handleSubmit(onSubmit)}
         >
           <div className="flex-1 space-y-5 overflow-y-auto px-5 py-6 sm:px-7">
+            <HelpDisclosure
+              label="Ayuda sobre recurrencias"
+              title="Cómo se registrará"
+            >
+              <p className="text-sm leading-6 text-slate-600">
+                Esta recurrencia se guardará como una regla pendiente. No afectará tu saldo hasta que confirmes una ocurrencia.
+              </p>
+            </HelpDisclosure>
+
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Tipo">
                 <select
@@ -206,9 +213,6 @@ const accountId = useWatch({
               </Field>
             </div>
 
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-              Esta recurrencia no afectará tu saldo hasta que confirmes una ocurrencia pendiente.
-            </div>
           </div>
 
           <footer className="grid gap-3 border-t border-slate-200 px-5 py-5 sm:px-7">

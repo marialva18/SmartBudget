@@ -49,7 +49,7 @@ export function DashboardPage() {
         </div>
         <Link
           className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#006b5f] px-5 py-3 font-semibold text-white shadow-[0_10px_30px_rgba(13,148,136,0.14)] hover:bg-[#005047]"
-          to="/app/transactions"
+          to="/app/transactions/movements"
         >
           {es.dashboard.addMovement}
           <ArrowRight size={18} />
@@ -106,7 +106,7 @@ export function DashboardPage() {
             </h2>
             <Link
               className="text-sm font-semibold text-[#006b5f]"
-              to="/app/transactions"
+              to="/app/transactions/movements"
             >
               {es.dashboard.viewAll}
             </Link>
@@ -135,7 +135,7 @@ export function DashboardPage() {
           </p>
           <Link
             className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#006b5f] px-5 py-3 font-semibold text-white"
-            to="/app/transactions"
+            to="/app/transactions/movements"
           >
             {es.dashboard.addMovement}
             <ArrowRight size={18} />
@@ -211,7 +211,7 @@ function CurrencySection({ summary }: { summary: DashboardCurrencySummary }) {
             <h3 className="text-lg font-bold">{es.dashboard.activeGoals}</h3>
             <Link
               className="text-sm font-semibold text-[#006b5f]"
-              to="/app/goals"
+              to="/app/planning/goals"
             >
               {es.dashboard.viewAll}
             </Link>
@@ -348,7 +348,7 @@ function BudgetProgress({ summary }: { summary: DashboardCurrencySummary }) {
         </div>
         <Link
           className="text-sm font-semibold text-[#006b5f]"
-          to="/app/budgets"
+          to="/app/planning/budgets"
         >
           {es.dashboard.manageBudgets}
         </Link>
@@ -368,7 +368,7 @@ function TransactionRow({
 }: {
   transaction: DashboardTransaction;
 }) {
-  const isExpense = transaction.type === 'EXPENSE';
+  const isNegative = isNegativeTransaction(transaction.type);
   return (
     <div className="grid gap-3 border-b border-[#e0e3e5] px-4 py-4 last:border-b-0 sm:grid-cols-[1fr_auto] sm:items-center">
       <div className="min-w-0">
@@ -383,14 +383,17 @@ function TransactionRow({
       </div>
       <div className="sm:text-right">
         <p
-          className={`font-bold ${
-            isExpense ? 'text-red-700' : 'text-emerald-800'
-          }`}
-        >
-          {isExpense ? '-' : '+'}{' '}
+            className={`font-bold ${
+              isNegative ? 'text-red-700' : 'text-emerald-800'
+            }`}
+          >
+          {isNegative ? '-' : '+'}{' '}
           {formatMoney(Number(transaction.amount), transaction.currency)}
-        </p>
-        <p className="mt-1 text-xs text-slate-500">
+          </p>
+          <p className="mt-1 text-xs font-semibold uppercase text-slate-400">
+            {formatTransactionType(transaction.type)}
+          </p>
+          <p className="mt-1 text-xs text-slate-500">
           {new Intl.DateTimeFormat('es-PE', {
             dateStyle: 'medium',
             timeStyle: 'short',
@@ -399,6 +402,30 @@ function TransactionRow({
       </div>
     </div>
   );
+}
+
+function formatTransactionType(type: DashboardTransaction['type']) {
+  if (type === 'INCOME') {
+    return es.transactions.income;
+  }
+
+  if (type === 'EXPENSE') {
+    return es.transactions.expense;
+  }
+
+  if (type === 'TRANSFER_IN') {
+    return es.transactions.transferIn;
+  }
+
+  if (type === 'TRANSFER_OUT') {
+    return es.transactions.transferOut;
+  }
+
+  return es.accounts.form.openingBalance;
+}
+
+function isNegativeTransaction(type: DashboardTransaction['type']) {
+  return type === 'EXPENSE' || type === 'TRANSFER_OUT';
 }
 
 function getCurrentMonthStart() {

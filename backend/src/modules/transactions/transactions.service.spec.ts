@@ -178,6 +178,87 @@ describe('TransactionsService', () => {
     });
   });
 
+  it('creates a balanced transfer between owned accounts with the same currency', async () => {
+    const occurredAt = new Date('2026-07-05T15:00:00.000Z');
+    prisma.account.findFirst
+      .mockResolvedValueOnce({
+        id: 'from-account-id',
+        currency: 'PEN',
+        balanceStartedAt: new Date('2026-07-01T05:00:00.000Z'),
+      })
+      .mockResolvedValueOnce({
+        id: 'to-account-id',
+        currency: 'PEN',
+        balanceStartedAt: new Date('2026-07-01T05:00:00.000Z'),
+      });
+    const transferOut = {
+      id: 'transfer-out-id',
+      userId: 'user-id',
+      accountId: 'from-account-id',
+      categoryId: null,
+      type: 'TRANSFER_OUT',
+      amount: new Prisma.Decimal(80),
+      currency: 'PEN',
+      description: 'Yape a efectivo',
+      occurredAt,
+      source: 'ACCOUNT_TRANSFER',
+      idempotencyKey: 'account-transfer:key:out',
+      balanceImpactStatus: 'AFFECTS_BALANCE',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      deletedAt: null,
+      account: { id: 'from-account-id', name: 'Yape' },
+      category: null,
+    };
+    const transferIn = {
+      ...transferOut,
+      id: 'transfer-in-id',
+      accountId: 'to-account-id',
+      type: 'TRANSFER_IN',
+      idempotencyKey: 'account-transfer:key:in',
+      account: { id: 'to-account-id', name: 'Efectivo' },
+    };
+    transactionClient.transaction.create
+      .mockResolvedValueOnce(transferOut)
+      .mockResolvedValueOnce(transferIn);
+    transactionClient.auditLog.create.mockResolvedValue({});
+    prisma.$transaction.mockImplementation(
+      (callback: (client: typeof transactionClient) => unknown) =>
+        callback(transactionClient),
+    );
+
+    const result = await service.createTransfer('user-id', 'WEB', 'key', {
+      amount: 80,
+      fromAccountId: 'from-account-id',
+      occurredAt,
+      toAccountId: 'to-account-id',
+      description: 'Yape a efectivo',
+    });
+
+    expect(transactionClient.transaction.create).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        data: expect.objectContaining({
+          accountId: 'from-account-id',
+          type: 'TRANSFER_OUT',
+          source: 'ACCOUNT_TRANSFER',
+        }),
+      }),
+    );
+    expect(transactionClient.transaction.create).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        data: expect.objectContaining({
+          accountId: 'to-account-id',
+          type: 'TRANSFER_IN',
+          source: 'ACCOUNT_TRANSFER',
+        }),
+      }),
+    );
+    expect(result.from.type).toBe('TRANSFER_OUT');
+    expect(result.to.type).toBe('TRANSFER_IN');
+  });
+
   it('does not delete an opening balance movement', async () => {
     prisma.transaction.findFirst.mockResolvedValue({
       id: 'opening-id',

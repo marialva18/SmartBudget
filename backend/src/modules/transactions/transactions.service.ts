@@ -9,6 +9,7 @@ import { DEFAULT_TIMEZONE } from '../../common/dates/local-date';
 import { getBalanceImpactStatus } from '../../common/finance/balance-impact';
 import { es } from '../../common/i18n/es';
 import { PrismaService } from '../../database/prisma/prisma.service';
+import { CreateTransferDto } from './dto/create-transfer.dto';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { ListTransactionsDto } from './dto/list-transactions.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
@@ -145,6 +146,124 @@ export class TransactionsService {
     }
   }
 
+  async createTransfer(
+    userId: string,
+    channel: Channel,
+    idempotencyKey: string,
+    dto: CreateTransferDto,
+  ) {
+    if (dto.fromAccountId === dto.toAccountId) {
+      throw new BadRequestException(es.transactions.sameTransferAccount);
+    }
+
+    const [fromAccount, toAccount, profile] = await Promise.all([
+      this.prisma.account.findFirst({
+        where: { id: dto.fromAccountId, userId, status: 'ACTIVE' },
+        select: { id: true, currency: true, balanceStartedAt: true },
+      }),
+      this.prisma.account.findFirst({
+        where: { id: dto.toAccountId, userId, status: 'ACTIVE' },
+        select: { id: true, currency: true, balanceStartedAt: true },
+      }),
+      this.prisma.profile.findUnique({
+        where: { userId },
+        select: { timezone: true },
+      }),
+    ]);
+
+    if (!fromAccount || !toAccount) {
+      throw new BadRequestException(es.transactions.invalidAccount);
+    }
+
+    if (fromAccount.currency !== toAccount.currency) {
+      throw new BadRequestException(es.transactions.transferCurrencyMismatch);
+    }
+
+    const timezone = profile?.timezone ?? DEFAULT_TIMEZONE;
+    const amount = new Prisma.Decimal(dto.amount);
+    const note = dto.description?.trim() || es.transactions.transferDescription;
+    const transferKey = `account-transfer:${idempotencyKey}`;
+
+    try {
+      const created = await this.prisma.$transaction(async (transaction) => {
+        const balanceImpactStatus = getBalanceImpactStatus({
+          occurredAt: dto.occurredAt,
+          balanceStartedAt:
+            fromAccount.balanceStartedAt > toAccount.balanceStartedAt
+              ? fromAccount.balanceStartedAt
+              : toAccount.balanceStartedAt,
+          timezone,
+        });
+
+        const transferOut = await transaction.transaction.create({
+          data: {
+            userId,
+            accountId: fromAccount.id,
+            type: 'TRANSFER_OUT',
+            amount,
+            currency: fromAccount.currency,
+            description: note,
+            occurredAt: dto.occurredAt,
+            balanceImpactStatus,
+            source: 'ACCOUNT_TRANSFER',
+            idempotencyKey: `${transferKey}:out`,
+          },
+          include: transactionInclude,
+        });
+
+        const transferIn = await transaction.transaction.create({
+          data: {
+            userId,
+            accountId: toAccount.id,
+            type: 'TRANSFER_IN',
+            amount,
+            currency: toAccount.currency,
+            description: note,
+            occurredAt: dto.occurredAt,
+            balanceImpactStatus,
+            source: 'ACCOUNT_TRANSFER',
+            idempotencyKey: `${transferKey}:in`,
+          },
+          include: transactionInclude,
+        });
+
+        await transaction.auditLog.create({
+          data: {
+            userId,
+            action: 'ACCOUNT_TRANSFER_CREATED',
+            entity: 'TRANSACTION',
+            entityId: transferOut.id,
+            channel,
+            newValuesJson: JSON.stringify({
+              fromTransactionId: transferOut.id,
+              toTransactionId: transferIn.id,
+              fromAccountId: fromAccount.id,
+              toAccountId: toAccount.id,
+              amount: amount.toFixed(4),
+              currency: fromAccount.currency,
+              occurredAt: dto.occurredAt.toISOString(),
+            }),
+          },
+        });
+
+        return { from: transferOut, to: transferIn };
+      });
+
+      return {
+        from: this.toResponse(created.from),
+        to: this.toResponse(created.to),
+      };
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException(es.transactions.duplicate);
+      }
+      throw error;
+    }
+  }
+
   async update(
     userId: string,
     channel: Channel,
@@ -160,6 +279,9 @@ export class TransactionsService {
     }
     if (current.type === 'OPENING_BALANCE') {
       throw new BadRequestException(es.transactions.openingImmutable);
+    }
+    if (current.source === 'ACCOUNT_TRANSFER') {
+      throw new BadRequestException(es.transactions.transferImmutable);
     }
 
     const type = dto.type ?? (current.type as 'INCOME' | 'EXPENSE');
@@ -229,12 +351,30 @@ export class TransactionsService {
     }
 
     const deletedAt = new Date();
-    await this.prisma.$transaction([
-      this.prisma.transaction.update({
-        where: { id: current.id },
-        data: { deletedAt },
-      }),
-      this.prisma.auditLog.create({
+    await this.prisma.$transaction(async (transaction) => {
+      const deletedIds =
+        current.source === 'ACCOUNT_TRANSFER' && current.idempotencyKey
+          ? (
+              await transaction.transaction.updateMany({
+                where: {
+                  userId,
+                  source: 'ACCOUNT_TRANSFER',
+                  idempotencyKey: {
+                    startsWith: current.idempotencyKey.replace(/:(in|out)$/, ''),
+                  },
+                  deletedAt: null,
+                },
+                data: { deletedAt },
+              })
+            ).count
+          : (
+              await transaction.transaction.update({
+                where: { id: current.id },
+                data: { deletedAt },
+              })
+            ).id;
+
+      await transaction.auditLog.create({
         data: {
           userId,
           action: 'TRANSACTION_DELETED',
@@ -242,10 +382,13 @@ export class TransactionsService {
           entityId: current.id,
           channel,
           oldValuesJson: JSON.stringify(this.auditValues(current)),
-          newValuesJson: JSON.stringify({ deletedAt: deletedAt.toISOString() }),
+          newValuesJson: JSON.stringify({
+            deletedAt: deletedAt.toISOString(),
+            deletedIds,
+          }),
         },
-      }),
-    ]);
+      });
+    });
     return { message: es.transactions.deleted };
   }
 

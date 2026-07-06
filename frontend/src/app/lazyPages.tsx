@@ -56,6 +56,16 @@ export const AccountPage = lazy(() =>
     default: module.AccountPage,
   })),
 )
+export const PlanningPage = lazy(() =>
+  import('../pages/app/PlanningPage').then((module) => ({
+    default: module.PlanningPage,
+  })),
+)
+export const AgendaPage = lazy(() =>
+  import('../pages/app/AgendaPage').then((module) => ({
+    default: module.AgendaPage,
+  })),
+)
 export const DashboardPage = lazy(() =>
   import('../pages/app/DashboardPage').then((module) => ({
     default: module.DashboardPage,
@@ -74,6 +84,11 @@ export const AccountsPage = lazy(() =>
 export const TransactionsPage = lazy(() =>
   import('../pages/app/TransactionsPage').then((module) => ({
     default: module.TransactionsPage,
+  })),
+)
+export const TransactionsHubPage = lazy(() =>
+  import('../pages/app/TransactionsHubPage').then((module) => ({
+    default: module.TransactionsHubPage,
   })),
 )
 export const AnalyticsPage = lazy(() =>

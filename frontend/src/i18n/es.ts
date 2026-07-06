@@ -26,6 +26,8 @@ export const es = {
     dashboard: 'Resumen',
     accounts: 'Cuentas',
     transactions: 'Movimientos',
+    planning: 'Planificación',
+    agenda: 'Agenda',
     analytics: 'Análisis',
     calendar: 'Calendario',
     categories: 'Categorías',
@@ -47,6 +49,20 @@ export const es = {
     navigationClose: 'Cerrar navegación',
     themeToggle: 'Cambiar tema',
     logout: 'Cerrar sesión',
+  },
+  planning: {
+    section: 'Planificación',
+    title: 'Planificación financiera',
+    subtitle:
+      'Organiza límites mensuales y objetivos de ahorro en un solo lugar.',
+    tabsLabel: 'Secciones de planificación',
+  },
+  agenda: {
+    section: 'Agenda',
+    title: 'Agenda financiera',
+    subtitle:
+      'Revisa movimientos por fecha y pagos frecuentes desde una sola vista.',
+    tabsLabel: 'Secciones de agenda',
   },
   calendar: {
     section: 'Calendario',
@@ -71,7 +87,10 @@ export const es = {
     section: 'Movimientos',
     title: 'Ingresos y gastos',
     subtitle: 'Consulta y administra tus movimientos confirmados.',
+    tabsLabel: 'Secciones de movimientos',
     newTransaction: 'Nuevo movimiento',
+    newTransfer: 'Nueva transferencia',
+    manageCategories: 'Gestionar categorías',
     loadError: 'No pudimos cargar tus movimientos.',
     emptyTitle: 'Aún no hay movimientos',
     emptyDescription:
@@ -81,6 +100,8 @@ export const es = {
     allAccounts: 'Todas las cuentas',
     income: 'Ingreso',
     expense: 'Gasto',
+    transferIn: 'Transferencia recibida',
+    transferOut: 'Transferencia enviada',
     totalIncome: 'Ingresos',
     totalExpense: 'Gastos',
     balance: 'Balance',
@@ -116,6 +137,16 @@ export const es = {
     form: {
       createTitle: 'Registrar movimiento',
       editTitle: 'Editar movimiento',
+      helpLabel: 'Antes de guardar',
+      helpTitle: 'Cómo se registrará',
+      helpItems: {
+        account:
+          'La cuenta elegida define de dónde entra o sale el dinero.',
+        date:
+          'La fecha define si el movimiento afecta tu saldo actual, queda pendiente o solo aparece en análisis.',
+        category:
+          'La categoría ayuda a que los reportes y gráficos sean más útiles.',
+      },
       type: 'Tipo',
       amount: 'Monto',
       category: 'Categoría',
@@ -132,9 +163,27 @@ export const es = {
       submitCreate: 'Guardar movimiento',
       submitEdit: 'Guardar cambios',
     },
+    transferForm: {
+      title: 'Transferir entre cuentas',
+      helpLabel: 'Cómo funciona',
+      helpTitle: 'Transferencia propia',
+      help:
+        'Mueve dinero entre dos cuentas tuyas. No cuenta como ingreso ni gasto; solo cambia el saldo de cada cuenta.',
+      fromAccount: 'Desde',
+      toAccount: 'Hacia',
+      amount: 'Monto',
+      date: 'Fecha y hora',
+      description: 'Nota',
+      descriptionPlaceholder: 'Ej. Pasé dinero de Yape a efectivo',
+      selectAccount: 'Selecciona una cuenta',
+      submit: 'Guardar transferencia',
+    },
     validation: {
       amount: 'Ingresa un monto mayor que cero.',
       account: 'Selecciona una cuenta.',
+      fromAccount: 'Selecciona la cuenta de origen.',
+      toAccount: 'Selecciona la cuenta de destino.',
+      transferAccounts: 'Elige cuentas diferentes.',
       category: 'Selecciona una categoría.',
       date: 'Selecciona una fecha válida.',
     },
@@ -162,6 +211,8 @@ export const es = {
     exportPdf: 'Exportar PDF',
     exporting: 'Exportando...',
     exportError: 'No pudimos generar el reporte. Inténtalo nuevamente.',
+    invalidDateRange:
+      'La fecha inicial no puede ser posterior a la fecha final.',
     totalIncome: 'Total ingresado',
     totalExpense: 'Total gastado',
     balance: 'Balance del periodo',
@@ -343,6 +394,10 @@ export const es = {
       'Compara tus gastos confirmados contra límites generales o por categoría.',
     calculationNote:
       'El gasto usado considera movimientos que afectan saldo dentro del mes seleccionado.',
+    helpLabel: 'Cómo se calcula',
+    helpTitle: 'Cómo funcionan los presupuestos',
+    helpNote:
+      'Un presupuesto es una referencia mensual. No bloquea movimientos; solo compara lo planificado contra los gastos que afectan saldo en el mes elegido.',
     newBudget: 'Nuevo presupuesto',
     monthFilter: 'Mes',
     planned: 'Planificado',
@@ -363,6 +418,16 @@ export const es = {
       createTitle: 'Crear presupuesto',
       editTitle: 'Editar presupuesto',
       close: 'Cerrar formulario de presupuesto',
+      helpLabel: 'Antes de guardar',
+      helpTitle: 'Qué estás definiendo',
+      helpItems: {
+        scope:
+          'El alcance puede ser general del mes o solo una categoría de gasto.',
+        amount:
+          'El monto límite sirve para comparar tus gastos; no mueve dinero real.',
+        edit:
+          'Al editar, se mantiene el alcance para conservar la comparación histórica.',
+      },
       scope: 'Alcance',
       scopeImmutable:
         'El alcance no cambia para conservar la comparación histórica.',
@@ -517,11 +582,22 @@ export const es = {
       createTitle: 'Crear meta',
       editTitle: 'Editar meta',
       close: 'Cerrar formulario de meta',
+      helpLabel: 'Antes de guardar',
+      helpTitle: 'Cómo funciona una meta',
+      helpItems: {
+        target:
+          'La meta define un objetivo de ahorro y una moneda. No mueve dinero por sí sola.',
+        reserve:
+          'Las reservas separan parte de tu disponible para medir avance.',
+      },
       name: 'Nombre',
       targetAmount: 'Monto objetivo',
       currency: 'Moneda',
       targetDate: 'Fecha objetivo',
       reserveTitle: (name: string) => `Reservar para ${name}`,
+      reserveHelpTitle: 'Qué pasa al reservar',
+      reserveHelp:
+        'Reservar reduce tu disponible en Qori para esa cuenta, pero no hace una transferencia bancaria real.',
       account: 'Cuenta',
       selectAccount: 'Selecciona una cuenta',
       reserveAmount: 'Monto a reservar',

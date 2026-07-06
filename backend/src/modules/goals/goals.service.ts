@@ -378,10 +378,9 @@ export class GoalsService {
     let realBalance = new Prisma.Decimal(0);
     for (const total of transactionTotals) {
       const amount = total._sum.amount ?? new Prisma.Decimal(0);
-      realBalance =
-        total.type === 'EXPENSE'
-          ? realBalance.minus(amount)
-          : realBalance.plus(amount);
+      realBalance = isNegativeBalanceType(total.type)
+        ? realBalance.minus(amount)
+        : realBalance.plus(amount);
     }
     const reserved = reservationTotals[0]?._sum.amount ?? new Prisma.Decimal(0);
     return realBalance.minus(reserved);
@@ -462,4 +461,8 @@ export class GoalsService {
       throw new BadRequestException(es.goals.targetDateInPast);
     }
   }
+}
+
+function isNegativeBalanceType(type: string) {
+  return type === 'EXPENSE' || type === 'TRANSFER_OUT';
 }

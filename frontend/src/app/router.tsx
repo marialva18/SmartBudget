@@ -8,6 +8,7 @@ import { RouteErrorPage } from '../pages/RouteErrorPage'
 import {
   AccountPage,
   AccountsPage,
+  AgendaPage,
   AnalyticsPage,
   AppGoalsPage,
   BudgetsPage,
@@ -22,11 +23,13 @@ import {
   LoginPage,
   OnboardingGoalsPage,
   PageLoader,
+  PlanningPage,
   PreferencesPage,
   RecurringPage,
   RegisterPage,
   ResetPasswordPage,
   SettingsPage,
+  TransactionsHubPage,
   TransactionsPage,
   VerifyEmailPage,
   WelcomePage,
@@ -124,44 +127,94 @@ export const router = createBrowserRouter([
             element: routePage(<DashboardPage />),
           },
           {
-            path: 'coach',
-            element: routePage(<CoachPage />),
-          },
-          {
             path: 'accounts',
             element: routePage(<AccountsPage />),
           },
           {
             path: 'transactions',
-            element: routePage(<TransactionsPage />),
+            element: routePage(<TransactionsHubPage />),
+            children: [
+              {
+                index: true,
+                element: <Navigate to="/app/transactions/movements" replace />,
+              },
+              {
+                path: 'movements',
+                element: routePage(<TransactionsPage />),
+              },
+              {
+                path: 'categories',
+                element: routePage(<CategoriesPage />),
+              },
+            ],
+          },
+          {
+            path: 'planning',
+            element: routePage(<PlanningPage />),
+            children: [
+              {
+                index: true,
+                element: <Navigate to="/app/planning/budgets" replace />,
+              },
+              {
+                path: 'budgets',
+                element: routePage(<BudgetsPage />),
+              },
+              {
+                path: 'goals',
+                element: routePage(<AppGoalsPage />),
+              },
+            ],
+          },
+          {
+            path: 'agenda',
+            element: routePage(<AgendaPage />),
+            children: [
+              {
+                index: true,
+                element: <Navigate to="/app/agenda/calendar" replace />,
+              },
+              {
+                path: 'calendar',
+                element: routePage(<CalendarPage />),
+              },
+              {
+                path: 'recurring',
+                element: routePage(<RecurringPage />),
+              },
+            ],
+          },
+          {
+            path: 'calendar',
+            element: <Navigate to="/app/agenda/calendar" replace />,
+          },
+          {
+            path: 'recurring',
+            element: <Navigate to="/app/agenda/recurring" replace />,
+          },
+          {
+            path: 'budgets',
+            element: <Navigate to="/app/planning/budgets" replace />,
+          },
+          {
+            path: 'goals',
+            element: <Navigate to="/app/planning/goals" replace />,
+          },
+          {
+            path: 'groups',
+            element: routePage(<GroupsPage />),
+          },
+          {
+            path: 'categories',
+            element: <Navigate to="/app/transactions/categories" replace />,
           },
           {
             path: 'analytics',
             element: routePage(<AnalyticsPage />),
           },
           {
-            path: 'calendar',
-            element: routePage(<CalendarPage />),
-          },
-          {
-            path: 'recurring',
-            element: routePage(<RecurringPage />),
-          },
-          {
-            path: 'categories',
-            element: routePage(<CategoriesPage />),
-          },
-          {
-            path: 'budgets',
-            element: routePage(<BudgetsPage />),
-          },
-          {
-            path: 'goals',
-            element: routePage(<AppGoalsPage />),
-          },
-          {
-            path: 'groups',
-            element: routePage(<GroupsPage />),
+            path: 'coach',
+            element: routePage(<CoachPage />),
           },
           {
             path: 'settings',

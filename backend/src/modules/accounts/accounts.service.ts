@@ -412,10 +412,9 @@ export class AccountsService {
     for (const total of transactionTotals) {
       const summary = getSummary(total.accountId);
       const amount = total._sum.amount ?? new Prisma.Decimal(0);
-      summary.realBalance =
-        total.type === 'EXPENSE'
-          ? summary.realBalance.minus(amount)
-          : summary.realBalance.plus(amount);
+      summary.realBalance = isNegativeBalanceType(total.type)
+        ? summary.realBalance.minus(amount)
+        : summary.realBalance.plus(amount);
     }
 
     for (const total of reservationTotals) {
@@ -460,4 +459,8 @@ export class AccountsService {
 
     return profile?.timezone ?? DEFAULT_TIMEZONE;
   }
+}
+
+function isNegativeBalanceType(type: string) {
+  return type === 'EXPENSE' || type === 'TRANSFER_OUT';
 }

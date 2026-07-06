@@ -94,11 +94,18 @@ export const es = {
   transactions: {
     missing: 'El movimiento no existe.',
     invalidAccount: 'La cuenta no existe o está archivada.',
-    invalidCategory:
-      'La categoría no corresponde al tipo de movimiento seleccionado.',
-    openingImmutable: 'El saldo inicial no puede editarse desde movimientos.',
-    duplicate: 'Este movimiento ya fue registrado.',
-    deleted: 'Movimiento eliminado correctamente.',
+      invalidCategory:
+        'La categoría no corresponde al tipo de movimiento seleccionado.',
+      openingImmutable: 'El saldo inicial no puede editarse desde movimientos.',
+      transferImmutable:
+        'Una transferencia propia no puede editarse. Elimínala y vuelve a registrarla.',
+      sameTransferAccount:
+        'La cuenta de origen y destino deben ser diferentes.',
+      transferCurrencyMismatch:
+        'Las transferencias propias solo se permiten entre cuentas de la misma moneda.',
+      transferDescription: 'Transferencia entre cuentas propias',
+      duplicate: 'Este movimiento ya fue registrado.',
+      deleted: 'Movimiento eliminado correctamente.',
   },
   validation: {
     categoryName:

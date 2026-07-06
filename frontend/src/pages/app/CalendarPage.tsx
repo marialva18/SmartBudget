@@ -396,17 +396,17 @@ function TransactionItem({
   transaction: CalendarTransaction;
 }) {
   const amount = Number(transaction.amount);
-  const isExpense = transaction.type === 'EXPENSE';
+  const isNegative = isNegativeTransaction(transaction.type);
 
   return (
     <article className="flex flex-col justify-between gap-3 border-b border-slate-100 p-4 last:border-b-0 sm:flex-row sm:items-center">
       <div className="flex items-start gap-3">
         <span
           className={[
-            'grid size-10 place-items-center rounded-md',
-            isExpense
-              ? 'bg-red-50 text-red-700'
-              : 'bg-emerald-50 text-emerald-700',
+              'grid size-10 place-items-center rounded-md',
+              isNegative
+                ? 'bg-red-50 text-red-700'
+                : 'bg-emerald-50 text-emerald-700',
           ].join(' ')}
         >
           <ReceiptText size={18} />
@@ -429,21 +429,41 @@ function TransactionItem({
       </div>
 
       <div className="text-left sm:text-right">
-        <p
-          className={
-            isExpense
-              ? 'font-bold text-red-700'
-              : 'font-bold text-emerald-700'
-          }
-        >
-          {isExpense ? '-' : '+'} {formatMoney(amount, transaction.currency)}
-        </p>
-        <p className="mt-1 text-xs font-semibold uppercase text-slate-400">
-          {isExpense ? es.transactions.expense : es.transactions.income}
-        </p>
+          <p
+            className={
+              isNegative
+                ? 'font-bold text-red-700'
+                : 'font-bold text-emerald-700'
+            }
+          >
+          {isNegative ? '-' : '+'} {formatMoney(amount, transaction.currency)}
+          </p>
+          <p className="mt-1 text-xs font-semibold uppercase text-slate-400">
+            {formatTransactionType(transaction.type)}
+          </p>
       </div>
     </article>
   );
+}
+
+function formatTransactionType(type: CalendarTransaction['type']) {
+  if (type === 'INCOME') {
+    return es.transactions.income;
+  }
+
+  if (type === 'EXPENSE') {
+    return es.transactions.expense;
+  }
+
+  if (type === 'TRANSFER_IN') {
+    return es.transactions.transferIn;
+  }
+
+  return es.transactions.transferOut;
+}
+
+function isNegativeTransaction(type: CalendarTransaction['type']) {
+  return type === 'EXPENSE' || type === 'TRANSFER_OUT';
 }
 
 function EmptyDay() {

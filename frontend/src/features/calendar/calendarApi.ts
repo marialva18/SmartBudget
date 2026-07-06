@@ -2,7 +2,7 @@ import { apiRequest } from '../../lib/api';
 
 export type CalendarTransaction = {
   id: string;
-  type: 'INCOME' | 'EXPENSE';
+  type: 'INCOME' | 'EXPENSE' | 'TRANSFER_IN' | 'TRANSFER_OUT';
   amount: string;
   currency: 'PEN' | 'USD';
   description: string | null;

@@ -22,7 +22,12 @@ export type DashboardCurrencySummary = {
 
 export type DashboardTransaction = {
   id: string;
-  type: 'INCOME' | 'EXPENSE' | 'OPENING_BALANCE';
+  type:
+    | 'INCOME'
+    | 'EXPENSE'
+    | 'OPENING_BALANCE'
+    | 'TRANSFER_IN'
+    | 'TRANSFER_OUT';
   amount: string;
   currency: 'PEN' | 'USD';
   description: string;

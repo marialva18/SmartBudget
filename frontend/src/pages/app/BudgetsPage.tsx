@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Calendar, Pencil, Plus, RefreshCw, WalletCards } from 'lucide-react';
 import { useState } from 'react';
+import { HelpDisclosure } from '../../components/ui/HelpDisclosure';
 import { getCategories } from '../../features/categories/categoriesApi';
 import { BudgetFormPanel } from '../../features/budgets/BudgetFormPanel';
 import type { BudgetFormValues } from '../../features/budgets/budgetSchema';
@@ -115,9 +116,17 @@ export function BudgetsPage() {
         <p className="text-xs font-semibold uppercase text-slate-500">
           {es.accounts.currencies[currency].plural}
         </p>
-        <p className="mt-2 text-sm text-slate-500">
-          {es.budgets.calculationNote}
-        </p>
+        <div className="mt-3">
+          <HelpDisclosure
+            label={es.budgets.helpLabel}
+            title={es.budgets.helpTitle}
+          >
+            <div className="space-y-2 text-sm leading-6 text-slate-600">
+              <p>{es.budgets.helpNote}</p>
+              <p>{es.budgets.calculationNote}</p>
+            </div>
+          </HelpDisclosure>
+        </div>
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
           <SummaryValue
             currency={currency}

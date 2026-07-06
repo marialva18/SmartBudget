@@ -4,6 +4,7 @@ import { Banknote, Landmark, WalletCards } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
+import { HelpDisclosure } from '../../components/ui/HelpDisclosure';
 import { createAccount } from '../../features/accounts/services/accountsApi';
 import { OnboardingStep } from '../../features/onboarding/components/OnboardingStep';
 import {
@@ -172,9 +173,13 @@ export function AccountPage() {
             type="number"
             {...register('openingBalance', { valueAsNumber: true })}
           />
-          <span className="mt-1 block text-sm text-slate-500">
-            Indica cuánto dinero tienes actualmente en esta cuenta.
-          </span>
+          <div className="mt-2">
+            <HelpDisclosure label="Ayuda sobre saldo inicial">
+              <p className="text-sm leading-6 text-slate-600">
+                Indica cuánto dinero tienes actualmente en esta cuenta.
+              </p>
+            </HelpDisclosure>
+          </div>
           {errors.openingBalance ? (
             <span className="mt-1 block text-sm text-red-700">
               {errors.openingBalance.message}
@@ -217,9 +222,13 @@ export function AccountPage() {
               />
             </label>
           ) : null}
-          <span className="mt-2 block text-sm text-slate-500">
-            Elige desde cuándo quieres que Qori empiece a controlar el saldo de esta cuenta. Los movimientos anteriores a esta fecha se guardarán para análisis, pero no modificarán tu saldo actual.
-          </span>
+          <div className="mt-2">
+            <HelpDisclosure label="Ayuda sobre fecha de inicio">
+              <p className="text-sm leading-6 text-slate-600">
+                Elige desde cuándo quieres que Qori empiece a controlar el saldo de esta cuenta. Los movimientos anteriores a esta fecha se guardarán para análisis, pero no modificarán tu saldo actual.
+              </p>
+            </HelpDisclosure>
+          </div>
           {errors.balanceStartedAt ? (
             <span className="mt-1 block text-sm text-red-700">
               {errors.balanceStartedAt.message}

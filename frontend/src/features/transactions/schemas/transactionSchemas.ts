@@ -12,3 +12,17 @@ export const transactionSchema = z.object({
 
 export type TransactionFormValues = z.infer<typeof transactionSchema>;
 
+export const transferSchema = z
+  .object({
+    fromAccountId: z.string().min(1, es.transactions.validation.fromAccount),
+    toAccountId: z.string().min(1, es.transactions.validation.toAccount),
+    amount: z.number().positive(es.transactions.validation.amount),
+    occurredAt: z.string().min(1, es.transactions.validation.date),
+    description: z.string().trim().max(250).optional(),
+  })
+  .refine((values) => values.fromAccountId !== values.toAccountId, {
+    message: es.transactions.validation.transferAccounts,
+    path: ['toAccountId'],
+  });
+
+export type TransferFormValues = z.infer<typeof transferSchema>;

@@ -22,6 +22,7 @@ import { markLoggedOut } from '../../lib/auth-session';
 import { ApiError } from '../../lib/api';
 import { preventNumberWheelChange } from '../../lib/number-input';
 import { useTheme } from '../../features/theme/useTheme';
+import type { ThemePreference } from '../../features/theme/themeContext';
 
 const timezoneOptions = [
   'America/Lima',
@@ -76,6 +77,7 @@ export function SettingsPage() {
     resolver: zodResolver(profileSchema),
     defaultValues: getDefaults(),
   });
+  const themeField = register('theme');
 
   useEffect(() => {
     if (query.data) {
@@ -258,7 +260,13 @@ export function SettingsPage() {
                 </span>
                 <select
                   className="w-full rounded-md bg-slate-100 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-700"
-                  {...register('theme')}
+                  {...themeField}
+                  onChange={(event) => {
+                    void themeField.onChange(event);
+                    setThemePreference(
+                      event.target.value as ThemePreference,
+                    );
+                  }}
                 >
                   <option value="SYSTEM">{es.settings.themes.SYSTEM}</option>
                   <option value="LIGHT">{es.settings.themes.LIGHT}</option>

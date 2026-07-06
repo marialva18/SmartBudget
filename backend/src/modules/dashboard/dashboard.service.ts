@@ -210,8 +210,14 @@ function getRealBalance(
     .filter((row) => row.currency === currency)
     .reduce((total, row) => {
       const amount = row._sum.amount ?? new Prisma.Decimal(0);
-      return row.type === 'EXPENSE' ? total.minus(amount) : total.plus(amount);
+      return isNegativeBalanceType(row.type)
+        ? total.minus(amount)
+        : total.plus(amount);
     }, new Prisma.Decimal(0));
+}
+
+function isNegativeBalanceType(type: string) {
+  return type === 'EXPENSE' || type === 'TRANSFER_OUT';
 }
 
 function getMonthlyAmount(

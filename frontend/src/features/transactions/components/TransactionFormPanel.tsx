@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { X } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import { HelpDisclosure } from '../../../components/ui/HelpDisclosure';
 import { getAccounts } from '../../accounts/services/accountsApi';
 import { getCategories } from '../../categories/categoriesApi';
 import { useFinanceScope } from '../../finance-scope/financeScope';
@@ -88,6 +89,17 @@ export function TransactionFormPanel({
           onSubmit={handleSubmit(onSubmit)}
         >
           <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
+            <HelpDisclosure
+              label={es.transactions.form.helpLabel}
+              title={es.transactions.form.helpTitle}
+            >
+              <div className="space-y-2 text-sm leading-6 text-slate-600">
+                {Object.values(es.transactions.form.helpItems).map((item) => (
+                  <p key={item}>{item}</p>
+                ))}
+              </div>
+            </HelpDisclosure>
+
             <div className="grid grid-cols-2 gap-2 rounded-md bg-slate-100 p-1">
               {(['EXPENSE', 'INCOME'] as const).map((value) => (
                 <label
@@ -229,7 +241,10 @@ function Field({
 }
 
 function getDefaults(transaction: Transaction | null): TransactionFormValues {
-  if (transaction && transaction.type !== 'OPENING_BALANCE') {
+  if (
+    transaction &&
+    (transaction.type === 'INCOME' || transaction.type === 'EXPENSE')
+  ) {
     return {
       type: transaction.type,
       amount: Number(transaction.amount),

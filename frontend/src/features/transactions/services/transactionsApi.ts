@@ -1,9 +1,17 @@
 import { apiRequest } from '../../../lib/api';
-import type { TransactionFormValues } from '../schemas/transactionSchemas';
+import type {
+  TransactionFormValues,
+  TransferFormValues,
+} from '../schemas/transactionSchemas';
 
 export type Transaction = {
   id: string;
-  type: 'OPENING_BALANCE' | 'INCOME' | 'EXPENSE';
+  type:
+    | 'OPENING_BALANCE'
+    | 'INCOME'
+    | 'EXPENSE'
+    | 'TRANSFER_IN'
+    | 'TRANSFER_OUT';
   amount: string;
   currency: 'PEN' | 'USD';
   description: string | null;
@@ -26,7 +34,12 @@ export type TransactionList = {
   };
   summary: Array<{
     currency: 'PEN' | 'USD';
-    type: 'OPENING_BALANCE' | 'INCOME' | 'EXPENSE';
+    type:
+      | 'OPENING_BALANCE'
+      | 'INCOME'
+      | 'EXPENSE'
+      | 'TRANSFER_IN'
+      | 'TRANSFER_OUT';
     amount: string;
   }>;
 };
@@ -60,6 +73,20 @@ export function createTransaction(values: TransactionFormValues) {
       occurredAt: new Date(values.occurredAt).toISOString(),
     },
   });
+}
+
+export function createTransfer(values: TransferFormValues) {
+  return apiRequest<{ from: Transaction; to: Transaction }>(
+    '/transactions/transfers',
+    {
+      method: 'POST',
+      headers: { 'Idempotency-Key': crypto.randomUUID() },
+      body: {
+        ...values,
+        occurredAt: new Date(values.occurredAt).toISOString(),
+      },
+    },
+  );
 }
 
 export function updateTransaction(

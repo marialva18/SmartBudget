@@ -1,18 +1,12 @@
 import {
   Bell,
-  CalendarClock,
   CalendarDays,
   LayoutDashboard,
   LogOut,
   Menu,
-  MonitorCog,
-  Moon,
   PiggyBank,
   ReceiptText,
   Settings,
-  Sun,
-  Tags,
-  Target,
   Bot,
   BarChart3,
   Users,
@@ -30,20 +24,17 @@ import { es } from '../../i18n/es';
 import { markLoggedOut } from '../../lib/auth-session';
 import { getRecurringDueOccurrences } from '../../features/recurring/services/recurringApi';
 import { getProfile, updateProfile } from '../../features/profile/profileApi';
+import { getNextThemePreference } from '../../features/theme/themePreference';
 import { useTheme } from '../../features/theme/useTheme';
 import type { ThemePreference } from '../../features/theme/themeContext';
 import { QoriMark } from '../brand/QoriMark';
+import { ThemeToggleButton } from '../ui/ThemeToggleButton';
 
 const navItems = [
   {
     label: es.navigation.dashboard,
     to: '/app/dashboard',
     icon: LayoutDashboard,
-  },
-  {
-    label: 'Coach',
-    to: '/app/coach',
-    icon: Bot,
   },
   {
     label: es.navigation.accounts,
@@ -56,40 +47,29 @@ const navItems = [
     icon: ReceiptText,
   },
   {
-    label: es.navigation.analytics,
-    to: '/app/analytics',
-    icon: BarChart3,
-  },
-  {
-    label: es.navigation.calendar,
-    to: '/app/calendar',
-    icon: CalendarDays,
-  },
-  {
-    label: es.navigation.recurring,
-    to: '/app/recurring',
-    icon: CalendarClock,
-  },
-
-  {
-    label: es.navigation.categories,
-    to: '/app/categories',
-    icon: Tags,
-  },
-  {
-    label: es.navigation.budgets,
-    to: '/app/budgets',
+    label: es.navigation.planning,
+    to: '/app/planning',
     icon: PiggyBank,
   },
   {
-    label: es.navigation.goals,
-    to: '/app/goals',
-    icon: Target,
+    label: es.navigation.agenda,
+    to: '/app/agenda',
+    icon: CalendarDays,
   },
   {
     label: es.navigation.groups,
     to: '/app/groups',
     icon: Users,
+  },
+  {
+    label: es.navigation.analytics,
+    to: '/app/analytics',
+    icon: BarChart3,
+  },
+  {
+    label: 'Coach',
+    to: '/app/coach',
+    icon: Bot,
   },
   {
     label: es.navigation.settings,
@@ -296,50 +276,6 @@ function AppShell() {
   );
 }
 
-function ThemeToggleButton({
-  effectiveTheme,
-  isPending,
-  onToggle,
-  preference,
-}: {
-  effectiveTheme: 'LIGHT' | 'DARK';
-  isPending: boolean;
-  onToggle: () => void;
-  preference: ThemePreference;
-}) {
-  const Icon =
-    preference === 'SYSTEM' ? MonitorCog : effectiveTheme === 'DARK' ? Moon : Sun;
-
-  return (
-    <button
-      aria-label={`${es.navigation.themeToggle}: ${formatThemePreference(preference)}`}
-      className="grid size-10 place-items-center rounded-lg border border-[#e0e3e5] bg-white text-[#3c4a46] shadow-[0_10px_30px_rgba(13,148,136,0.06)] transition hover:border-[#bacac5] hover:text-[#006b5f] disabled:opacity-60"
-      disabled={isPending}
-      onClick={onToggle}
-      title={`${es.navigation.themeToggle}: ${formatThemePreference(preference)}`}
-      type="button"
-    >
-      <Icon size={19} />
-    </button>
-  );
-}
-
-function getNextThemePreference(preference: ThemePreference): ThemePreference {
-  if (preference === 'LIGHT') {
-    return 'DARK';
-  }
-
-  if (preference === 'DARK') {
-    return 'SYSTEM';
-  }
-
-  return 'LIGHT';
-}
-
-function formatThemePreference(preference: ThemePreference) {
-  return es.settings.themes[preference];
-}
-
 function NotificationBell({
   pendingInvitations,
   pendingRecurringDue,
@@ -373,7 +309,7 @@ function NotificationBell({
                 <NavLink
                   className="block rounded-md bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900"
                   onClick={() => setIsOpen(false)}
-                  to="/app/recurring"
+                  to="/app/agenda/recurring"
                 >
                   {pendingRecurringDue === 1
                     ? 'Tienes 1 recurrencia pendiente por confirmar'

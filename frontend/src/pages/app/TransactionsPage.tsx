@@ -2,6 +2,7 @@
 import {
   ChevronLeft,
   ChevronRight,
+  ArrowRightLeft,
   Pencil,
   Plus,
   Search,
@@ -16,8 +17,13 @@ import {
 } from '../../features/accounts/services/accountsApi';
 import { useFinanceScope } from '../../features/finance-scope/financeScope';
 import { TransactionFormPanel } from '../../features/transactions/components/TransactionFormPanel';
-import type { TransactionFormValues } from '../../features/transactions/schemas/transactionSchemas';
+import { TransferFormPanel } from '../../features/transactions/components/TransferFormPanel';
+import type {
+  TransactionFormValues,
+  TransferFormValues,
+} from '../../features/transactions/schemas/transactionSchemas';
 import {
+  createTransfer,
   createTransaction,
   deleteTransaction,
   getTransactions,
@@ -39,6 +45,7 @@ export function TransactionsPage() {
   const [deleteCandidate, setDeleteCandidate] =
     useState<Transaction | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [transferPanelOpen, setTransferPanelOpen] = useState(false);
   const [error, setError] = useState('');
   const [highExpenseWarning, setHighExpenseWarning] =
   useState<HighExpenseWarning | null>(null);
@@ -94,6 +101,20 @@ const highExpenseWarningRatio = highExpenseWarningPercent / 100;
           : es.transactions.saveError,
       ),
   });
+  const transferMutation = useMutation({
+    mutationFn: createTransfer,
+    onSuccess: async () => {
+      setTransferPanelOpen(false);
+      setError('');
+      await refreshData();
+    },
+    onError: (reason) =>
+      setError(
+        reason instanceof ApiError
+          ? reason.message
+          : es.transactions.saveError,
+      ),
+  });
   const deleteMutation = useMutation({
     mutationFn: deleteTransaction,
     onSuccess: async () => {
@@ -122,6 +143,10 @@ const highExpenseWarningRatio = highExpenseWarningPercent / 100;
   saveMutation.mutate(values);
 };
 
+  const handleSubmitTransfer = (values: TransferFormValues) => {
+    transferMutation.mutate(values);
+  };
+
   return (
     <section className="space-y-7">
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
@@ -132,17 +157,27 @@ const highExpenseWarningRatio = highExpenseWarningPercent / 100;
           <h1 className="mt-1 text-3xl font-bold">{es.transactions.title}</h1>
           <p className="mt-2 text-slate-600">{es.transactions.subtitle}</p>
         </div>
-        <button
-          className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-800 px-5 py-3 font-semibold text-white"
-          onClick={() => {
-            setSelected(null);
-            setPanelOpen(true);
-          }}
-          type="button"
-        >
-          <Plus size={19} />
-          {es.transactions.newTransaction}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-emerald-200 bg-white px-5 py-3 font-semibold text-emerald-800 transition hover:bg-emerald-50"
+            onClick={() => setTransferPanelOpen(true)}
+            type="button"
+          >
+            <ArrowRightLeft size={18} />
+            {es.transactions.newTransfer}
+          </button>
+          <button
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-800 px-5 py-3 font-semibold text-white"
+            onClick={() => {
+              setSelected(null);
+              setPanelOpen(true);
+            }}
+            type="button"
+          >
+            <Plus size={19} />
+            {es.transactions.newTransaction}
+          </button>
+        </div>
       </header>
 
       <div className="space-y-4">
@@ -321,6 +356,14 @@ const highExpenseWarningRatio = highExpenseWarningPercent / 100;
         />
       ) : null}
 
+      {transferPanelOpen ? (
+        <TransferFormPanel
+          isSaving={transferMutation.isPending}
+          onClose={() => setTransferPanelOpen(false)}
+          onSubmit={handleSubmitTransfer}
+        />
+      ) : null}
+
       {deleteCandidate ? (
         <ConfirmDialog
           actionLabel={es.transactions.deleteConfirmationAction}
@@ -370,7 +413,10 @@ function TransactionRow({
   onEdit: () => void;
   transaction: Transaction;
 }) {
-  const editable = transaction.type !== 'OPENING_BALANCE';
+  const editable =
+    transaction.type !== 'OPENING_BALANCE' &&
+    transaction.type !== 'TRANSFER_IN' &&
+    transaction.type !== 'TRANSFER_OUT';
   return (
     <tr className="hover:bg-slate-50">
       <td className="px-4 py-4 font-semibold">
@@ -390,11 +436,7 @@ function TransactionRow({
       </td>
       <td className="px-4 py-4">
         <span>
-          {transaction.type === 'INCOME'
-            ? es.transactions.income
-            : transaction.type === 'EXPENSE'
-              ? es.transactions.expense
-              : es.accounts.form.openingBalance}
+          {formatTransactionType(transaction.type)}
         </span>
         <span className="mt-2 block">
           <BalanceImpactBadge status={transaction.balanceImpactStatus} />
@@ -402,13 +444,15 @@ function TransactionRow({
       </td>
       <td
         className={`px-4 py-4 font-bold ${
-          transaction.type === 'EXPENSE' ? 'text-red-700' : 'text-emerald-700'
+          isNegativeTransaction(transaction.type)
+            ? 'text-red-700'
+            : 'text-emerald-700'
         }`}
       >
         {formatSignedMoney(
           Number(transaction.amount),
           transaction.currency,
-          transaction.type === 'EXPENSE' ? '-' : '+',
+          isNegativeTransaction(transaction.type) ? '-' : '+',
         )}
       </td>
       <td className="px-4 py-4">
@@ -494,7 +538,12 @@ function SummaryValue({
 function getSummary(
   rows: Array<{
     currency: 'PEN' | 'USD';
-    type: 'OPENING_BALANCE' | 'INCOME' | 'EXPENSE';
+    type:
+      | 'OPENING_BALANCE'
+      | 'INCOME'
+      | 'EXPENSE'
+      | 'TRANSFER_IN'
+      | 'TRANSFER_OUT';
     amount: string;
   }>,
 ) {
@@ -505,12 +554,36 @@ function getSummary(
   for (const row of rows) {
     if (row.type === 'OPENING_BALANCE') {
       result[row.currency].openingBalance = Number(row.amount);
-    } else {
+    } else if (row.type === 'INCOME' || row.type === 'EXPENSE') {
       result[row.currency][row.type === 'INCOME' ? 'income' : 'expense'] =
         Number(row.amount);
     }
   }
   return result;
+}
+
+function formatTransactionType(type: Transaction['type']) {
+  if (type === 'INCOME') {
+    return es.transactions.income;
+  }
+
+  if (type === 'EXPENSE') {
+    return es.transactions.expense;
+  }
+
+  if (type === 'TRANSFER_IN') {
+    return es.transactions.transferIn;
+  }
+
+  if (type === 'TRANSFER_OUT') {
+    return es.transactions.transferOut;
+  }
+
+  return es.accounts.form.openingBalance;
+}
+
+function isNegativeTransaction(type: Transaction['type']) {
+  return type === 'EXPENSE' || type === 'TRANSFER_OUT';
 }
 function getHighExpenseWarning({
   accounts,

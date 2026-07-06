@@ -44,8 +44,10 @@ export class AnalyticsService {
     const accountTotals = this.sumByAccount(transactions);
     const dayTotals = await this.sumExpensesByDay(userId, transactions);
     const [comparison, budgetUsage] = await Promise.all([
-      this.getPeriodComparison(userId, query, totals),
-      this.getBudgetUsage(userId, query),
+      this.getOptionalAnalyticsValue(() =>
+        this.getPeriodComparison(userId, query, totals),
+      ),
+      this.getOptionalAnalyticsValue(() => this.getBudgetUsage(userId, query)),
     ]);
 
     return {
@@ -793,7 +795,15 @@ export class AnalyticsService {
       select: { timezone: true },
     });
 
-    return profile?.timezone ?? DEFAULT_TIMEZONE;
+    return normalizeTimezone(profile?.timezone);
+  }
+
+  private async getOptionalAnalyticsValue<T>(loader: () => Promise<T>) {
+    try {
+      return await loader();
+    } catch {
+      return null;
+    }
   }
 
   private async getFilterRows(userId: string, query: AnalyticsQueryDto) {
@@ -1004,4 +1014,17 @@ function formatComparisonMode(mode?: string) {
   }
 
   return 'Periodo anterior equivalente';
+}
+
+function normalizeTimezone(timezone?: string | null) {
+  if (!timezone) {
+    return DEFAULT_TIMEZONE;
+  }
+
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: timezone });
+    return timezone;
+  } catch {
+    return DEFAULT_TIMEZONE;
+  }
 }

@@ -1,6 +1,6 @@
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { Download, FileText } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import {
   downloadAnalyticsExport,
   downloadAnalyticsPdf,
@@ -42,10 +42,11 @@ type RangePreset =
 type CompareWith = 'PREVIOUS_PERIOD' | 'PREVIOUS_MONTH' | 'PREVIOUS_YEAR' | 'NONE';
 
 const filterFieldClass =
-  'min-h-12 rounded-md bg-slate-100 px-3 py-3 text-sm text-slate-900 outline-none transition focus:ring-2 focus:ring-emerald-700';
+  'min-h-12 min-w-0 truncate rounded-md bg-slate-100 px-3 py-3 text-sm text-slate-900 outline-none transition focus:ring-2 focus:ring-emerald-700';
 
 export function AnalyticsPage() {
   const { scope } = useFinanceScope();
+  const customDateErrorId = useId();
   const [range, setRange] = useState<RangePreset>('MONTH');
   const [customFrom, setCustomFrom] = useState(getCurrentMonthStartKey());
   const [customTo, setCustomTo] = useState(getTodayDateKey());
@@ -62,6 +63,8 @@ export function AnalyticsPage() {
   const [exportingFormat, setExportingFormat] = useState<
     'xlsx' | 'pdf' | null
   >(null);
+  const hasInvalidCustomRange = range === 'CUSTOM' && customFrom > customTo;
+  const analyticsEnabled = !hasInvalidCustomRange;
 
   const filters = useMemo<AnalyticsFilters>(() => {
     const dateRange =
@@ -109,41 +112,53 @@ export function AnalyticsPage() {
       queries: [
         {
           queryKey: ['analytics-summary', filters],
+          enabled: analyticsEnabled,
           queryFn: () => getAnalyticsSummary(filters),
         },
         {
           queryKey: ['analytics-by-category', filters],
+          enabled: analyticsEnabled,
           queryFn: () => getAnalyticsByCategory(filters),
         },
         {
           queryKey: ['analytics-by-account', filters],
+          enabled: analyticsEnabled,
           queryFn: () => getAnalyticsByAccount(filters),
         },
         {
           queryKey: ['analytics-timeline', filters],
+          enabled: analyticsEnabled,
           queryFn: () => getAnalyticsTimeline(filters),
         },
         {
           queryKey: ['analytics-top-expenses', filters],
+          enabled: analyticsEnabled,
           queryFn: () => getAnalyticsTopExpenses(filters),
         },
       ],
     });
 
   const currency = scope === 'USD' ? 'USD' : 'PEN';
+  const summary = analyticsEnabled ? summaryQuery.data : undefined;
+  const categoryRows = analyticsEnabled
+    ? (categoriesAnalyticsQuery.data ?? [])
+    : [];
+  const accountRows = analyticsEnabled ? (accountsAnalyticsQuery.data ?? []) : [];
+  const timelineRows = analyticsEnabled ? (timelineQuery.data ?? []) : [];
+  const topExpenseRows = analyticsEnabled ? (topExpensesQuery.data ?? []) : [];
   const topCategoryAmount = Math.max(
-    ...((categoriesAnalyticsQuery.data ?? []).map((row) => Number(row.amount))),
+    ...categoryRows.map((row) => Number(row.amount)),
     1,
   );
-  const categoryChartRows = (categoriesAnalyticsQuery.data ?? [])
+  const categoryChartRows = categoryRows
     .slice(0, 8)
     .map((row) => ({
       name: row.category?.name ?? es.budgets.uncategorized,
       amount: Number(row.amount),
       currency: row.currency,
     }));
-  const hasCategoryData = (categoriesAnalyticsQuery.data ?? []).length > 0;
-  const accountExpenseRows = (accountsAnalyticsQuery.data ?? []).filter(
+  const hasCategoryData = categoryRows.length > 0;
+  const accountExpenseRows = accountRows.filter(
     (row) => row.type === 'EXPENSE',
   );
   const topAccountAmount = Math.max(
@@ -156,11 +171,11 @@ export function AnalyticsPage() {
     currency: row.currency,
   }));
   const hasAccountData = accountExpenseRows.length > 0;
-  const hasTopExpenses = (topExpensesQuery.data ?? []).length > 0;
-  const hasTimelineData = (timelineQuery.data ?? []).length > 0;
-  const budgetUsage = summaryQuery.data?.budgetUsage;
-  const comparisonRows = summaryQuery.data?.comparison
-    ? buildComparisonRows(summaryQuery.data)
+  const hasTopExpenses = topExpenseRows.length > 0;
+  const hasTimelineData = timelineRows.length > 0;
+  const budgetUsage = summary?.budgetUsage;
+  const comparisonRows = summary?.comparison
+    ? buildComparisonRows(summary)
     : [];
   const activeFilterLabels = buildActiveFilterLabels({
     accountName:
@@ -184,6 +199,12 @@ export function AnalyticsPage() {
 
   async function handleExport(format: 'xlsx' | 'pdf') {
     setExportError('');
+
+    if (hasInvalidCustomRange) {
+      setExportError(es.analytics.invalidDateRange);
+      return;
+    }
+
     setExportingFormat(format);
 
     try {
@@ -206,6 +227,8 @@ export function AnalyticsPage() {
     }
   }
 
+  const isExportDisabled = Boolean(exportingFormat) || hasInvalidCustomRange;
+
   return (
     <section className="space-y-7">
       <header className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
@@ -222,8 +245,8 @@ export function AnalyticsPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <button
-            className="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-700 px-4 py-3 font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-300"
-            disabled={Boolean(exportingFormat)}
+            className="inline-flex min-w-0 items-center justify-center gap-2 rounded-md bg-emerald-700 px-4 py-3 font-semibold text-white transition hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-300"
+            disabled={isExportDisabled}
             onClick={() => void handleExport('xlsx')}
             type="button"
           >
@@ -233,8 +256,8 @@ export function AnalyticsPage() {
               : es.analytics.export}
           </button>
           <button
-            className="inline-flex items-center justify-center gap-2 rounded-md border border-emerald-200 bg-white px-4 py-3 font-semibold text-emerald-800 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
-            disabled={Boolean(exportingFormat)}
+            className="inline-flex min-w-0 items-center justify-center gap-2 rounded-md border border-emerald-200 bg-white px-4 py-3 font-semibold text-emerald-800 transition hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
+            disabled={isExportDisabled}
             onClick={() => void handleExport('pdf')}
             type="button"
           >
@@ -248,7 +271,7 @@ export function AnalyticsPage() {
 
       <section
         aria-label={es.analytics.filters.panel}
-        className="grid gap-3 rounded-lg bg-white p-4 shadow-[0_10px_30px_rgba(13,148,136,0.08)] md:grid-cols-3 xl:grid-cols-8"
+        className="grid gap-3 rounded-lg bg-white p-4 shadow-[0_10px_30px_rgba(13,148,136,0.08)] sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-7"
       >
         <label className="sr-only" htmlFor="analytics-range">
           {es.analytics.filters.range}
@@ -272,6 +295,10 @@ export function AnalyticsPage() {
               {es.analytics.filters.from}
             </label>
             <input
+              aria-describedby={
+                hasInvalidCustomRange ? customDateErrorId : undefined
+              }
+              aria-invalid={hasInvalidCustomRange}
               className={filterFieldClass}
               id="analytics-from"
               onChange={(event) => setCustomFrom(event.target.value)}
@@ -282,6 +309,10 @@ export function AnalyticsPage() {
               {es.analytics.filters.to}
             </label>
             <input
+              aria-describedby={
+                hasInvalidCustomRange ? customDateErrorId : undefined
+              }
+              aria-invalid={hasInvalidCustomRange}
               className={filterFieldClass}
               id="analytics-to"
               onChange={(event) => setCustomTo(event.target.value)}
@@ -394,7 +425,7 @@ export function AnalyticsPage() {
           <div className="flex flex-wrap gap-2">
             {activeFilterLabels.map((label) => (
               <span
-                className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm font-semibold text-slate-700"
+                className="max-w-full break-words rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm font-semibold text-slate-700"
                 key={label}
               >
                 {label}
@@ -418,24 +449,40 @@ export function AnalyticsPage() {
         </HelpDisclosure>
       </div>
 
-      {summaryQuery.isError ? (
-        <p className="border-y border-red-200 bg-red-50 p-4 text-red-800">
+      {hasInvalidCustomRange ? (
+        <div
+          className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900"
+          id={customDateErrorId}
+          role="alert"
+        >
+          {es.analytics.invalidDateRange}
+        </div>
+      ) : null}
+
+      {analyticsEnabled && summaryQuery.isError ? (
+        <div
+          className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
+          role="alert"
+        >
           {es.analytics.loadError}
-        </p>
+        </div>
       ) : null}
 
       {exportError ? (
-        <p className="border-y border-red-200 bg-red-50 p-4 text-red-800">
+        <p
+          className="border-y border-red-200 bg-red-50 p-4 text-red-800"
+          role="alert"
+        >
           {exportError}
         </p>
       ) : null}
 
-      {summaryQuery.isLoading ? (
+      {analyticsEnabled && summaryQuery.isLoading ? (
         <AnalyticsSkeleton />
-      ) : (
+      ) : !analyticsEnabled || summaryQuery.isError ? null : (
         <AnalyticsSummaryPanels
           currency={currency}
-          summary={summaryQuery.data}
+          summary={summary}
         />
       )}
 
@@ -478,7 +525,7 @@ export function AnalyticsPage() {
             />
           ) : null}
           <div className="mt-5 space-y-3">
-            {hasCategoryData ? (categoriesAnalyticsQuery.data ?? []).slice(0, 8).map((row) => (
+            {hasCategoryData ? categoryRows.slice(0, 8).map((row) => (
               <div key={`${row.categoryId ?? 'none'}-${row.currency}`}>
                 <div className="mb-1 flex justify-between gap-3 text-sm">
                   <span className="font-semibold">{row.category?.name ?? es.budgets.uncategorized}</span>
@@ -530,7 +577,7 @@ export function AnalyticsPage() {
         >
           <h2 className="text-lg font-bold">{es.analytics.topExpenses}</h2>
           <div className="mt-4 divide-y divide-slate-100">
-            {hasTopExpenses ? (topExpensesQuery.data ?? []).map((transaction) => (
+            {hasTopExpenses ? topExpenseRows.map((transaction) => (
               <article className="flex items-center justify-between gap-4 py-3" key={transaction.id}>
                 <div>
                   <p className="font-semibold">{transaction.description ?? transaction.category?.name ?? es.budgets.uncategorized}</p>
@@ -553,7 +600,7 @@ export function AnalyticsPage() {
         {hasTimelineData ? (
           <TimelineChart
             currency={currency}
-            rows={timelineQuery.data ?? []}
+            rows={timelineRows}
           />
         ) : null}
         <div className="mt-4 overflow-x-auto">
@@ -567,7 +614,7 @@ export function AnalyticsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {hasTimelineData ? (timelineQuery.data ?? []).map((row) => (
+              {hasTimelineData ? timelineRows.map((row) => (
                 <tr key={row.date}>
                   <td className="py-3 font-semibold">{row.date}</td>
                   <td className="py-3 text-emerald-700">{formatMoney(Number(row.income), currency)}</td>
@@ -632,20 +679,38 @@ function buildActiveFilterLabels({
   scope: 'ALL' | 'PEN' | 'USD';
   type: '' | 'INCOME' | 'EXPENSE';
 }) {
-  return [
+  const labels = [
     getRangeLabel(range, customFrom, customTo),
     scope === 'ALL' ? 'Todas las monedas' : `Moneda ${scope}`,
-    accountName ? `Cuenta: ${accountName}` : es.analytics.filters.allAccounts,
-    categoryName
-      ? `Categoría: ${categoryName}`
-      : es.analytics.filters.allCategories,
-    groupName ? `Grupo: ${groupName}` : es.analytics.filters.allGroups,
-    type ? (type === 'INCOME' ? es.transactions.income : es.transactions.expense) : es.analytics.filters.allTypes,
-    impact
-      ? es.transactions.balanceImpactStatus[impact]
-      : es.analytics.filters.allImpact,
-    getCompareLabel(compareWith),
   ];
+
+  if (accountName) {
+    labels.push(`Cuenta: ${accountName}`);
+  }
+
+  if (categoryName) {
+    labels.push(`Categoría: ${categoryName}`);
+  }
+
+  if (groupName) {
+    labels.push(`Grupo: ${groupName}`);
+  }
+
+  if (type) {
+    labels.push(
+      type === 'INCOME' ? es.transactions.income : es.transactions.expense,
+    );
+  }
+
+  if (impact) {
+    labels.push(es.transactions.balanceImpactStatus[impact]);
+  }
+
+  if (compareWith !== 'NONE') {
+    labels.push(getCompareLabel(compareWith));
+  }
+
+  return labels;
 }
 
 function getRangeLabel(
