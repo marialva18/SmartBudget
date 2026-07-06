@@ -156,7 +156,7 @@ export function validateEnvironment(config: Environment): Environment {
     EMAIL_VERIFICATION_APP_URL: readString(config.EMAIL_VERIFICATION_APP_URL),
     EMAIL_VERIFICATION_EXPIRES_IN_MINUTES: readPositiveInteger(
       config.EMAIL_VERIFICATION_EXPIRES_IN_MINUTES,
-      1440,
+      60,
     ),
 
     AI_COACH_ENABLED: aiCoachEnabled,

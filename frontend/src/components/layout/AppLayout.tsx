@@ -190,46 +190,46 @@ function AppShell() {
         </div>
       </header>
 
-     <aside
-  className={`fixed inset-y-0 left-0 z-30 flex w-64 flex-col overflow-y-auto overscroll-contain border-r border-white/10 bg-[#073f38] p-4 shadow-[10px_0_30px_rgba(3,32,29,0.22)] transition-transform md:translate-x-0 md:shadow-none ${
-    isMenuOpen ? 'translate-x-0 pt-20 md:pt-4' : '-translate-x-full'
-  }`}
->
-  <div className="hidden shrink-0 px-2 pb-8 pt-2 md:block">
-    <BrandMark tone="light" />
-  </div>
-
-  <nav className="space-y-1 pb-4">
-    {navItems.map(({ icon: Icon, label, to }) => (
-      <NavLink
-        className={({ isActive }) =>
-          [
-            'flex min-h-11 items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold transition-all',
-            isActive
-              ? 'bg-[#e5f5ef] text-[#063c36] shadow-[0_12px_28px_rgba(0,0,0,0.16)]'
-              : 'text-[#d4e6df] hover:bg-white/10 hover:text-white',
-          ].join(' ')
-        }
-        key={to}
-        onClick={() => setIsMenuOpen(false)}
-        to={to}
+      <aside
+        className={`fixed inset-y-0 left-0 z-30 flex w-72 flex-col overflow-y-auto overscroll-contain border-r border-white/10 bg-[#073f38] px-5 py-6 shadow-[10px_0_30px_rgba(3,32,29,0.22)] transition-transform md:translate-x-0 md:shadow-none ${
+          isMenuOpen ? 'translate-x-0 pt-20 md:pt-6' : '-translate-x-full'
+        }`}
       >
-        <Icon size={19} />
-        {label}
-      </NavLink>
-    ))}
-  </nav>
+        <div className="hidden shrink-0 px-1 pb-7 md:block">
+          <BrandMark tone="light" />
+        </div>
 
-  <button
-    className="mt-2 flex min-h-11 w-full shrink-0 items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-semibold text-red-100 transition-colors hover:bg-red-500/15 hover:text-white disabled:opacity-60"
-    disabled={logoutMutation.isPending}
-    onClick={() => logoutMutation.mutate()}
-    type="button"
-  >
-    <LogOut size={19} />
-    {es.navigation.logout}
-  </button>
-</aside>
+        <nav className="flex flex-1 flex-col gap-2 pb-6">
+          {navItems.map(({ icon: Icon, label, to }) => (
+            <NavLink
+              className={({ isActive }) =>
+                [
+                  'flex min-h-12 items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold transition-all',
+                  isActive
+                    ? 'bg-[#e5f5ef] text-[#063c36] shadow-[0_12px_28px_rgba(0,0,0,0.16)]'
+                    : 'text-[#d4e6df] hover:bg-white/10 hover:text-white',
+                ].join(' ')
+              }
+              key={to}
+              onClick={() => setIsMenuOpen(false)}
+              to={to}
+            >
+              <Icon className="shrink-0" size={19} />
+              <span className="truncate">{label}</span>
+            </NavLink>
+          ))}
+        </nav>
+
+        <button
+          className="mt-auto flex min-h-12 w-full shrink-0 items-center gap-3 rounded-lg border border-transparent px-4 py-3 text-left text-sm font-semibold text-red-100 transition-colors hover:border-red-300/20 hover:bg-red-500/15 hover:text-white disabled:opacity-60"
+          disabled={logoutMutation.isPending}
+          onClick={() => logoutMutation.mutate()}
+          type="button"
+        >
+          <LogOut className="shrink-0" size={19} />
+          <span>{es.navigation.logout}</span>
+        </button>
+      </aside>
 
       {isMenuOpen ? (
         <button
@@ -240,7 +240,7 @@ function AppShell() {
         />
       ) : null}
 
-      <main className="min-h-screen min-w-0 md:pl-64">
+      <main className="min-h-screen min-w-0 md:pl-72">
         <div className="sticky top-0 z-20 hidden h-16 items-center justify-end gap-4 border-b border-[#e0e3e5] bg-white/90 px-6 shadow-[0_10px_30px_rgba(13,148,136,0.04)] backdrop-blur md:flex lg:px-10">
           <NotificationBell
             pendingInvitations={pendingInvitations}

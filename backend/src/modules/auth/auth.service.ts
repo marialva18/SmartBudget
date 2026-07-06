@@ -637,7 +637,7 @@ export class AuthService {
     );
     const emailVerificationExpiresInMinutes = this.configService.get<number>(
       'EMAIL_VERIFICATION_EXPIRES_IN_MINUTES',
-      1440,
+      60,
     );
 
     const missingResetUrl = requiredUrls.reset === true && !resetAppUrl;

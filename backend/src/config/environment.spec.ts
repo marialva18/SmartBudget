@@ -47,6 +47,7 @@ describe('environment configuration', () => {
     expect(validateEnvironment({ NODE_ENV: 'development' })).toEqual(
       expect.objectContaining({
         API_PREFIX: 'api/v1',
+        EMAIL_VERIFICATION_EXPIRES_IN_MINUTES: 60,
         FRONTEND_ORIGIN: 'http://localhost:5173',
         TRUST_PROXY: false,
         THROTTLE_TTL_MS: 60_000,
