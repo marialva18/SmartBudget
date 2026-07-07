@@ -54,8 +54,7 @@ export function AnalyticsPage() {
   const [categoryId, setCategoryId] = useState('');
   const [groupId, setGroupId] = useState('');
   const [type, setType] = useState<'' | 'INCOME' | 'EXPENSE'>('');
-  const [compareWith, setCompareWith] =
-    useState<CompareWith>('PREVIOUS_PERIOD');
+  const [compareWith, setCompareWith] = useState<CompareWith>('NONE');
   const [impact, setImpact] = useState<
     '' | 'AFFECTS_BALANCE' | 'ANALYSIS_ONLY' | 'PENDING_FUTURE'
   >('');
@@ -66,7 +65,7 @@ export function AnalyticsPage() {
   const hasInvalidCustomRange = range === 'CUSTOM' && customFrom > customTo;
   const analyticsEnabled = !hasInvalidCustomRange;
 
-  const filters = useMemo<AnalyticsFilters>(() => {
+  const baseFilters = useMemo<AnalyticsFilters>(() => {
     const dateRange =
       range === 'CUSTOM'
         ? { from: toStartIso(customFrom), to: toEndIso(customTo) }
@@ -80,12 +79,10 @@ export function AnalyticsPage() {
       type: type || undefined,
       currency: scope === 'ALL' ? undefined : scope,
       balanceImpactStatus: impact || undefined,
-      compareWith,
     };
   }, [
     accountId,
     categoryId,
-    compareWith,
     customFrom,
     customTo,
     groupId,
@@ -94,6 +91,13 @@ export function AnalyticsPage() {
     scope,
     type,
   ]);
+  const comparisonFilters = useMemo<AnalyticsFilters>(
+    () => ({
+      ...baseFilters,
+      compareWith: compareWith === 'NONE' ? undefined : compareWith,
+    }),
+    [baseFilters, compareWith],
+  );
 
   const accountsQuery = useQuery({ queryKey: ['accounts'], queryFn: getAccounts });
   const groupsQuery = useQuery({ queryKey: ['groups'], queryFn: getGroups });
@@ -111,32 +115,37 @@ export function AnalyticsPage() {
     useQueries({
       queries: [
         {
-          queryKey: ['analytics-summary', filters],
+          queryKey: ['analytics-summary', baseFilters],
           enabled: analyticsEnabled,
-          queryFn: () => getAnalyticsSummary(filters),
+          queryFn: () => getAnalyticsSummary(baseFilters),
         },
         {
-          queryKey: ['analytics-by-category', filters],
+          queryKey: ['analytics-by-category', baseFilters],
           enabled: analyticsEnabled,
-          queryFn: () => getAnalyticsByCategory(filters),
+          queryFn: () => getAnalyticsByCategory(baseFilters),
         },
         {
-          queryKey: ['analytics-by-account', filters],
+          queryKey: ['analytics-by-account', baseFilters],
           enabled: analyticsEnabled,
-          queryFn: () => getAnalyticsByAccount(filters),
+          queryFn: () => getAnalyticsByAccount(baseFilters),
         },
         {
-          queryKey: ['analytics-timeline', filters],
+          queryKey: ['analytics-timeline', baseFilters],
           enabled: analyticsEnabled,
-          queryFn: () => getAnalyticsTimeline(filters),
+          queryFn: () => getAnalyticsTimeline(baseFilters),
         },
         {
-          queryKey: ['analytics-top-expenses', filters],
+          queryKey: ['analytics-top-expenses', baseFilters],
           enabled: analyticsEnabled,
-          queryFn: () => getAnalyticsTopExpenses(filters),
+          queryFn: () => getAnalyticsTopExpenses(baseFilters),
         },
       ],
     });
+  const comparisonQuery = useQuery({
+    queryKey: ['analytics-comparison', comparisonFilters],
+    enabled: analyticsEnabled && compareWith !== 'NONE',
+    queryFn: () => getAnalyticsSummary(comparisonFilters),
+  });
 
   const currency = scope === 'USD' ? 'USD' : 'PEN';
   const summary = analyticsEnabled ? summaryQuery.data : undefined;
@@ -174,9 +183,16 @@ export function AnalyticsPage() {
   const hasTopExpenses = topExpenseRows.length > 0;
   const hasTimelineData = timelineRows.length > 0;
   const budgetUsage = summary?.budgetUsage;
-  const comparisonRows = summary?.comparison
-    ? buildComparisonRows(summary)
+  const comparisonSummary = comparisonQuery.data;
+  const comparisonRows = comparisonSummary?.comparison
+    ? buildComparisonRows(comparisonSummary)
     : [];
+  const hasAnalyticsLoadError =
+    summaryQuery.isError ||
+    categoriesAnalyticsQuery.isError ||
+    accountsAnalyticsQuery.isError ||
+    timelineQuery.isError ||
+    topExpensesQuery.isError;
   const activeFilterLabels = buildActiveFilterLabels({
     accountName:
       (accountsQuery.data ?? []).find((account) => account.id === accountId)
@@ -210,8 +226,8 @@ export function AnalyticsPage() {
     try {
       const file =
         format === 'xlsx'
-          ? await downloadAnalyticsExport(filters)
-          : await downloadAnalyticsPdf(filters);
+          ? await downloadAnalyticsExport(comparisonFilters)
+          : await downloadAnalyticsPdf(comparisonFilters);
       const url = URL.createObjectURL(file.blob);
       const link = document.createElement('a');
       link.href = url;
@@ -385,6 +401,7 @@ export function AnalyticsPage() {
           onChange={(event) => setCompareWith(event.target.value as CompareWith)}
           value={compareWith}
         >
+          <option value="NONE">{es.analytics.filters.noComparison}</option>
           <option value="PREVIOUS_PERIOD">
             {es.analytics.filters.previousPeriod}
           </option>
@@ -394,7 +411,6 @@ export function AnalyticsPage() {
           <option value="PREVIOUS_YEAR">
             {es.analytics.filters.comparePreviousYear}
           </option>
-          <option value="NONE">{es.analytics.filters.noComparison}</option>
         </select>
         <label className="sr-only" htmlFor="analytics-impact">
           {es.analytics.filters.impact}
@@ -459,12 +475,21 @@ export function AnalyticsPage() {
         </div>
       ) : null}
 
-      {analyticsEnabled && summaryQuery.isError ? (
+      {analyticsEnabled && hasAnalyticsLoadError ? (
         <div
           className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
           role="alert"
         >
           {es.analytics.loadError}
+        </div>
+      ) : null}
+
+      {analyticsEnabled && compareWith !== 'NONE' && comparisonQuery.isError ? (
+        <div
+          className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900"
+          role="status"
+        >
+          {es.analytics.comparisonLoadError}
         </div>
       ) : null}
 

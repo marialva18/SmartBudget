@@ -206,6 +206,8 @@ export const es = {
     subtitle:
       'Explora tus ingresos y gastos por periodo, cuenta, categoría y efecto en saldo.',
     loadError: 'No pudimos cargar tu análisis financiero.',
+    comparisonLoadError:
+      'El análisis cargó, pero no pudimos calcular la comparación elegida. Puedes verla sin comparación o intentar otra referencia.',
     loading: 'Preparando análisis...',
     export: 'Exportar Excel',
     exportPdf: 'Exportar PDF',
@@ -227,7 +229,7 @@ export const es = {
     insightComparison: 'Cambio frente a referencia',
     insightFocus: 'Dónde mirar primero',
     insightBudget: 'Presupuesto',
-    comparison: 'Comparación con periodo anterior',
+    comparison: 'Comparación del periodo',
     comparisonHelp:
       'Contrasta el rango actual con la referencia elegida en los filtros.',
     comparisonChart:

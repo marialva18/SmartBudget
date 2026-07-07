@@ -115,7 +115,7 @@ function params(filters: AnalyticsFilters) {
   const params = new URLSearchParams();
 
   for (const [key, value] of Object.entries(filters)) {
-    if (value) {
+    if (value && value !== 'NONE') {
       params.set(key, value);
     }
   }
