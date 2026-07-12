@@ -24,8 +24,8 @@ export function ThemeToggleButton({
   return (
     <button
       aria-label={label}
+      aria-busy={isPending}
       className="grid size-10 place-items-center rounded-lg border border-[#e0e3e5] bg-white text-[#3c4a46] shadow-[0_10px_30px_rgba(13,148,136,0.06)] transition hover:border-[#bacac5] hover:text-[#006b5f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2 disabled:opacity-60"
-      disabled={isPending}
       onClick={onToggle}
       title={label}
       type="button"

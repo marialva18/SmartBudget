@@ -3,7 +3,11 @@ import { LogOut } from 'lucide-react';
 import { useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { logout } from '../../features/auth/services/authApi';
-import { getProfile, updateProfile } from '../../features/profile/profileApi';
+import {
+  getProfile,
+  updateProfile,
+  type Profile,
+} from '../../features/profile/profileApi';
 import { getNextThemePreference } from '../../features/theme/themePreference';
 import type { ThemePreference } from '../../features/theme/themeContext';
 import { useTheme } from '../../features/theme/useTheme';
@@ -35,6 +39,28 @@ export function OnboardingLayout() {
         theme,
         timezone: profileQuery.data.timezone,
       });
+    },
+    onMutate: async (theme) => {
+      await queryClient.cancelQueries({ queryKey: ['profile'] });
+      const previousProfile = queryClient.getQueryData<Profile>(['profile']);
+
+      if (previousProfile) {
+        queryClient.setQueryData<Profile>(['profile'], {
+          ...previousProfile,
+          theme,
+        });
+      }
+
+      return { previousProfile };
+    },
+    onError: (_error, _theme, context) => {
+      if (context?.previousProfile) {
+        queryClient.setQueryData<Profile>(
+          ['profile'],
+          context.previousProfile,
+        );
+        setPreference(context.previousProfile.theme);
+      }
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['profile'] });

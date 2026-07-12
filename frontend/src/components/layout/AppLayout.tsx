@@ -23,7 +23,11 @@ import { getGroups } from '../../features/groups/groupsApi';
 import { es } from '../../i18n/es';
 import { markLoggedOut } from '../../lib/auth-session';
 import { getRecurringDueOccurrences } from '../../features/recurring/services/recurringApi';
-import { getProfile, updateProfile } from '../../features/profile/profileApi';
+import {
+  getProfile,
+  updateProfile,
+  type Profile,
+} from '../../features/profile/profileApi';
 import { getNextThemePreference } from '../../features/theme/themePreference';
 import { useTheme } from '../../features/theme/useTheme';
 import type { ThemePreference } from '../../features/theme/themeContext';
@@ -132,6 +136,28 @@ function AppShell() {
         theme,
         timezone: profileQuery.data.timezone,
       });
+    },
+    onMutate: async (theme) => {
+      await queryClient.cancelQueries({ queryKey: ['profile'] });
+      const previousProfile = queryClient.getQueryData<Profile>(['profile']);
+
+      if (previousProfile) {
+        queryClient.setQueryData<Profile>(['profile'], {
+          ...previousProfile,
+          theme,
+        });
+      }
+
+      return { previousProfile };
+    },
+    onError: (_error, _theme, context) => {
+      if (context?.previousProfile) {
+        queryClient.setQueryData<Profile>(
+          ['profile'],
+          context.previousProfile,
+        );
+        setPreference(context.previousProfile.theme);
+      }
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['profile'] });

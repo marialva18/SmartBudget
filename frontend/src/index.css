@@ -85,6 +85,24 @@ textarea {
     #f3f8f5;
 }
 
+.qori-auth-entry-surface {
+  background-color: #f7f1e4;
+}
+
+.qori-auth-entry-panel {
+  background-color: #fffdf8;
+}
+
+.qori-segment-option {
+  color: #344b45;
+}
+
+.qori-segment-option:has(input:checked) {
+  background-color: #ffffff;
+  color: #063c36;
+  box-shadow: 0 2px 10px rgba(6, 60, 54, 0.1);
+}
+
 .qori-public-light-section {
   background-color: #edf6f1;
   color: #13231f;
@@ -143,6 +161,24 @@ html.dark .qori-auth-surface {
     radial-gradient(circle at top left, rgba(214, 168, 79, 0.12), transparent 22rem),
     radial-gradient(circle at bottom right, rgba(45, 212, 191, 0.12), transparent 24rem),
     #071714;
+}
+
+html.dark .qori-auth-entry-surface {
+  background-color: #071714 !important;
+}
+
+html.dark .qori-auth-entry-panel {
+  background-color: #0d211d !important;
+}
+
+html.dark .qori-segment-option {
+  color: #dff5ef !important;
+}
+
+html.dark .qori-segment-option:has(input:checked) {
+  background-color: #dff5ef !important;
+  color: #063c36 !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22) !important;
 }
 
 html.dark .qori-login-surface {

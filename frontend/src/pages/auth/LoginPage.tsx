@@ -56,7 +56,7 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#f7f1e4] px-4 py-6 sm:px-5 lg:px-8">
+    <div className="qori-auth-entry-surface flex min-h-screen items-center justify-center px-4 py-6 sm:px-5 lg:px-8">
       <div className="grid w-full max-w-5xl overflow-hidden rounded-2xl border border-[#eadfc9] bg-white shadow-[0_26px_80px_rgba(72,53,24,0.14)] lg:grid-cols-[0.96fr_1.04fr]">
         <aside className="hidden min-h-[min(640px,calc(100vh-3rem))] bg-[#063c36] p-8 text-white lg:flex lg:flex-col lg:justify-between">
           <div>
@@ -95,7 +95,7 @@ export function LoginPage() {
           </div>
         </aside>
 
-        <main className="flex min-h-[min(640px,calc(100vh-3rem))] items-center justify-center bg-[#fffdf8] px-5 py-7 sm:px-8 lg:px-10">
+        <main className="qori-auth-entry-panel flex min-h-[min(640px,calc(100vh-3rem))] items-center justify-center px-5 py-7 sm:px-8 lg:px-10">
           <div className="w-full max-w-[420px]">
             <div className="mb-6">
               <AuthBrand />
