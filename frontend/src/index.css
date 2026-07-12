@@ -340,6 +340,54 @@ html.dark :focus-visible {
   outline-color: #5eead4;
 }
 
+html.dark .qori-public-light-section,
+html.dark .qori-public-light-section :is(.qori-public-card, .qori-public-chat-panel) {
+  background-color: #edf6f1 !important;
+  color: #13231f !important;
+}
+
+html.dark .qori-public-light-section .qori-public-card {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  border-color: #cfe2dc !important;
+}
+
+html.dark :is(.qori-public-title, .qori-public-light-section .qori-public-title) {
+  color: #14231f !important;
+}
+
+html.dark :is(.qori-public-copy, .qori-public-light-section .qori-public-copy) {
+  color: #344b45 !important;
+}
+
+html.dark :is(.qori-public-muted, .qori-public-light-section .qori-public-muted) {
+  color: #526b64 !important;
+}
+
+html.dark :is(.qori-public-accent, .qori-public-light-section .qori-public-accent) {
+  color: #006b5f !important;
+}
+
+html.dark :is(.qori-public-chip, .qori-public-light-section .qori-public-chip) {
+  background-color: #d9f5ee !important;
+  color: #005f55 !important;
+}
+
+html.dark :is(
+  .qori-public-chat-panel,
+  .qori-public-light-section .qori-public-chat-panel
+) {
+  background-color: #f7fbf8 !important;
+  border-color: #dce8e3 !important;
+}
+
+html.dark :is(
+  .qori-public-chat-question,
+  .qori-public-light-section .qori-public-chat-question
+) {
+  background-color: #e9f4ef !important;
+  color: #26332f !important;
+}
+
 .qori-mark {
   animation: qori-mark-breathe 3.8s ease-in-out infinite;
 }
