@@ -3,7 +3,7 @@ import {
   Bot,
   CalendarDays,
   CheckCircle2,
-  CircleDollarSign,
+  Layers3,
   Landmark,
   PiggyBank,
   ReceiptText,
@@ -55,28 +55,27 @@ export function HomeDemoSection() {
       <div className="mx-auto grid max-w-7xl gap-9 px-5 py-16 lg:grid-cols-[0.78fr_1.22fr] lg:items-center">
         <div className="relative">
           <p className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-4 py-2 font-mono text-xs font-bold uppercase tracking-[0.14em] text-[#8ef3e4] shadow-[0_10px_30px_rgba(0,0,0,0.12)] backdrop-blur">
-            <CircleDollarSign size={16} />
-            Demo sin registro
+            <Layers3 size={16} />
+            Vista interactiva
           </p>
 
           <h2 className="mt-5 text-3xl font-black leading-tight text-white md:text-4xl">
-            Mira cómo Qori ordena tu dinero antes de crear una cuenta.
+            Recorre las partes clave de Qori en una sola vista.
           </h2>
 
           <p className="mt-4 max-w-xl leading-7 text-[#cde5df]">
-            Explora una simulación con saldos, movimientos, análisis y
-            recomendaciones. Son datos ficticios, pero muestran la experiencia
-            principal de la app.
+            Una vista con datos de ejemplo para revisar cuentas, movimientos,
+            planificación, grupos, análisis y coach financiero.
           </p>
 
           <div className="mt-7 grid gap-3 text-sm font-semibold text-[#dff5ef]">
             <div className="flex items-start gap-3">
               <CheckCircle2 className="mt-0.5 text-[#8ef3e4]" size={18} />
-              <span>Sin login, sin credenciales y sin modificar datos reales.</span>
+              <span>Un recorrido rápido por la experiencia principal.</span>
             </div>
             <div className="flex items-start gap-3">
               <CheckCircle2 className="mt-0.5 text-[#8ef3e4]" size={18} />
-              <span>Ideal para entender el flujo antes de probar la app.</span>
+              <span>Diseñado para mostrar el flujo, no para capturar datos.</span>
             </div>
           </div>
 

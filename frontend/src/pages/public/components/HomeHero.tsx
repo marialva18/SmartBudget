@@ -1,18 +1,24 @@
 import {
   ArrowRight,
-  CalendarDays,
   CheckCircle2,
+  CircleDollarSign,
   ShieldAlert,
   Sparkles,
-  WalletCards,
+  TrendingUp,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const benefits = [
-  'Visualiza tu dinero disponible de forma clara.',
-  'Detecta gastos importantes antes de confirmarlos.',
-  'Organiza metas, cuentas y pagos frecuentes en un solo lugar.',
-  'Recibe recomendaciones inteligentes para tomar mejores decisiones.',
+  'Saldos, cuentas y movimientos conectados.',
+  'Alertas cuando un gasto merece revisión.',
+  'Metas, presupuestos y pagos próximos en contexto.',
+  'Recomendaciones útiles a partir de tus hábitos.',
+];
+
+const activity = [
+  { label: 'Ingreso', value: '+ S/ 1,850', tone: 'text-[#00796b]' },
+  { label: 'Mercado', value: '- S/ 86.40', tone: 'text-[#fca5a5]' },
+  { label: 'Meta laptop', value: '68%', tone: 'text-[#8a651f]' },
 ];
 
 export function HomeHero() {
@@ -30,9 +36,9 @@ export function HomeHero() {
           </h1>
 
           <p className="mt-5 max-w-2xl text-lg leading-8 text-[#52625d]">
-            Qori reúne tus cuentas, gastos, metas y pagos frecuentes en una
-            sola app. Entiende mejor tu dinero, recibe alertas útiles y toma
-            decisiones con más confianza.
+            Qori reúne cuentas, movimientos, metas y pagos frecuentes en una
+            experiencia pensada para leer tu dinero con menos ruido y más
+            contexto.
           </p>
 
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
@@ -48,7 +54,7 @@ export function HomeHero() {
               className="inline-flex min-h-12 items-center justify-center rounded-lg border border-[#c8d8d2] bg-white/88 px-6 font-bold text-[#00796b] transition hover:-translate-y-0.5 hover:bg-white"
               href="#demo"
             >
-              Ver demo
+              Explorar demo
             </a>
           </div>
 
@@ -67,68 +73,60 @@ export function HomeHero() {
           </div>
         </div>
 
-        <div className="qori-card-motion relative mx-auto w-full max-w-[560px] rounded-2xl border border-white/70 bg-white/68 p-3 shadow-[0_28px_70px_rgba(9,60,54,0.14)] backdrop-blur">
-          <div className="overflow-hidden rounded-xl border border-[#dce8e3] bg-[#f8fbfa]">
-            <div className="flex items-center justify-between border-b border-[#dce8e3] bg-white/90 p-4">
+        <div className="qori-card-motion relative mx-auto w-full max-w-[560px] rounded-3xl border border-[#dce8e3] bg-[#063c36] p-4 text-white shadow-[0_28px_70px_rgba(9,60,54,0.22)]">
+          <div className="rounded-2xl border border-white/12 bg-white/10 p-5 backdrop-blur">
+            <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#00796b]">
-                  Panel Qori
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#8ef3e4]">
+                  Pulso financiero
                 </p>
-                <p className="mt-1 font-black text-[#16201d]">
-                  Vista de tu dinero
+                <p className="mt-2 max-w-sm text-2xl font-black">
+                  Lo importante de tu mes, sin perderte en filas.
                 </p>
               </div>
-              <span className="grid h-11 w-11 place-items-center rounded-lg bg-[#dcfbf5] text-[#006b5f]">
-                <WalletCards size={22} />
+              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[#d6a84f] text-[#063c36]">
+                <TrendingUp size={24} />
               </span>
             </div>
 
-            <div className="grid gap-4 p-4">
-              <div className="rounded-xl bg-[#063c36] p-5 text-white">
-                <p className="text-sm font-semibold text-[#a9ded4]">
-                  Saldo disponible
-                </p>
-                <p className="mt-2 text-4xl font-black">S/ 2,438.50</p>
-                <p className="mt-2 text-sm text-[#d4eee8]">
-                  Calculado con cuentas, metas y pagos próximos.
-                </p>
-              </div>
+            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+              {[
+                ['Disponible', 'S/ 2,438'],
+                ['Gasto variable', 'S/ 761'],
+                ['Meta activa', '68%'],
+              ].map(([label, value]) => (
+                <div className="rounded-xl bg-white/12 p-4" key={label}>
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#a9ded4]">
+                    {label}
+                  </p>
+                  <p className="mt-2 text-xl font-black">{value}</p>
+                </div>
+              ))}
+            </div>
 
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-xl border border-[#dce8e3] bg-white p-4">
+            <div className="mt-5 grid gap-3 rounded-2xl bg-[#f8fbfa] p-4 text-[#16201d]">
+              {activity.map((item) => (
+                <div
+                  className="flex items-center justify-between gap-4 rounded-xl bg-white px-4 py-3 shadow-sm"
+                  key={item.label}
+                >
                   <div className="flex items-center gap-3">
-                    <span className="grid h-10 w-10 place-items-center rounded-lg bg-[#dcfbf5] text-[#006b5f]">
-                      <CalendarDays size={20} />
+                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-[#dcfbf5] text-[#006b5f]">
+                      <CircleDollarSign size={18} />
                     </span>
-                    <div>
-                      <p className="font-black text-[#16201d]">Próximo pago</p>
-                      <p className="text-sm text-[#52625d]">Internet · 15 jul.</p>
-                    </div>
+                    <p className="font-bold">{item.label}</p>
                   </div>
+                  <p className={`font-black ${item.tone}`}>{item.value}</p>
                 </div>
+              ))}
+            </div>
 
-                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-                  <div className="flex items-center gap-3">
-                    <ShieldAlert
-                      className="shrink-0 text-amber-800"
-                      size={20}
-                    />
-                    <p className="text-sm font-bold leading-5 text-amber-950">
-                      Revisa gastos altos antes de confirmarlos.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-[#dce8e3] bg-white p-4">
-                <div className="mb-3 flex items-center justify-between text-sm font-bold">
-                  <span>Meta Laptop</span>
-                  <span className="text-[#00796b]">68%</span>
-                </div>
-                <div className="h-3 overflow-hidden rounded-full bg-[#e8f2ee]">
-                  <div className="h-full w-[68%] rounded-full bg-[#d6a84f]" />
-                </div>
-              </div>
+            <div className="mt-5 flex items-start gap-3 rounded-2xl border border-[#d6a84f]/40 bg-[#d6a84f]/14 p-4">
+              <ShieldAlert className="mt-0.5 shrink-0 text-[#f8d991]" size={20} />
+              <p className="text-sm font-semibold leading-6 text-[#fff4d6]">
+                Qori destaca señales relevantes: pagos próximos, metas y gastos
+                que conviene revisar.
+              </p>
             </div>
           </div>
         </div>
