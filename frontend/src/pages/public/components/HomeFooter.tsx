@@ -1,14 +1,22 @@
-﻿import { Mail } from 'lucide-react';
+import { Mail, MessageCircle } from 'lucide-react';
 
 const currentYear = new Date().getFullYear();
 
 const contactEmail = 'malva0418@gmail.com';
 const contactSubject = 'Consulta sobre Qori';
-const contactBody = 'Hola, quiero conocer más sobre Qori.';
+const contactBody = [
+  'Hola Maria,',
+  '',
+  'Quiero conocer mas sobre Qori y su propuesta para organizar finanzas personales.',
+  '',
+  'Mi consulta es:',
+].join('\n');
 
-const contactHref = `mailto:${contactEmail}?subject=${encodeURIComponent(
-  contactSubject,
-)}&body=${encodeURIComponent(contactBody)}`;
+const contactHref = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+  contactEmail,
+)}&su=${encodeURIComponent(contactSubject)}&body=${encodeURIComponent(
+  contactBody,
+)}`;
 
 export function HomeFooter() {
   return (
@@ -25,26 +33,39 @@ export function HomeFooter() {
 
           <p className="mt-3 max-w-xl leading-7 text-[#3c4a46]">
             Si tienes comentarios, dudas o quieres conocer más sobre la
-            propuesta, puedes ponerte en contacto directamente.
+            propuesta, puedes enviar una consulta con un mensaje ya preparado.
           </p>
         </div>
 
         <div className="rounded-xl border border-[#e0e3e5] bg-[#f7f9fb] p-5">
           <a
-            className="flex items-center gap-3 rounded-lg bg-white p-4 text-sm font-semibold text-[#3c4a46] shadow-sm transition hover:text-[#006b5f]"
+            className="flex items-center gap-3 rounded-lg bg-white p-4 text-sm font-semibold text-[#3c4a46] shadow-sm transition hover:-translate-y-0.5 hover:text-[#006b5f]"
             href={contactHref}
+            rel="noreferrer"
+            target="_blank"
           >
             <span className="grid h-10 w-10 place-items-center rounded-lg bg-[#dcfbf5] text-[#006b5f]">
               <Mail size={20} />
             </span>
 
             <span>
-              Contactar
+              Enviar consulta
               <span className="block text-slate-500">
-                Enviar una consulta sobre Qori
+                Abrir correo con mensaje predeterminado
               </span>
             </span>
           </a>
+
+          <div className="mt-3 flex items-start gap-3 rounded-lg border border-[#dce8e3] bg-white/70 p-4 text-sm leading-6 text-[#52625d]">
+            <MessageCircle
+              className="mt-0.5 shrink-0 text-[#006b5f]"
+              size={18}
+            />
+            <p>
+              Se abrirá una ventana de correo con destinatario, asunto y mensaje
+              listos para completar y enviar.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -53,7 +74,7 @@ export function HomeFooter() {
           <div>
             <p className="font-black text-slate-800">Qori</p>
             <p className="mt-1 text-xs text-slate-400">
-              Desarrollado por María Alva Ruiz 
+              Desarrollado por María Alva Ruiz
             </p>
           </div>
 

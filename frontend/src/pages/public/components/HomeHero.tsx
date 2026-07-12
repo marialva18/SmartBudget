@@ -1,4 +1,11 @@
-import { ArrowRight, CheckCircle2, Sparkles } from 'lucide-react';
+import {
+  ArrowRight,
+  CalendarDays,
+  CheckCircle2,
+  ShieldAlert,
+  Sparkles,
+  WalletCards,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const benefits = [
@@ -39,9 +46,9 @@ export function HomeHero() {
 
             <a
               className="inline-flex min-h-12 items-center justify-center rounded-lg border border-[#c8d8d2] bg-white/88 px-6 font-bold text-[#00796b] transition hover:-translate-y-0.5 hover:bg-white"
-              href="#funciones"
+              href="#demo"
             >
-              Ver funciones
+              Ver demo
             </a>
           </div>
 
@@ -60,17 +67,69 @@ export function HomeHero() {
           </div>
         </div>
 
-        <div className="qori-card-motion qori-image-card relative mx-auto w-full max-w-[560px] overflow-hidden rounded-xl border border-[#dce8e3] bg-white p-3 shadow-[0_22px_60px_rgba(9,60,54,0.12)]">
-          <img
-            alt="Vista previa de Qori con cuentas, metas y recordatorios"
-            className="qori-auth-bg aspect-[4/3] w-full rounded-lg object-cover"
-            src="/images/qori_home_hero.png"
-          />
-          <div className="qori-soft-float absolute bottom-5 left-5 max-w-[240px] rounded-xl border border-white/70 bg-white/86 p-4 shadow-[0_18px_45px_rgba(9,60,54,0.16)] backdrop-blur">
-            <p className="text-sm font-black text-[#063c36]">Todo en un lugar</p>
-            <p className="mt-1 text-xs leading-5 text-[#52625d]">
-              Cuentas, metas y pagos próximos en una vista fácil de entender.
-            </p>
+        <div className="qori-card-motion relative mx-auto w-full max-w-[560px] rounded-2xl border border-white/70 bg-white/68 p-3 shadow-[0_28px_70px_rgba(9,60,54,0.14)] backdrop-blur">
+          <div className="overflow-hidden rounded-xl border border-[#dce8e3] bg-[#f8fbfa]">
+            <div className="flex items-center justify-between border-b border-[#dce8e3] bg-white/90 p-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#00796b]">
+                  Panel Qori
+                </p>
+                <p className="mt-1 font-black text-[#16201d]">
+                  Vista de tu dinero
+                </p>
+              </div>
+              <span className="grid h-11 w-11 place-items-center rounded-lg bg-[#dcfbf5] text-[#006b5f]">
+                <WalletCards size={22} />
+              </span>
+            </div>
+
+            <div className="grid gap-4 p-4">
+              <div className="rounded-xl bg-[#063c36] p-5 text-white">
+                <p className="text-sm font-semibold text-[#a9ded4]">
+                  Saldo disponible
+                </p>
+                <p className="mt-2 text-4xl font-black">S/ 2,438.50</p>
+                <p className="mt-2 text-sm text-[#d4eee8]">
+                  Calculado con cuentas, metas y pagos próximos.
+                </p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl border border-[#dce8e3] bg-white p-4">
+                  <div className="flex items-center gap-3">
+                    <span className="grid h-10 w-10 place-items-center rounded-lg bg-[#dcfbf5] text-[#006b5f]">
+                      <CalendarDays size={20} />
+                    </span>
+                    <div>
+                      <p className="font-black text-[#16201d]">Próximo pago</p>
+                      <p className="text-sm text-[#52625d]">Internet · 15 jul.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                  <div className="flex items-center gap-3">
+                    <ShieldAlert
+                      className="shrink-0 text-amber-800"
+                      size={20}
+                    />
+                    <p className="text-sm font-bold leading-5 text-amber-950">
+                      Revisa gastos altos antes de confirmarlos.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-[#dce8e3] bg-white p-4">
+                <div className="mb-3 flex items-center justify-between text-sm font-bold">
+                  <span>Meta Laptop</span>
+                  <span className="text-[#00796b]">68%</span>
+                </div>
+                <div className="h-3 overflow-hidden rounded-full bg-[#e8f2ee]">
+                  <div className="h-full w-[68%] rounded-full bg-[#d6a84f]" />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

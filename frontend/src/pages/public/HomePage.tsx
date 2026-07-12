@@ -1,4 +1,5 @@
 import { HomeCoachSection } from './components/HomeCoachSection';
+import { HomeDemoSection } from './components/HomeDemoSection';
 import { HomeFeatures } from './components/HomeFeatures';
 import { HomeFooter } from './components/HomeFooter';
 import { HomeHeader } from './components/HomeHeader';
@@ -10,6 +11,7 @@ export function HomePage() {
     <main className="min-h-screen bg-[#f6fbf8] text-slate-900">
       <HomeHeader />
       <HomeHero />
+      <HomeDemoSection />
       <HomeFeatures />
       <HomeCoachSection />
       <HomeSecuritySection />

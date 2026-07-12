@@ -19,6 +19,9 @@ export function HomeHeader() {
         </Link>
 
         <nav className="hidden items-center gap-7 text-sm font-semibold text-[#3c4a46] md:flex">
+          <a className="hover:text-[#006b5f]" href="#demo">
+            Demo
+          </a>
           <a className="hover:text-[#006b5f]" href="#funciones">
             Funciones
           </a>
