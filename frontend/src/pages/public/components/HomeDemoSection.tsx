@@ -1,17 +1,29 @@
 import {
   BarChart3,
   Bot,
+  CalendarDays,
   CheckCircle2,
   CircleDollarSign,
+  Landmark,
   PiggyBank,
   ReceiptText,
   ShieldAlert,
+  Target,
+  Users,
   WalletCards,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-type DemoTab = 'summary' | 'movements' | 'analytics' | 'coach';
+type DemoTab =
+  | 'summary'
+  | 'accounts'
+  | 'movements'
+  | 'planning'
+  | 'agenda'
+  | 'groups'
+  | 'analytics'
+  | 'coach';
 
 const tabs: Array<{
   id: DemoTab;
@@ -19,7 +31,11 @@ const tabs: Array<{
   icon: typeof WalletCards;
 }> = [
   { id: 'summary', label: 'Resumen', icon: WalletCards },
+  { id: 'accounts', label: 'Cuentas', icon: Landmark },
   { id: 'movements', label: 'Movimientos', icon: ReceiptText },
+  { id: 'planning', label: 'Planificación', icon: Target },
+  { id: 'agenda', label: 'Agenda', icon: CalendarDays },
+  { id: 'groups', label: 'Grupos', icon: Users },
   { id: 'analytics', label: 'Análisis', icon: BarChart3 },
   { id: 'coach', label: 'Coach', icon: Bot },
 ];
@@ -34,47 +50,45 @@ export function HomeDemoSection() {
   const [activeTab, setActiveTab] = useState<DemoTab>('summary');
 
   return (
-    <section
-      className="relative overflow-hidden border-y border-[#dce8e3] bg-[#edf7f3]"
-      id="demo"
-    >
+    <section className="relative overflow-hidden bg-[#0b2d28]" id="demo">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_10%,rgba(45,212,191,0.16),transparent_28rem),radial-gradient(circle_at_90%_20%,rgba(214,168,79,0.15),transparent_24rem)]" />
       <div className="mx-auto grid max-w-7xl gap-9 px-5 py-16 lg:grid-cols-[0.78fr_1.22fr] lg:items-center">
-        <div>
-          <p className="inline-flex items-center gap-2 rounded-lg border border-[#b6dcd4] bg-white/75 px-4 py-2 font-mono text-xs font-bold uppercase tracking-[0.14em] text-[#006b5f] shadow-[0_10px_30px_rgba(9,60,54,0.06)] backdrop-blur">
+        <div className="relative">
+          <p className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-4 py-2 font-mono text-xs font-bold uppercase tracking-[0.14em] text-[#8ef3e4] shadow-[0_10px_30px_rgba(0,0,0,0.12)] backdrop-blur">
             <CircleDollarSign size={16} />
             Demo sin registro
           </p>
 
-          <h2 className="mt-5 text-3xl font-black leading-tight text-[#16201d] md:text-4xl">
+          <h2 className="mt-5 text-3xl font-black leading-tight text-white md:text-4xl">
             Mira cómo Qori ordena tu dinero antes de crear una cuenta.
           </h2>
 
-          <p className="mt-4 max-w-xl leading-7 text-[#52625d]">
+          <p className="mt-4 max-w-xl leading-7 text-[#cde5df]">
             Explora una simulación con saldos, movimientos, análisis y
             recomendaciones. Son datos ficticios, pero muestran la experiencia
             principal de la app.
           </p>
 
-          <div className="mt-7 grid gap-3 text-sm font-semibold text-[#3c4a46]">
+          <div className="mt-7 grid gap-3 text-sm font-semibold text-[#dff5ef]">
             <div className="flex items-start gap-3">
-              <CheckCircle2 className="mt-0.5 text-[#00796b]" size={18} />
+              <CheckCircle2 className="mt-0.5 text-[#8ef3e4]" size={18} />
               <span>Sin login, sin credenciales y sin modificar datos reales.</span>
             </div>
             <div className="flex items-start gap-3">
-              <CheckCircle2 className="mt-0.5 text-[#00796b]" size={18} />
+              <CheckCircle2 className="mt-0.5 text-[#8ef3e4]" size={18} />
               <span>Ideal para entender el flujo antes de probar la app.</span>
             </div>
           </div>
 
           <Link
-            className="mt-8 inline-flex min-h-12 items-center justify-center rounded-lg bg-[#00796b] px-6 font-bold text-white shadow-[0_14px_34px_rgba(0,107,95,0.18)] transition hover:-translate-y-0.5 hover:bg-[#006b5f]"
+            className="mt-8 inline-flex min-h-12 items-center justify-center rounded-lg bg-[#d6a84f] px-6 font-bold text-[#14201d] shadow-[0_14px_34px_rgba(214,168,79,0.22)] transition hover:-translate-y-0.5 hover:bg-[#e0b85e]"
             to="/register"
           >
             Crear cuenta para probar con mis datos
           </Link>
         </div>
 
-        <div className="rounded-2xl border border-white/70 bg-white/62 p-3 shadow-[0_28px_70px_rgba(9,60,54,0.16)] backdrop-blur">
+        <div className="relative rounded-2xl border border-white/20 bg-white/12 p-3 shadow-[0_28px_70px_rgba(0,0,0,0.28)] backdrop-blur">
           <div className="overflow-hidden rounded-xl border border-[#dce8e3] bg-[#f8fbfa]">
             <div className="flex flex-col gap-3 border-b border-[#dce8e3] bg-white/86 p-4 md:flex-row md:items-center md:justify-between">
               <div>
@@ -86,7 +100,7 @@ export function HomeDemoSection() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 sm:flex">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {tabs.map((tab) => {
                   const Icon = tab.icon;
                   const isActive = activeTab === tab.id;
@@ -113,7 +127,11 @@ export function HomeDemoSection() {
 
             <div className="p-4 sm:p-5">
               {activeTab === 'summary' ? <SummaryDemo /> : null}
+              {activeTab === 'accounts' ? <AccountsDemo /> : null}
               {activeTab === 'movements' ? <MovementsDemo /> : null}
+              {activeTab === 'planning' ? <PlanningDemo /> : null}
+              {activeTab === 'agenda' ? <AgendaDemo /> : null}
+              {activeTab === 'groups' ? <GroupsDemo /> : null}
               {activeTab === 'analytics' ? <AnalyticsDemo /> : null}
               {activeTab === 'coach' ? <CoachDemo /> : null}
             </div>
@@ -121,6 +139,29 @@ export function HomeDemoSection() {
         </div>
       </div>
     </section>
+  );
+}
+
+function AccountsDemo() {
+  return (
+    <div className="grid gap-4 md:grid-cols-3">
+      {[
+        { balance: 'S/ 1,240.50', label: 'Yape', tone: 'bg-[#063c36] text-white' },
+        { balance: 'S/ 780.00', label: 'Efectivo', tone: 'bg-[#f0efe7] text-[#16201d]' },
+        { balance: '$ 126.40', label: 'Ahorro USD', tone: 'bg-[#dff3ee] text-[#063c36]' },
+      ].map((account) => (
+        <article
+          className={`rounded-xl p-5 shadow-[0_12px_30px_rgba(9,60,54,0.08)] ${account.tone}`}
+          key={account.label}
+        >
+          <p className="text-sm font-semibold opacity-75">{account.label}</p>
+          <p className="mt-3 text-2xl font-black">{account.balance}</p>
+          <p className="mt-5 rounded-lg bg-white/18 px-3 py-2 text-xs font-bold">
+            Disponible para movimientos
+          </p>
+        </article>
+      ))}
+    </div>
   );
 }
 
@@ -249,6 +290,83 @@ function AnalyticsDemo() {
   );
 }
 
+function PlanningDemo() {
+  return (
+    <div className="grid gap-4 lg:grid-cols-[1fr_0.9fr]">
+      <div className="rounded-xl border border-[#dce8e3] bg-white p-4">
+        <p className="font-black text-[#16201d]">Presupuesto mensual</p>
+        <div className="mt-5 space-y-4">
+          <ProgressRow label="Comida" value="S/ 320 de S/ 500" width="64%" />
+          <ProgressRow label="Transporte" value="S/ 120 de S/ 180" width="67%" />
+          <ProgressRow label="Ocio" value="S/ 90 de S/ 160" width="56%" />
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-[#dce8e3] bg-[#f7f5ed] p-4">
+        <p className="font-black text-[#16201d]">Meta de ahorro</p>
+        <p className="mt-2 text-sm leading-6 text-[#52625d]">
+          Separa dinero para objetivos importantes sin mezclarlo con tus gastos
+          diarios.
+        </p>
+        <div className="mt-5 rounded-xl bg-white p-4">
+          <p className="text-sm font-bold text-[#52625d]">Viaje familiar</p>
+          <p className="mt-2 text-2xl font-black text-[#063c36]">S/ 1,150</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AgendaDemo() {
+  return (
+    <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
+      <div className="rounded-xl border border-[#dce8e3] bg-white p-4">
+        <p className="font-black text-[#16201d]">Próximos eventos</p>
+        <div className="mt-4 grid gap-3">
+          <EventRow day="15" label="Internet" value="- S/ 89.90" />
+          <EventRow day="18" label="Suscripción" value="- S/ 19.90" />
+          <EventRow day="30" label="Ingreso mensual" value="+ S/ 2,400" />
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-[#dce8e3] bg-[#eef5f2] p-4">
+        <p className="font-black text-[#16201d]">Recurrentes</p>
+        <p className="mt-2 text-sm leading-6 text-[#52625d]">
+          Qori deja pagos frecuentes como pendientes para confirmarlos antes de
+          afectar tu saldo.
+        </p>
+        <div className="mt-5 rounded-lg bg-white px-4 py-3 text-sm font-bold text-[#006b5f]">
+          2 recurrencias por confirmar esta semana
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GroupsDemo() {
+  return (
+    <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
+      <div className="rounded-xl border border-[#dce8e3] bg-white p-4">
+        <p className="font-black text-[#16201d]">Gasto grupal</p>
+        <div className="mt-4 rounded-xl bg-[#063c36] p-4 text-white">
+          <p className="text-sm font-semibold text-[#a9ded4]">Cena con amigos</p>
+          <p className="mt-2 text-3xl font-black">S/ 180.00</p>
+          <p className="mt-2 text-sm text-[#d4eee8]">Pagó: María</p>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-[#dce8e3] bg-white p-4">
+        <p className="font-black text-[#16201d]">Reparto sugerido</p>
+        <div className="mt-4 space-y-3">
+          <Insight label="Andre debe" value="S/ 60.00" />
+          <Insight label="Victor debe" value="S/ 60.00" />
+          <Insight label="María recibe" value="S/ 120.00" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CoachDemo() {
   return (
     <div className="rounded-xl border border-[#dce8e3] bg-white p-4">
@@ -303,6 +421,50 @@ function Insight({ label, value }: { label: string; value: string }) {
         {label}
       </p>
       <p className="mt-1 font-black text-[#16201d]">{value}</p>
+    </div>
+  );
+}
+
+function ProgressRow({
+  label,
+  value,
+  width,
+}: {
+  label: string;
+  value: string;
+  width: string;
+}) {
+  return (
+    <div>
+      <div className="mb-2 flex justify-between gap-3 text-sm font-bold">
+        <span>{label}</span>
+        <span className="text-[#52625d]">{value}</span>
+      </div>
+      <div className="h-3 overflow-hidden rounded-full bg-[#e8f2ee]">
+        <div className="h-full rounded-full bg-[#00796b]" style={{ width }} />
+      </div>
+    </div>
+  );
+}
+
+function EventRow({
+  day,
+  label,
+  value,
+}: {
+  day: string;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 rounded-lg bg-[#f3f8f5] p-3">
+      <div className="flex items-center gap-3">
+        <span className="grid h-10 w-10 place-items-center rounded-lg bg-white font-black text-[#00796b]">
+          {day}
+        </span>
+        <p className="font-bold text-[#16201d]">{label}</p>
+      </div>
+      <p className="font-black text-[#3c4a46]">{value}</p>
     </div>
   );
 }
