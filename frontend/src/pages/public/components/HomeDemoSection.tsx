@@ -51,7 +51,6 @@ export function HomeDemoSection() {
 
   return (
     <section className="relative overflow-hidden bg-[#0b2d28]" id="demo">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_10%,rgba(45,212,191,0.16),transparent_28rem),radial-gradient(circle_at_90%_20%,rgba(214,168,79,0.15),transparent_24rem)]" />
       <div className="mx-auto grid max-w-7xl gap-9 px-5 py-16 lg:grid-cols-[0.78fr_1.22fr] lg:items-center">
         <div className="relative">
           <p className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/10 px-4 py-2 font-mono text-xs font-bold uppercase tracking-[0.14em] text-[#8ef3e4] shadow-[0_10px_30px_rgba(0,0,0,0.12)] backdrop-blur">

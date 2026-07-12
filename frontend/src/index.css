@@ -67,11 +67,7 @@ textarea {
 }
 
 .qori-home-surface {
-  background:
-    radial-gradient(circle at 8% 18%, rgba(0, 121, 107, 0.09), transparent 18rem),
-    radial-gradient(circle at 82% 14%, rgba(214, 168, 79, 0.1), transparent 20rem),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.74) 25%, transparent 25%) 0 0 / 28px 28px,
-    #f4f8f5;
+  background: #f4f8f5;
 }
 
 .qori-login-surface {
@@ -98,10 +94,7 @@ html.dark .qori-app-surface {
 }
 
 html.dark .qori-home-surface {
-  background:
-    radial-gradient(circle at 8% 18%, rgba(45, 212, 191, 0.12), transparent 18rem),
-    radial-gradient(circle at 82% 14%, rgba(214, 168, 79, 0.14), transparent 20rem),
-    #081815;
+  background: #081815;
 }
 
 html.dark .qori-auth-surface {

@@ -1,14 +1,12 @@
-﻿import { PiggyBank } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { QoriMark } from '../../../components/brand/QoriMark';
 
 export function HomeHeader() {
   return (
     <header className="sticky top-0 z-20 border-b border-white/10 bg-[#063c36]/94 text-white shadow-[0_12px_34px_rgba(6,60,54,0.18)] backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
         <Link className="flex items-center gap-3" to="/">
-          <span className="grid h-11 w-11 place-items-center rounded-lg bg-[#d6a84f] text-[#063c36] shadow-[0_10px_30px_rgba(214,168,79,0.22)]">
-            <PiggyBank size={24} />
-          </span>
+          <QoriMark size="sm" />
 
           <div>
             <p className="text-lg font-black leading-none">Qori</p>
