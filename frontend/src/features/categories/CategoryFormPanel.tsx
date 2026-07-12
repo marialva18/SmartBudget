@@ -99,7 +99,7 @@ export function CategoryFormPanel({
               <div className="grid grid-cols-2 gap-2 rounded-md bg-slate-100 p-1">
                 {(['EXPENSE', 'INCOME'] as const).map((value) => (
                   <label
-                    className="has-checked:bg-white has-checked:shadow-sm cursor-pointer rounded-md px-4 py-3 text-center font-semibold"
+                    className="qori-segment-option cursor-pointer rounded-md px-4 py-3 text-center font-semibold"
                     key={value}
                   >
                     {value === 'EXPENSE'
@@ -146,7 +146,7 @@ export function CategoryFormPanel({
               <div className="grid grid-cols-4 gap-2">
                 {iconOptions.map(({ icon: Icon, label, value }) => (
                   <label
-                    className="has-checked:border-emerald-700 has-checked:bg-emerald-50 cursor-pointer rounded-md border border-slate-200 p-3 text-center"
+                    className="qori-choice-option cursor-pointer rounded-md border border-slate-200 p-3 text-center"
                     key={value}
                     title={label}
                   >

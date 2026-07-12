@@ -87,7 +87,7 @@ export function HomeDemoSection() {
         </div>
 
         <div className="relative rounded-2xl border border-white/20 bg-white/12 p-3 shadow-[0_28px_70px_rgba(0,0,0,0.28)] backdrop-blur">
-          <div className="overflow-hidden rounded-xl border border-[#dce8e3] bg-[#f8fbfa]">
+          <div className="qori-public-demo-surface overflow-hidden rounded-xl border border-[#dce8e3] bg-[#f8fbfa]">
             <div className="flex flex-col gap-3 border-b border-[#dce8e3] bg-white/86 p-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#00796b]">

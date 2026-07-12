@@ -103,9 +103,28 @@ textarea {
   box-shadow: 0 2px 10px rgba(6, 60, 54, 0.1);
 }
 
+.qori-choice-option {
+  color: #334155;
+}
+
+.qori-choice-option:has(input:checked) {
+  background-color: #ecfdf5;
+  border-color: #047857;
+  color: #063c36;
+}
+
+.qori-choice-option:has(input:checked) svg {
+  color: #006b5f;
+}
+
 .qori-public-light-section {
   background-color: #edf6f1;
   color: #13231f;
+}
+
+.qori-public-demo-surface {
+  background-color: #f8fbfa;
+  color: #16201d;
 }
 
 .qori-public-card {
@@ -153,7 +172,7 @@ html.dark .qori-app-surface {
 }
 
 html.dark .qori-home-surface {
-  background: #081815;
+  background: #f4f8f5;
 }
 
 html.dark .qori-auth-surface {
@@ -171,6 +190,12 @@ html.dark .qori-auth-entry-panel {
   background-color: #0d211d !important;
 }
 
+html.dark
+  .qori-auth-entry-surface
+  :is([class~="text-[#16201d]"], [class~="text-[#191c1e]"]) {
+  color: #fbfffd !important;
+}
+
 html.dark .qori-segment-option {
   color: #dff5ef !important;
 }
@@ -179,6 +204,20 @@ html.dark .qori-segment-option:has(input:checked) {
   background-color: #dff5ef !important;
   color: #063c36 !important;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22) !important;
+}
+
+html.dark .qori-choice-option {
+  color: #d7e7e2 !important;
+}
+
+html.dark .qori-choice-option:has(input:checked) {
+  background-color: #dff5ef !important;
+  border-color: #7ddfd2 !important;
+  color: #063c36 !important;
+}
+
+html.dark .qori-choice-option:has(input:checked) svg {
+  color: #006b5f !important;
 }
 
 html.dark .qori-login-surface {
@@ -191,6 +230,54 @@ html.dark .qori-login-surface {
 html.dark .qori-public-light-section {
   background-color: #edf6f1 !important;
   color: #13231f !important;
+}
+
+html.dark .qori-public-demo-surface {
+  background-color: #f8fbfa !important;
+  border-color: #dce8e3 !important;
+  color: #16201d !important;
+}
+
+html.dark .qori-public-demo-surface [class~="bg-white"] {
+  background-color: #ffffff !important;
+}
+
+html.dark
+  .qori-public-demo-surface
+  :is([class~="bg-white/70"], [class~="bg-white/86"]) {
+  background-color: rgba(255, 255, 255, 0.88) !important;
+}
+
+html.dark
+  .qori-public-demo-surface
+  :is(
+    [class~="bg-[#eef5f2]"],
+    [class~="bg-[#f3f8f5]"],
+    [class~="bg-[#f8fbfa]"],
+    [class~="bg-[#dff3ee]"]
+  ) {
+  background-color: #eef5f2 !important;
+}
+
+html.dark
+  .qori-public-demo-surface
+  :is([class~="bg-[#f7f5ed]"], [class~="bg-[#f0efe7]"]) {
+  background-color: #f7f5ed !important;
+}
+
+html.dark
+  .qori-public-demo-surface
+  :is(
+    [class~="text-[#16201d]"],
+    [class~="text-[#3c4a46]"],
+    [class~="text-[#52625d]"],
+    [class~="text-slate-500"]
+  ) {
+  color: #344b45 !important;
+}
+
+html.dark .qori-public-demo-surface [class~="text-[#006b5f]"] {
+  color: #006b5f !important;
 }
 
 html.dark .qori-public-card {

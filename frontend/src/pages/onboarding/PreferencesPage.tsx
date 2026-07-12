@@ -101,7 +101,7 @@ export function PreferencesPage() {
                 { value: 'SYSTEM', label: 'Sistema', icon: Sun },
               ].map(({ icon: Icon, label, value }) => (
                 <label
-                  className="has-checked:border-emerald-700 has-checked:bg-emerald-50 cursor-pointer rounded-md border border-slate-200 bg-white p-3 text-center text-sm"
+                  className="qori-choice-option cursor-pointer rounded-md border border-slate-200 bg-white p-3 text-center text-sm"
                   key={value}
                 >
                   <Icon className="mx-auto mb-1" size={17} />

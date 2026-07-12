@@ -23,19 +23,19 @@ const activity = [
 
 export function HomeHero() {
   return (
-    <section className="qori-home-surface border-b border-[#dce8e3]">
+    <section className="qori-home-surface qori-public-light-section border-b border-[#dce8e3]">
       <div className="mx-auto grid max-w-7xl gap-9 px-5 py-12 lg:grid-cols-[1fr_0.86fr] lg:items-center lg:py-16">
         <div>
-          <p className="inline-flex items-center gap-2 rounded-lg border border-[#c8d8d2] bg-white/88 px-4 py-2 font-mono text-xs font-bold uppercase tracking-[0.14em] text-[#00796b] shadow-[0_10px_30px_rgba(9,60,54,0.06)] backdrop-blur">
+          <p className="qori-public-accent inline-flex items-center gap-2 rounded-lg border border-[#c8d8d2] bg-white/88 px-4 py-2 font-mono text-xs font-bold uppercase tracking-[0.14em] text-[#00796b] shadow-[0_10px_30px_rgba(9,60,54,0.06)]">
             <Sparkles size={16} />
             Finanzas personales con ayuda inteligente
           </p>
 
-          <h1 className="mt-6 max-w-3xl text-4xl font-black leading-tight text-[#16201d] md:text-5xl lg:text-[56px]">
+          <h1 className="qori-public-title mt-6 max-w-3xl text-4xl font-black leading-tight text-[#16201d] md:text-5xl lg:text-[56px]">
             Tu dinero más claro. Tus decisiones más inteligentes.
           </h1>
 
-          <p className="mt-5 max-w-2xl text-lg leading-8 text-[#52625d]">
+          <p className="qori-public-copy mt-5 max-w-2xl text-lg leading-8 text-[#52625d]">
             Qori reúne cuentas, movimientos, metas y pagos frecuentes en una
             experiencia pensada para leer tu dinero con menos ruido y más
             contexto.
@@ -65,7 +65,7 @@ export function HomeHero() {
                   className="mt-0.5 shrink-0 text-[#00796b]"
                   size={18}
                 />
-                <p className="text-sm font-semibold text-[#52625d]">
+                <p className="qori-public-muted text-sm font-semibold text-[#52625d]">
                   {benefit}
                 </p>
               </div>
@@ -104,7 +104,7 @@ export function HomeHero() {
               ))}
             </div>
 
-            <div className="mt-5 grid gap-3 rounded-2xl bg-[#f8fbfa] p-4 text-[#16201d]">
+            <div className="qori-public-demo-surface mt-5 grid gap-3 rounded-2xl bg-[#f8fbfa] p-4 text-[#16201d]">
               {activity.map((item) => (
                 <div
                   className="flex items-center justify-between gap-4 rounded-xl bg-white px-4 py-3 shadow-sm"

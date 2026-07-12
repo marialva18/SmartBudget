@@ -121,7 +121,7 @@ export function AccountFormPanel({
               <div className="grid gap-2 sm:grid-cols-3">
                 {accountTypes.map(({ icon: Icon, label, value }) => (
                   <label
-                    className="has-checked:border-emerald-700 has-checked:bg-emerald-50 flex min-h-24 cursor-pointer flex-col justify-between rounded-md border border-slate-200 p-3 text-sm font-semibold text-slate-700"
+                    className="qori-choice-option flex min-h-24 cursor-pointer flex-col justify-between rounded-md border border-slate-200 p-3 text-sm font-semibold text-slate-700"
                     key={value}
                   >
                     <Icon className="text-emerald-700" size={22} />
@@ -172,7 +172,7 @@ export function AccountFormPanel({
                   },
                 ].map((currency) => (
                   <label
-                    className="has-checked:border-emerald-700 has-checked:bg-emerald-50 cursor-pointer rounded-md border border-slate-200 p-4"
+                    className="qori-choice-option cursor-pointer rounded-md border border-slate-200 p-4"
                     key={currency.value}
                   >
                     <span className="block font-semibold text-slate-950">
@@ -237,7 +237,7 @@ export function AccountFormPanel({
                   ['CUSTOM', es.accounts.form.balanceStartCustom],
                 ] as const).map(([value, label]) => (
                   <label
-                    className="has-checked:border-emerald-700 has-checked:bg-emerald-50 cursor-pointer rounded-md border border-slate-200 px-4 py-3 font-semibold text-slate-700"
+                    className="qori-choice-option cursor-pointer rounded-md border border-slate-200 px-4 py-3 font-semibold text-slate-700"
                     key={value}
                   >
                     {label}

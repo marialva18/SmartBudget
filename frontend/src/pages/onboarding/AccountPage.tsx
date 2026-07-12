@@ -109,7 +109,7 @@ export function AccountPage() {
         <div className="grid gap-3 sm:grid-cols-3">
           {accountTypes.map(({ icon: Icon, label, value }) => (
             <label
-              className="has-checked:border-emerald-700 has-checked:bg-emerald-50 cursor-pointer rounded-md border border-slate-200 p-4"
+              className="qori-choice-option cursor-pointer rounded-md border border-slate-200 p-4"
               key={value}
             >
               <Icon className="mb-3 text-emerald-700" size={22} />
@@ -144,7 +144,7 @@ export function AccountPage() {
           <div className="grid grid-cols-2 gap-3">
             {(['PEN', 'USD'] as const).map((value) => (
               <label
-                className="has-checked:border-emerald-700 has-checked:bg-emerald-50 cursor-pointer rounded-md border border-slate-200 p-4 font-semibold"
+                className="qori-choice-option cursor-pointer rounded-md border border-slate-200 p-4 font-semibold"
                 key={value}
               >
                 {value === 'PEN' ? 'Sol peruano (PEN)' : 'Dólar estadounidense (USD)'}
@@ -197,7 +197,7 @@ export function AccountPage() {
               ['CUSTOM', 'Elegir otra fecha'],
             ] as const).map(([value, label]) => (
               <label
-                className="has-checked:border-emerald-700 has-checked:bg-emerald-50 cursor-pointer rounded-md border border-slate-200 px-4 py-3 font-semibold"
+                className="qori-choice-option cursor-pointer rounded-md border border-slate-200 px-4 py-3 font-semibold"
                 key={value}
               >
                 {label}

@@ -20,26 +20,29 @@ const contactHref = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURICo
 
 export function HomeFooter() {
   return (
-    <footer id="contacto" className="border-t border-[#e0e3e5] bg-white">
+    <footer
+      id="contacto"
+      className="qori-public-light-section border-t border-[#e0e3e5] bg-white"
+    >
       <div className="mx-auto grid max-w-7xl gap-8 px-5 py-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
         <div>
-          <p className="font-mono text-xs font-bold uppercase tracking-[0.14em] text-[#006b5f]">
+          <p className="qori-public-accent font-mono text-xs font-bold uppercase tracking-[0.14em] text-[#006b5f]">
             Contacto
           </p>
 
-          <h2 className="mt-2 max-w-2xl text-3xl font-black text-[#191c1e]">
+          <h2 className="qori-public-title mt-2 max-w-2xl text-3xl font-black text-[#191c1e]">
             ¿Quieres saber más sobre Qori?
           </h2>
 
-          <p className="mt-3 max-w-xl leading-7 text-[#3c4a46]">
+          <p className="qori-public-copy mt-3 max-w-xl leading-7 text-[#3c4a46]">
             Si tienes comentarios, dudas o quieres conocer más sobre la
             propuesta, puedes enviar una consulta con un mensaje ya preparado.
           </p>
         </div>
 
-        <div className="rounded-xl border border-[#e0e3e5] bg-[#f7f9fb] p-5">
+        <div className="qori-public-card rounded-xl border border-[#e0e3e5] bg-[#f7f9fb] p-5">
           <a
-            className="flex items-center gap-3 rounded-lg bg-white p-4 text-sm font-semibold text-[#3c4a46] shadow-sm transition hover:-translate-y-0.5 hover:text-[#006b5f]"
+            className="qori-public-card qori-public-copy flex items-center gap-3 rounded-lg bg-white p-4 text-sm font-semibold text-[#3c4a46] shadow-sm transition hover:-translate-y-0.5 hover:text-[#006b5f]"
             href={contactHref}
             rel="noreferrer"
             target="_blank"
@@ -50,13 +53,13 @@ export function HomeFooter() {
 
             <span>
               Enviar consulta
-              <span className="block text-slate-500">
+              <span className="qori-public-muted block text-slate-500">
                 Abrir correo con mensaje predeterminado
               </span>
             </span>
           </a>
 
-          <div className="mt-3 flex items-start gap-3 rounded-lg border border-[#dce8e3] bg-white/70 p-4 text-sm leading-6 text-[#52625d]">
+          <div className="qori-public-card qori-public-muted mt-3 flex items-start gap-3 rounded-lg border border-[#dce8e3] bg-white/70 p-4 text-sm leading-6 text-[#52625d]">
             <MessageCircle
               className="mt-0.5 shrink-0 text-[#006b5f]"
               size={18}
@@ -70,10 +73,10 @@ export function HomeFooter() {
       </div>
 
       <div className="border-t border-[#e0e3e5]">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-6 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
+        <div className="qori-public-muted mx-auto flex max-w-7xl flex-col gap-3 px-5 py-6 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="font-black text-slate-800">Qori</p>
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="qori-public-title font-black text-slate-800">Qori</p>
+            <p className="qori-public-muted mt-1 text-xs text-slate-400">
               Desarrollado por María Alva Ruiz
             </p>
           </div>
