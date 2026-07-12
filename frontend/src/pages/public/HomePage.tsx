@@ -8,7 +8,7 @@ import { HomeSecuritySection } from './components/HomeSecuritySection';
 
 export function HomePage() {
   return (
-    <main className="min-h-screen bg-[#f6fbf8] text-slate-900">
+    <main className="min-h-screen bg-[#eef6f1] text-slate-900">
       <HomeHeader />
       <HomeHero />
       <HomeDemoSection />

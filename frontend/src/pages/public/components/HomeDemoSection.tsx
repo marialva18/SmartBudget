@@ -255,29 +255,140 @@ function MovementsDemo() {
 }
 
 function AnalyticsDemo() {
-  const bars = [88, 64, 42, 35, 28];
-
   return (
     <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
       <div className="rounded-xl border border-[#dce8e3] bg-white p-4">
-        <p className="font-black text-[#16201d]">Gastos por categoría</p>
-        <div className="mt-5 flex h-52 items-end gap-3 rounded-lg bg-[#f3f8f5] p-4">
-          {bars.map((height, index) => (
-            <div className="flex flex-1 flex-col items-center gap-2" key={height}>
-              <div
-                className="w-full rounded-t-lg bg-[#00796b]"
-                style={{ height: `${height}%` }}
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="font-black text-[#16201d]">Evolución del mes</p>
+            <p className="mt-1 text-sm text-[#52625d]">
+              Ingresos, gastos y balance por semana.
+            </p>
+          </div>
+          <span className="rounded-full bg-[#dcfbf5] px-3 py-1 text-xs font-black text-[#006b5f]">
+            Julio
+          </span>
+        </div>
+
+        <div className="mt-5 rounded-xl bg-[#f3f8f5] p-4">
+          <svg
+            aria-label="Gráfico de línea de balance del mes"
+            className="h-56 w-full"
+            role="img"
+            viewBox="0 0 420 220"
+          >
+            <g stroke="#d5e6df" strokeWidth="1">
+              <line x1="20" x2="400" y1="48" y2="48" />
+              <line x1="20" x2="400" y1="96" y2="96" />
+              <line x1="20" x2="400" y1="144" y2="144" />
+              <line x1="20" x2="400" y1="192" y2="192" />
+            </g>
+            <path
+              d="M28 162 C74 138, 92 118, 136 128 C178 138, 194 82, 232 92 C280 104, 296 56, 340 66 C368 72, 382 58, 398 44"
+              fill="none"
+              stroke="#00796b"
+              strokeLinecap="round"
+              strokeWidth="7"
+            />
+            <path
+              d="M28 178 C82 166, 108 154, 146 160 C194 168, 222 132, 264 138 C314 146, 340 122, 398 116"
+              fill="none"
+              stroke="#d6a84f"
+              strokeLinecap="round"
+              strokeWidth="5"
+            />
+            {[28, 136, 232, 340, 398].map((x, index) => (
+              <circle
+                cx={x}
+                cy={[162, 128, 92, 66, 44][index]}
+                fill="#ffffff"
+                key={x}
+                r="6"
+                stroke="#00796b"
+                strokeWidth="4"
               />
-              <span className="text-xs font-bold text-[#52625d]">
-                {['Com', 'Mov', 'Casa', 'Ocio', 'Sal'][index]}
-              </span>
-            </div>
-          ))}
+            ))}
+            <g fill="#52625d" fontSize="12" fontWeight="700">
+              <text x="22" y="214">Sem 1</text>
+              <text x="126" y="214">Sem 2</text>
+              <text x="230" y="214">Sem 3</text>
+              <text x="340" y="214">Sem 4</text>
+            </g>
+          </svg>
+
+          <div className="mt-3 flex flex-wrap gap-3 text-xs font-bold text-[#52625d]">
+            <span className="inline-flex items-center gap-2">
+              <span className="h-2 w-5 rounded-full bg-[#00796b]" />
+              Balance
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <span className="h-2 w-5 rounded-full bg-[#d6a84f]" />
+              Gasto
+            </span>
+          </div>
         </div>
       </div>
 
       <div className="rounded-xl border border-[#dce8e3] bg-white p-4">
-        <p className="font-black text-[#16201d]">Lectura rápida</p>
+        <p className="font-black text-[#16201d]">Distribución</p>
+        <div className="mt-5 grid place-items-center rounded-xl bg-[#f7f5ed] p-5">
+          <div className="relative grid size-40 place-items-center">
+            <svg
+              aria-label="Gráfico circular de distribución de gastos"
+              className="size-40 -rotate-90"
+              role="img"
+              viewBox="0 0 120 120"
+            >
+              <circle
+                cx="60"
+                cy="60"
+                fill="none"
+                r="44"
+                stroke="#e4dcca"
+                strokeWidth="16"
+              />
+              <circle
+                cx="60"
+                cy="60"
+                fill="none"
+                r="44"
+                stroke="#00796b"
+                strokeDasharray="150 276"
+                strokeLinecap="round"
+                strokeWidth="16"
+              />
+              <circle
+                cx="60"
+                cy="60"
+                fill="none"
+                r="44"
+                stroke="#d6a84f"
+                strokeDasharray="72 276"
+                strokeDashoffset="-156"
+                strokeLinecap="round"
+                strokeWidth="16"
+              />
+              <circle
+                cx="60"
+                cy="60"
+                fill="none"
+                r="44"
+                stroke="#063c36"
+                strokeDasharray="38 276"
+                strokeDashoffset="-234"
+                strokeLinecap="round"
+                strokeWidth="16"
+              />
+            </svg>
+            <div className="absolute text-center">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#52625d]">
+                Mayor rubro
+              </p>
+              <p className="mt-1 text-xl font-black text-[#063c36]">42%</p>
+            </div>
+          </div>
+        </div>
+
         <div className="mt-4 space-y-3">
           <Insight label="Mayor gasto" value="Comida: S/ 320" />
           <Insight label="Cuenta más usada" value="Yape" />
