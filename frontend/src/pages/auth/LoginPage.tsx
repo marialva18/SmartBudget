@@ -1,18 +1,19 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   ArrowRight,
+  BarChart3,
+  CalendarDays,
   Eye,
   EyeOff,
   LockKeyhole,
-  PiggyBank,
   ShieldCheck,
+  WalletCards,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthBrand } from '../../features/auth/components/AuthBrand';
 import { AuthCard } from '../../features/auth/components/AuthCard';
-import { AuthImage } from '../../features/auth/components/AuthImage';
 import { FormField } from '../../features/auth/components/FormField';
 import {
   loginSchema,
@@ -55,26 +56,46 @@ export function LoginPage() {
   }
 
   return (
-    <div className="qori-login-surface flex min-h-screen items-center justify-center px-4 py-6 sm:px-5 lg:px-8">
-      <div className="grid w-full max-w-5xl overflow-hidden rounded-xl border border-white/15 bg-white/88 shadow-[0_26px_80px_rgba(3,32,29,0.28)] backdrop-blur lg:grid-cols-[0.96fr_1.04fr]">
-        <aside className="relative hidden lg:block lg:min-h-[min(640px,calc(100vh-3rem))] overflow-hidden">
-          <AuthImage
-            className="qori-auth-bg absolute inset-0 h-full w-full object-cover object-left"
-            fallbackSrc="/images/qori_login_background.svg"
-            src="/images/qori_login_background.png"
-          />
-          <div className="absolute inset-0 bg-[#063c36]/10" />
-          <div className="qori-soft-float absolute bottom-8 left-8 max-w-[300px] rounded-xl border border-white/65 bg-white/84 p-5 shadow-[0_22px_58px_rgba(9,60,54,0.15)] backdrop-blur">
-            <p className="text-sm font-black text-[#063c36]">
-              Tu dinero en calma
+    <div className="flex min-h-screen items-center justify-center bg-[#eef6f1] px-4 py-6 sm:px-5 lg:px-8">
+      <div className="grid w-full max-w-5xl overflow-hidden rounded-2xl border border-[#d8e8e1] bg-white shadow-[0_26px_80px_rgba(3,32,29,0.14)] lg:grid-cols-[0.96fr_1.04fr]">
+        <aside className="hidden min-h-[min(640px,calc(100vh-3rem))] bg-[#063c36] p-8 text-white lg:flex lg:flex-col lg:justify-between">
+          <div>
+            <p className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-[#a9ded4]">
+              Panel financiero
             </p>
-            <p className="mt-2 text-sm leading-6 text-[#52625d]">
-              Revisa tus gastos, metas y próximos pagos desde un espacio claro.
+            <h2 className="mt-4 text-4xl font-black leading-tight">
+              Vuelve a tu resumen sin perder contexto.
+            </h2>
+            <p className="mt-4 text-sm leading-6 text-[#dff5ef]">
+              Accede a tus cuentas, movimientos, metas y análisis desde una
+              experiencia consistente.
             </p>
+          </div>
+
+          <div className="my-8 rounded-2xl border border-white/12 bg-white/10 p-5">
+            <p className="text-sm font-semibold text-[#a9ded4]">
+              Saldo disponible
+            </p>
+            <p className="mt-2 text-4xl font-black">S/ 2,438.50</p>
+            <div className="mt-5 grid gap-3">
+              <AuthMetric icon={WalletCards} label="Cuentas activas" value="3" />
+              <AuthMetric icon={CalendarDays} label="Próximo pago" value="15 jul." />
+              <AuthMetric icon={BarChart3} label="Balance mensual" value="+12%" />
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-[#d6a84f]/45 bg-[#d6a84f]/12 p-4">
+            <div className="flex items-start gap-3">
+              <ShieldCheck className="mt-0.5 shrink-0 text-[#f8d991]" size={20} />
+              <p className="text-sm font-semibold leading-6 text-[#fff4d6]">
+                Tus datos se mantienen separados por cuenta y protegidos por
+                sesión autenticada.
+              </p>
+            </div>
           </div>
         </aside>
 
-        <main className="flex min-h-[min(640px,calc(100vh-3rem))] items-center justify-center bg-[#fbfdfb]/94 px-5 py-7 sm:px-8 lg:px-10">
+        <main className="flex min-h-[min(640px,calc(100vh-3rem))] items-center justify-center bg-[#fbfdfb] px-5 py-7 sm:px-8 lg:px-10">
           <div className="w-full max-w-[420px]">
             <div className="mb-6">
               <AuthBrand />
@@ -86,10 +107,10 @@ export function LoginPage() {
                   Acceso seguro
                 </p>
                 <h1 className="text-3xl font-extrabold text-[#16201d]">
-                  Bienvenido de nuevo
+                  Accede a tu panel financiero
                 </h1>
                 <p className="mx-auto mt-2 max-w-sm text-[#52625d]">
-                  Ingresa para seguir organizando tu dinero con calma.
+                  Continúa revisando tus movimientos, metas y análisis.
                 </p>
               </div>
 
@@ -122,6 +143,11 @@ export function LoginPage() {
                       {...register('password')}
                     />
                     <button
+                      aria-label={
+                        showPassword
+                          ? 'Ocultar contraseña'
+                          : 'Mostrar contraseña'
+                      }
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-[#6b7a76] transition hover:text-[#191c1e]"
                       onClick={() => setShowPassword((value) => !value)}
                       type="button"
@@ -137,7 +163,10 @@ export function LoginPage() {
                 </div>
 
                 {serverError ? (
-                  <p className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  <p
+                    className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700"
+                    role="alert"
+                  >
                     {serverError}
                   </p>
                 ) : null}
@@ -156,15 +185,15 @@ export function LoginPage() {
                 {[
                   {
                     icon: ShieldCheck,
-                    text: 'Tu cuenta se mantiene protegida mientras usas Qori',
+                    text: 'Sesión protegida para acceder a tus datos',
                   },
                   {
-                    icon: PiggyBank,
-                    text: 'Tus gastos y metas se organizan en un solo lugar',
+                    icon: WalletCards,
+                    text: 'Cuentas y movimientos en un solo panel',
                   },
                   {
                     icon: LockKeyhole,
-                    text: 'Te avisamos cuando algo necesita tu atención',
+                    text: 'Alertas cuando un gasto requiere revisión',
                   },
                 ].map(({ icon: Icon, text }) => (
                   <div className="flex items-center gap-3" key={text}>
@@ -186,6 +215,28 @@ export function LoginPage() {
           </div>
         </main>
       </div>
+    </div>
+  );
+}
+
+function AuthMetric({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof WalletCards;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 rounded-xl bg-white/10 px-4 py-3">
+      <div className="flex items-center gap-3">
+        <span className="grid size-9 place-items-center rounded-lg bg-white/12 text-[#8ef3e4]">
+          <Icon size={18} />
+        </span>
+        <span className="text-sm font-semibold text-[#dff5ef]">{label}</span>
+      </div>
+      <span className="font-black text-white">{value}</span>
     </div>
   );
 }

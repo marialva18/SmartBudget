@@ -1,10 +1,21 @@
-﻿import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowRight, CheckCircle, Eye, EyeOff, ShieldCheck, X } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  ArrowRight,
+  BarChart3,
+  CheckCircle,
+  Eye,
+  EyeOff,
+  ShieldCheck,
+  Target,
+  WalletCards,
+  X,
+  type LucideIcon,
+} from 'lucide-react';
+import { type FormEvent, useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
+import { AuthBrand } from '../../features/auth/components/AuthBrand';
 import { AuthCard } from '../../features/auth/components/AuthCard';
-import { AuthImage } from '../../features/auth/components/AuthImage';
 import { FormField } from '../../features/auth/components/FormField';
 import {
   registerSchema,
@@ -25,11 +36,11 @@ export function RegisterPage() {
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
+      acceptedTerms: false,
+      confirmPassword: '',
       displayName: '',
       email: '',
       password: '',
-      confirmPassword: '',
-      acceptedTerms: false,
     },
   });
   const password = useWatch({ control, name: 'password' }) ?? '';
@@ -58,62 +69,66 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="qori-auth-surface flex min-h-screen items-center justify-center px-4 py-6 sm:px-5 lg:px-10">
-      <div className="grid w-full max-w-5xl overflow-hidden rounded-xl border border-[#dde8e4] bg-white shadow-[0_18px_45px_rgba(9,60,54,0.08)] lg:grid-cols-[0.92fr_1.08fr]">
-        <aside className="relative hidden overflow-hidden bg-[#063c36] p-10 text-white lg:flex lg:flex-col lg:justify-between">
-          <AuthImage
-            className="qori-auth-bg absolute inset-0 h-full w-full object-cover opacity-55"
-            fallbackSrc="/images/qori_register_background.svg"
-            src="/images/qori_register_background.png"
-          />
-          <div className="absolute inset-0 bg-[#063c36]/55" />
-          <div className="relative z-10">
-            <p className="font-mono text-sm font-semibold uppercase tracking-[0.18em] text-[#89f5e7]">
-              Empieza con calma
+    <div className="flex min-h-screen items-center justify-center bg-[#eef6f1] px-4 py-6 sm:px-5 lg:px-10">
+      <div className="grid w-full max-w-5xl overflow-hidden rounded-2xl border border-[#d8e8e1] bg-white shadow-[0_26px_80px_rgba(3,32,29,0.14)] lg:grid-cols-[0.92fr_1.08fr]">
+        <aside className="hidden bg-[#063c36] p-10 text-white lg:flex lg:flex-col lg:justify-between">
+          <div>
+            <p className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-[#a9ded4]">
+              Primeros pasos
             </p>
-            <h1 className="mt-6 text-4xl font-extrabold leading-tight">
-              Empieza a ordenar tu dinero.
+            <h1 className="mt-5 text-4xl font-black leading-tight">
+              Crea tu espacio financiero en Qori.
             </h1>
-            <p className="mt-5 text-lg text-white/90">
-              Qori te acompaña paso a paso para entender tus gastos, cuidar tus
-              metas y decidir con más tranquilidad.
+            <p className="mt-5 text-sm leading-6 text-[#dff5ef]">
+              Organiza cuentas, movimientos y objetivos desde una estructura
+              pensada para revisar tu dinero con claridad.
             </p>
           </div>
-          <div className="relative z-10 space-y-4">
-            {['Entiende tus gastos', 'Cuida tu dinero', 'Avanza hacia tus metas'].map(
-              (item) => (
-                <div
-                  className="qori-card-motion flex items-center gap-3 rounded-xl border border-white/15 bg-white/10 p-3 backdrop-blur"
-                  key={item}
-                >
-                  <span className="rounded-lg bg-white/20 p-2">
-                    <CheckCircle size={20} />
-                  </span>
-                  <span className="font-semibold">{item}</span>
-                </div>
-              ),
-            )}
+
+          <div className="my-8 grid gap-4">
+            <RegisterStep
+              icon={WalletCards}
+              label="Cuentas"
+              text="Define dónde se mueve tu dinero."
+            />
+            <RegisterStep
+              icon={Target}
+              label="Metas"
+              text="Separa objetivos y reservas."
+            />
+            <RegisterStep
+              icon={BarChart3}
+              label="Análisis"
+              text="Revisa patrones y decisiones."
+            />
           </div>
-          <div className="relative z-10 rounded-xl border border-white/20 bg-white/10 p-5 backdrop-blur">
-            <div className="mb-3 flex items-center gap-2 font-semibold">
+
+          <div className="rounded-xl border border-[#d6a84f]/45 bg-[#d6a84f]/12 p-5">
+            <div className="mb-3 flex items-center gap-2 font-semibold text-[#fff4d6]">
               <ShieldCheck size={18} />
-              Registro claro y seguro
+              Acceso protegido
             </div>
-            <p className="text-sm leading-6 text-white/85">
-              Te pedimos solo lo necesario para crear tu cuenta y ayudarte a
-              ordenar tus finanzas desde el primer paso.
+            <p className="text-sm leading-6 text-[#fff4d6]">
+              La verificación por correo confirma que la cuenta pertenece a la
+              persona que la registra.
             </p>
           </div>
         </aside>
 
         <AuthCard className="rounded-none border-0 shadow-none">
+          <div className="mb-6 lg:hidden">
+            <AuthBrand />
+          </div>
+
           <div className="mb-6">
             <p className="mb-3 font-mono text-xs font-semibold uppercase tracking-[0.18em] text-[#00796b]">
-              Alta protegida
+              Registro
             </p>
-            <h1 className="text-3xl font-extrabold">Crea tu cuenta</h1>
+            <h1 className="text-3xl font-extrabold text-[#16201d]">
+              Crea tu cuenta
+            </h1>
             <p className="mt-2 text-[#3c4a46]">
-              Empieza a tomar el control de tus finanzas.
+              Configura tu acceso y confirma tu correo para empezar.
             </p>
           </div>
 
@@ -122,7 +137,7 @@ export function RegisterPage() {
               error={errors.displayName?.message}
               label="Nombre completo"
               onInput={sanitizeNameInput}
-              placeholder="Ej. Maria Perez"
+              placeholder="Ej. María Pérez"
               registration={register('displayName')}
               type="text"
             />
@@ -134,19 +149,22 @@ export function RegisterPage() {
               type="email"
             />
 
-            <div>
+            <div className="rounded-xl border border-[#e0e3e5] bg-[#f8fbfa] p-4">
               <span className="px-1 text-xs font-semibold uppercase tracking-wide text-[#3c4a46]">
                 Contraseña
               </span>
               <div className="relative mt-1">
                 <input
-                  className="h-12 w-full rounded-lg border-2 border-transparent bg-[#f2f4f6] px-4 pr-12 outline-none transition focus:border-[#006b5f] focus:bg-white focus:shadow-[0_0_0_4px_rgba(45,212,191,0.16)]"
+                  className="h-12 w-full rounded-lg border border-[#dfe8e4] bg-white px-4 pr-12 outline-none transition focus:border-[#006b5f] focus:shadow-[0_0_0_4px_rgba(0,107,95,0.12)]"
                   placeholder="••••••••"
                   type={showPassword ? 'text' : 'password'}
                   {...register('password')}
                 />
                 <button
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#6b7a76]"
+                  aria-label={
+                    showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'
+                  }
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#6b7a76] transition hover:text-[#191c1e]"
                   onClick={() => setShowPassword((value) => !value)}
                   type="button"
                 >
@@ -158,7 +176,7 @@ export function RegisterPage() {
                   {errors.password.message}
                 </span>
               ) : null}
-              <div className="mt-2 grid grid-cols-2 gap-2">
+              <div className="mt-3 grid grid-cols-2 gap-2">
                 {passwordChecks.map((check) => (
                   <span
                     className={[
@@ -221,7 +239,10 @@ export function RegisterPage() {
             ) : null}
 
             {serverError ? (
-              <p className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <p
+                className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700"
+                role="alert"
+              >
                 {serverError}
               </p>
             ) : null}
@@ -260,18 +281,6 @@ const legalContent: Record<
   LegalView,
   { title: string; description: string; items: string[] }
 > = {
-  terms: {
-    title: 'Términos y condiciones',
-    description:
-      'Qori es una herramienta de organización financiera personal. Estos puntos resumen el uso esperado de la aplicación.',
-    items: [
-      'Debes registrar información real y mantener segura tu cuenta.',
-      'La información que ingreses se usa para calcular saldos, movimientos, presupuestos, metas y análisis.',
-      'Qori no reemplaza asesoría financiera profesional ni ejecuta operaciones bancarias reales.',
-      'Puedes editar o eliminar información desde las opciones disponibles en la aplicación.',
-      'El uso de la plataforma implica aceptar un manejo responsable de tus datos financieros.',
-    ],
-  },
   privacy: {
     title: 'Política de privacidad',
     description:
@@ -282,6 +291,18 @@ const legalContent: Record<
       'Los secretos del sistema no viven en el frontend ni se exponen al navegador.',
       'Tus cuentas, movimientos, metas, presupuestos y grupos se separan por usuario.',
       'Si activas funciones de IA, Qori puede usar información contextual para generar recomendaciones.',
+    ],
+  },
+  terms: {
+    title: 'Términos y condiciones',
+    description:
+      'Qori es una herramienta de organización financiera personal. Estos puntos resumen el uso esperado de la aplicación.',
+    items: [
+      'Debes registrar información real y mantener segura tu cuenta.',
+      'La información que ingreses se usa para calcular saldos, movimientos, presupuestos, metas y análisis.',
+      'Qori no reemplaza asesoría financiera profesional ni ejecuta operaciones bancarias reales.',
+      'Puedes editar o eliminar información desde las opciones disponibles en la aplicación.',
+      'El uso de la plataforma implica aceptar un manejo responsable de tus datos financieros.',
     ],
   },
 };
@@ -308,6 +329,7 @@ function LegalInfoModal({
             </h2>
           </div>
           <button
+            aria-label="Cerrar información legal"
             className="grid size-9 place-items-center rounded-full bg-[#eef6f3] text-[#006b5f] transition hover:bg-[#d9eee8]"
             onClick={onClose}
             type="button"
@@ -338,7 +360,31 @@ function LegalInfoModal({
   );
 }
 
-function sanitizeNameInput(event: React.FormEvent<HTMLInputElement>) {
+function RegisterStep({
+  icon: Icon,
+  label,
+  text,
+}: {
+  icon: LucideIcon;
+  label: string;
+  text: string;
+}) {
+  return (
+    <div className="rounded-xl border border-white/12 bg-white/10 p-4">
+      <div className="flex items-start gap-3">
+        <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-white/12 text-[#8ef3e4]">
+          <Icon size={19} />
+        </span>
+        <div>
+          <p className="font-black">{label}</p>
+          <p className="mt-1 text-sm leading-6 text-[#dff5ef]">{text}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function sanitizeNameInput(event: FormEvent<HTMLInputElement>) {
   event.currentTarget.value = event.currentTarget.value.replace(
     /[^\p{L}\s'-]/gu,
     '',

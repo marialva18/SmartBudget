@@ -38,34 +38,34 @@ export function HomeFeatures() {
   return (
     <section
       id="funciones"
-      className="bg-[#f2f7f4] px-5 py-16"
+      className="qori-public-light-section bg-[#f2f7f4] px-5 py-16"
     >
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
           <div>
-            <p className="font-mono text-xs font-bold uppercase tracking-[0.14em] text-[#006b5f]">
+            <p className="qori-public-accent font-mono text-xs font-bold uppercase tracking-[0.14em] text-[#006b5f]">
               Funciones principales
             </p>
 
-            <h2 className="mt-2 text-3xl font-black text-[#191c1e]">
+            <h2 className="qori-public-title mt-2 text-3xl font-black text-[#191c1e]">
               Una forma más simple de manejar tus finanzas.
             </h2>
 
-            <p className="mt-3 text-[#3c4a46]">
+            <p className="qori-public-copy mt-3 text-[#3c4a46]">
               Qori combina organización, alertas y recomendaciones inteligentes
               para ayudarte a pasar de solo registrar gastos a entender
               realmente tu dinero.
             </p>
           </div>
 
-          <div className="rounded-2xl border border-[#dce8e3] bg-white/70 p-5 shadow-[0_18px_45px_rgba(13,148,136,0.08)] backdrop-blur">
-            <p className="text-sm font-bold uppercase tracking-[0.14em] text-[#00796b]">
+          <div className="qori-public-card rounded-2xl border border-[#dce8e3] bg-white/82 p-5 shadow-[0_18px_45px_rgba(13,148,136,0.08)]">
+            <p className="qori-public-accent text-sm font-bold uppercase tracking-[0.14em] text-[#00796b]">
               Flujo típico
             </p>
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
               {['Registra', 'Analiza', 'Decide'].map((step, index) => (
                 <div
-                  className="rounded-xl bg-[#063c36] p-4 text-white"
+                  className="rounded-xl border border-[#0a5d53]/30 bg-[#063c36] p-4 text-white shadow-[0_10px_24px_rgba(6,60,54,0.14)]"
                   key={step}
                 >
                   <span className="text-xs font-bold text-[#a9ded4]">
@@ -84,16 +84,18 @@ export function HomeFeatures() {
 
             return (
               <article
-                className={`qori-card-motion qori-card-delay-${index} rounded-xl border border-[#dce8e3] bg-white/86 p-5 shadow-[0_12px_35px_rgba(13,148,136,0.08)] backdrop-blur transition hover:-translate-y-1 hover:border-[#9bd8cf] hover:shadow-[0_22px_55px_rgba(13,148,136,0.16)]`}
+                className={`qori-card-motion qori-card-delay-${index} qori-public-card rounded-xl border border-[#dce8e3] bg-white/90 p-5 shadow-[0_12px_35px_rgba(13,148,136,0.08)] transition hover:-translate-y-1 hover:border-[#9bd8cf] hover:shadow-[0_22px_55px_rgba(13,148,136,0.16)]`}
                 key={feature.title}
               >
                 <span className="qori-icon-motion grid h-12 w-12 place-items-center rounded-lg bg-[#dcfbf5] text-[#006b5f]">
                   <Icon size={24} />
                 </span>
 
-                <h3 className="mt-5 text-lg font-black">{feature.title}</h3>
+                <h3 className="qori-public-title mt-5 text-lg font-black">
+                  {feature.title}
+                </h3>
 
-                <p className="mt-2 text-sm leading-6 text-[#3c4a46]">
+                <p className="qori-public-copy mt-2 text-sm leading-6 text-[#3c4a46]">
                   {feature.description}
                 </p>
               </article>
